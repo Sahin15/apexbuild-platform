@@ -1,0 +1,389 @@
+import React, { useState, useEffect } from 'react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { 
+  Home, Users, ClipboardList, TestTube2, Menu, Bell, 
+  Search, Plus, Activity, DollarSign, Package, Settings, LogOut, X, ChevronRight, FileText,
+  ChevronUp, User as UserIcon, HelpCircle, CreditCard
+} from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
+
+const DiagnosticsLayout = () => {
+  const { user, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = React.useRef(null);
+
+  const [topMenuOpen, setTopMenuOpen] = useState(false);
+  const topMenuRef = React.useRef(null);
+
+  // Close profile menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+      if (topMenuRef.current && !topMenuRef.current.contains(event.target)) {
+        setTopMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close mobile menus on route change and scroll to top
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setIsMoreMenuOpen(false);
+    // Only scroll to top if we don't have a hash in the URL, to preserve anchor links
+    if (!location.hash) {
+      window.scrollTo(0, 0);
+    }
+  }, [location.pathname, location.hash]);
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+    setMenuOpen(false);
+    setTopMenuOpen(false);
+    setIsMoreMenuOpen(false);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const navItems = [
+    { name: 'Dashboard', path: '/diagnostics/dashboard', icon: Home },
+    { name: 'Patients', path: '/diagnostics/patients', icon: Users },
+    { name: 'Orders', path: '/diagnostics/orders', icon: ClipboardList },
+    { name: 'Samples', path: '/diagnostics/samples', icon: TestTube2 },
+    { name: 'Result Entry', path: '/diagnostics/results', icon: ClipboardList },
+  ];
+
+  const moreMenuLinks = [
+    { name: 'Tests & Panels', path: '/diagnostics/tests', icon: Activity },
+    { name: 'Doctors', path: '/diagnostics/doctors', icon: Users },
+    { name: 'Reports', path: '/diagnostics/reports', icon: FileText },
+    { name: 'Payments', path: '/diagnostics/payments', icon: DollarSign },
+    { name: 'Inventory', path: '/diagnostics/inventory', icon: Package },
+    { name: 'Settings', path: '/diagnostics/settings', icon: Settings },
+    { name: 'Subscription', path: '/diagnostics/subscription', icon: CreditCard },
+  ];
+
+  const isActive = (path) => location.pathname.startsWith(path);
+
+  const getPageTitle = () => {
+    const path = location.pathname;
+    if (path.includes('/dashboard')) return 'Dashboard';
+    if (path.includes('/patients')) return 'Patients';
+    if (path.includes('/orders')) return 'Orders';
+    if (path.includes('/samples')) return 'Samples';
+    if (path.includes('/results')) return 'Result Entry';
+    if (path.includes('/reports')) return 'Reports';
+    if (path.includes('/inventory')) return 'Inventory';
+    if (path.includes('/settings')) return 'Settings';
+    if (path.includes('/payments')) return 'Payments';
+    if (path.includes('/tests')) return 'Tests & Panels';
+    if (path.includes('/doctors')) return 'Doctors';
+    return 'Diagnostics OS';
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col w-64 bg-cyan-950 border-r border-cyan-900 fixed inset-y-0 z-20">
+        <div className="h-16 flex items-center gap-3 px-6 bg-cyan-900 border-b border-cyan-800 shrink-0">
+          <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
+            <span className="text-white font-black text-sm">DX</span>
+          </div>
+          <div>
+            <h1 className="text-lg font-black text-white leading-tight">ApexHealth</h1>
+            <p className="text-[10px] text-cyan-400 font-bold tracking-wider uppercase">Diagnostics OS</p>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-cyan-800">
+          <nav className="px-4 space-y-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive(item.path)
+                    ? 'bg-cyan-600 text-white shadow-sm'
+                    : 'text-cyan-100 hover:bg-cyan-800 hover:text-white'
+                }`}
+              >
+                <item.icon className={`h-5 w-5 mr-3 ${isActive(item.path) ? 'text-white' : 'text-cyan-300'}`} />
+                {item.name}
+              </Link>
+            ))}
+
+            <div className="pt-4 mt-4 border-t border-cyan-900">
+              <p className="px-3 text-xs font-bold text-cyan-600 uppercase tracking-wider mb-2">
+                Management
+              </p>
+              {moreMenuLinks.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive(item.path)
+                      ? 'bg-cyan-600 text-white shadow-sm'
+                      : 'text-cyan-100 hover:bg-cyan-800 hover:text-white'
+                  }`}
+                >
+                  <item.icon className={`h-5 w-5 mr-3 ${isActive(item.path) ? 'text-white' : 'text-cyan-300'}`} />
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          </nav>
+        </div>
+
+        <div className="p-4 border-t border-cyan-900 relative" ref={menuRef}>
+          {menuOpen && (
+            <div className="absolute bottom-full left-4 mb-2 w-56 bg-cyan-900 rounded-xl shadow-xl border border-cyan-800 overflow-hidden transform transition-all">
+              <div className="p-3 border-b border-cyan-800 bg-cyan-900/50">
+                <p className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</p>
+                <p className="text-xs text-cyan-300 truncate">{user?.email || 'admin@diagnostics.com'}</p>
+              </div>
+              
+              <div className="py-1">
+                <button onClick={() => { setMenuOpen(false); navigate('/diagnostics/profile'); }} className="group flex w-full items-center px-3 py-2 text-sm text-cyan-100 hover:bg-cyan-800 hover:text-white transition-colors">
+                  <UserIcon className="mr-2 h-4 w-4 text-cyan-400 group-hover:text-cyan-300" /> My Profile
+                </button>
+                <button onClick={() => { setMenuOpen(false); navigate('/diagnostics/settings'); }} className="group flex w-full items-center px-3 py-2 text-sm text-cyan-100 hover:bg-cyan-800 hover:text-white transition-colors">
+                  <Settings className="mr-2 h-4 w-4 text-cyan-400 group-hover:text-cyan-300" /> Settings
+                </button>
+                <button onClick={() => { setMenuOpen(false); navigate('/diagnostics/support'); }} className="group flex w-full items-center px-3 py-2 text-sm text-cyan-100 hover:bg-cyan-800 hover:text-white transition-colors">
+                  <HelpCircle className="mr-2 h-4 w-4 text-cyan-400 group-hover:text-cyan-300" /> Help & Support
+                </button>
+              </div>
+              <div className="py-1 border-t border-cyan-800">
+                <button onClick={handleLogoutClick} className="group flex w-full items-center px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors">
+                  <LogOut className="mr-2 h-4 w-4 text-red-400/80 group-hover:text-red-400" /> Sign out
+                </button>
+              </div>
+            </div>
+          )}
+
+          <button 
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="w-full flex items-center justify-between px-3 py-2 bg-cyan-900 hover:bg-cyan-800 rounded-lg transition-colors group cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-700"
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="flex-shrink-0 h-8 w-8 rounded-full bg-cyan-800 flex items-center justify-center text-white font-bold shadow-sm">
+                {user?.name?.charAt(0) || 'U'}
+              </div>
+              <div className="text-left truncate">
+                <p className="text-sm font-bold text-white truncate w-32 group-hover:text-cyan-300 transition-colors">{user?.name || 'User'}</p>
+                <p className="text-[10px] font-bold text-cyan-400 truncate tracking-wide uppercase">
+                  {user?.role || 'Admin'}
+                </p>
+              </div>
+            </div>
+            <ChevronUp className={`w-4 h-4 text-cyan-500 transition-transform duration-200 ${menuOpen ? 'rotate-180 text-white' : 'group-hover:text-white'}`} />
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 md:ml-64 flex flex-col min-h-screen pb-16 md:pb-0">
+        {/* Mobile Header */}
+        <header className="md:hidden bg-white border-b border-gray-200 h-14 flex items-center justify-between px-4 sticky top-0 z-30 shadow-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-cyan-600 rounded-lg flex items-center justify-center shadow-sm">
+              <span className="text-white font-black text-xs">DX</span>
+            </div>
+            <span className="font-bold text-gray-800">{getPageTitle()}</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button className="text-gray-500 hover:text-gray-700 relative">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+            </button>
+            <div className="h-4 w-px bg-gray-300"></div>
+            <button onClick={() => navigate('/diagnostics/profile')} className="h-7 w-7 rounded-full bg-cyan-100 flex items-center justify-center border border-cyan-200">
+              <span className="text-cyan-700 font-bold text-xs">{user?.name?.charAt(0) || 'U'}</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Desktop Header */}
+        <header className="hidden md:flex bg-white border-b border-gray-200 h-16 items-center justify-between px-8 sticky top-0 z-10 shadow-sm">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-gray-800 truncate">{getPageTitle()}</h1>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <button className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-full transition-colors relative">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-1 right-1 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
+            </button>
+
+            <div className="h-6 w-px bg-gray-200"></div>
+
+            <div className="relative" ref={topMenuRef}>
+              <button onClick={() => setTopMenuOpen(!topMenuOpen)} className="flex items-center gap-3 focus:outline-none group">
+                <div className="text-right">
+                  <p className="text-sm font-bold text-gray-800 leading-tight group-hover:text-cyan-600 transition-colors">{user?.name || 'User'}</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{user?.role || 'Role'}</p>
+                </div>
+                <div className="h-10 w-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 font-black border-2 border-cyan-200 group-hover:border-cyan-400 transition-colors shadow-sm">
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+              </button>
+
+              {topMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transform transition-all z-50">
+                  <div className="py-2">
+                    <button onClick={() => { setTopMenuOpen(false); navigate('/diagnostics/profile'); }} className="group flex w-full items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-cyan-50 hover:text-cyan-600 transition-colors">
+                      <UserIcon className="mr-3 h-4 w-4 text-gray-400 group-hover:text-cyan-600" /> Edit Profile
+                    </button>
+                    <button onClick={() => { setTopMenuOpen(false); navigate('/diagnostics/settings'); }} className="group flex w-full items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-cyan-50 hover:text-cyan-600 transition-colors">
+                      <Settings className="mr-3 h-4 w-4 text-gray-400 group-hover:text-cyan-600" /> Account Settings
+                    </button>
+                    <button onClick={() => { setTopMenuOpen(false); navigate('/diagnostics/support'); }} className="group flex w-full items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-cyan-50 hover:text-cyan-600 transition-colors">
+                      <HelpCircle className="mr-3 h-4 w-4 text-gray-400 group-hover:text-cyan-600" /> Help & Support
+                    </button>
+                  </div>
+                  <div className="py-2 border-t border-gray-50">
+                    <button onClick={handleLogoutClick} className="group flex w-full items-center px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors">
+                      <LogOut className="mr-3 h-4 w-4 text-red-400 group-hover:text-red-600" /> Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Content Outlet */}
+        <div className="flex-1 overflow-x-hidden p-4 md:p-8">
+          <Outlet />
+        </div>
+      </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-40 pb-safe">
+        <div className="flex justify-around items-center h-16">
+          {navItems.map((item) => (
+            <Link
+              key={item.name}
+              to={item.path}
+              className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
+                isActive(item.path) ? 'text-cyan-700' : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              <item.icon className={`h-6 w-6 ${isActive(item.path) ? 'fill-cyan-50 text-cyan-600' : ''}`} />
+              <span className="text-[10px] font-medium">{item.name}</span>
+            </Link>
+          ))}
+          
+          {/* More Menu Toggle */}
+          <button
+            onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
+              isMoreMenuOpen ? 'text-cyan-700' : 'text-gray-500'
+            }`}
+          >
+            <Menu className={`h-6 w-6 ${isMoreMenuOpen ? 'text-cyan-600' : ''}`} />
+            <span className="text-[10px] font-medium">More</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile More Menu Full Screen Overlay */}
+      {isMoreMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-gray-50 flex flex-col pt-safe animate-in slide-in-from-bottom-full duration-200">
+          <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
+            <h2 className="text-lg font-bold text-gray-900">Diagnostics Menu</h2>
+            <button 
+              onClick={() => setIsMoreMenuOpen(false)}
+              className="p-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto">
+            {/* User Profile Summary */}
+            <div className="bg-white p-4 mb-2 border-b border-gray-100">
+              <div className="flex items-center">
+                <div className="h-12 w-12 rounded-full bg-cyan-100 border border-cyan-200 flex items-center justify-center">
+                  <span className="text-lg font-black text-cyan-700">
+                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <div className="ml-4">
+                  <p className="text-base font-bold text-gray-900 leading-tight">{user?.name || 'User'}</p>
+                  <p className="text-xs font-bold text-cyan-600 uppercase tracking-wider mt-1">{user?.role || 'Role'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Application Links */}
+            <div className="bg-white py-2 mb-2 border-y border-gray-100">
+              {moreMenuLinks.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  onClick={() => setIsMoreMenuOpen(false)}
+                  className={`flex items-center px-6 py-3.5 text-sm font-medium transition-colors ${
+                    isActive(item.path) ? 'text-cyan-700 bg-cyan-50 border-l-4 border-cyan-600' : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                  }`}
+                >
+                  <item.icon className={`h-5 w-5 mr-4 ${isActive(item.path) ? 'text-cyan-600' : 'text-gray-400'}`} />
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+
+            {/* Account & Support Links */}
+            <div className="bg-white py-2 border-y border-gray-100">
+              <Link
+                to="/diagnostics/profile"
+                onClick={() => setIsMoreMenuOpen(false)}
+                className="flex items-center px-6 py-3.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <UserIcon className="h-5 w-5 mr-4 text-gray-400" />
+                My Profile
+              </Link>
+              <Link
+                to="/diagnostics/support"
+                onClick={() => setIsMoreMenuOpen(false)}
+                className="flex items-center px-6 py-3.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <HelpCircle className="h-5 w-5 mr-4 text-gray-400" />
+                Help & Support
+              </Link>
+              
+              <button 
+                onClick={handleLogoutClick}
+                className="w-full flex items-center px-6 py-3.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="h-5 w-5 mr-4 text-red-500" />
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <LogoutConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+      />
+    </div>
+  );
+};
+
+export default DiagnosticsLayout;
