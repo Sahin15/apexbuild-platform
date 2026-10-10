@@ -34,11 +34,13 @@ import {
   Download,
   Camera,
   Barcode,
-  Share2
+  Share2,
+  PenTool
 } from 'lucide-react';
 import useOfflineDraft from '../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../components/common/OfflineDraftIndicator';
 import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
+import SignaturePadModal from '../components/common/SignaturePadModal';
 import PullToRefreshContainer from '../components/common/PullToRefreshContainer';
 import haptics from '../utils/haptics';
 import { notifyDprSubmitted } from '../utils/notifications';
@@ -103,10 +105,13 @@ export default function SiteReports({ isProjectView }) {
     issues: 'Heavy traffic near outer ring road delayed afternoon material delivery by 35 minutes.',
     delays: 'Zero impact on critical milestone path.',
     nextDayPlan: 'Commence M30 design mix pour for Raft Grid C1-E4. Position backup needle vibrators.',
-    status: 'SUBMITTED'
+    status: 'SUBMITTED',
+    engineerSignature: null,
+    signedBy: ''
   };
 
   const [formData, setFormData] = useState(initialForm);
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
 
   // Offline Draft Hook
   const dprDraftKey = `contractor_dpr_${projectId || routeProjectId || 'default'}`;
@@ -1564,6 +1569,19 @@ export default function SiteReports({ isProjectView }) {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
+                    onClick={() => setIsSignatureModalOpen(true)}
+                    className={`btn text-xs px-3.5 py-2.5 rounded-lg flex items-center gap-1.5 transition-all active:scale-95 ${
+                      formData.engineerSignature
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold'
+                        : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 font-semibold'
+                    }`}
+                  >
+                    <PenTool className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>{formData.engineerSignature ? 'Re-sign DPR' : 'Sign DPR'}</span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => setIsCreateModalOpen(false)}
                     className="flex-1 sm:flex-initial btn btn-secondary text-xs px-4 py-2.5"
                   >
@@ -2031,10 +2049,13 @@ export default function SiteReports({ isProjectView }) {
 
               {/* 3-Tier Official Signature Grid */}
               <div className="grid grid-cols-3 border border-slate-900 mt-6 text-center text-xs">
-                <div className="border-r border-slate-900 p-4 flex flex-col justify-between h-28">
+                <div className="border-r border-slate-900 p-3 sm:p-4 flex flex-col justify-between h-32">
                   <div className="font-bold text-slate-700">PREPARED BY:</div>
+                  {selectedReport.engineerSignature ? (
+                    <img src={selectedReport.engineerSignature} alt="Site Engineer Signature" className="h-10 mx-auto object-contain my-1" />
+                  ) : null}
                   <div className="font-bold text-slate-900 border-t border-slate-300 pt-1">
-                    {selectedReport.siteEngineerId?.name || 'Site Engineer'}
+                    {selectedReport.signedBy || selectedReport.siteEngineerId?.name || 'Site Engineer'}
                     <span className="block text-[10px] text-slate-500 font-normal">Junior Engineer / Site Supervisor</span>
                   </div>
                 </div>
@@ -2075,6 +2096,23 @@ export default function SiteReports({ isProjectView }) {
         }}
         title="Scan Delivery Challan / QR"
         subtitle="Align the delivery gate challan QR code or vehicle tag"
+      />
+
+      {/* Engineer Certification Signature Modal */}
+      <SignaturePadModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        initialSignerName={formData.signedBy || 'Site Engineer In-Charge'}
+        roleLabel="Site Engineer / Certification Authority"
+        title="DPR Form 62 Certification Sign-off"
+        subtitle="Digital sign-off verifying manpower headcount & day activities"
+        onSave={({ signatureDataUrl, signerName }) => {
+          setFormData(prev => ({
+            ...prev,
+            engineerSignature: signatureDataUrl,
+            signedBy: signerName
+          }));
+        }}
       />
       </div>
     </PullToRefreshContainer>

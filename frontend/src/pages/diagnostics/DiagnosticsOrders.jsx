@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, Plus, Filter, ClipboardList, X, FileText, User, Activity, Eye, Receipt, Share2 } from 'lucide-react';
+import { Search, Plus, Filter, ClipboardList, X, FileText, User, Activity, Eye, Receipt, Share2, PenTool } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import DiagnosticsReportModal from '../../components/diagnostics/DiagnosticsReportModal';
 import PaymentReceiptModal from '../../components/diagnostics/PaymentReceiptModal';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
+import SignaturePadModal from '../../components/common/SignaturePadModal';
 import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
 import haptics from '../../utils/haptics';
 import { enqueueSyncOperation } from '../../services/syncQueue';
@@ -29,6 +30,11 @@ const DiagnosticsOrders = () => {
   const [isHomeCollection, setIsHomeCollection] = useState(false);
   const [collectionAddress, setCollectionAddress] = useState('');
 
+  // Signature State
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const [patientSignature, setPatientSignature] = useState(null);
+  const [signedBy, setSignedBy] = useState('');
+
   // Offline Draft Hook
   const orderFormData = useMemo(() => ({
     selectedPatient,
@@ -36,8 +42,10 @@ const DiagnosticsOrders = () => {
     discount,
     paidAmount,
     isHomeCollection,
-    collectionAddress
-  }), [selectedPatient, selectedTests, discount, paidAmount, isHomeCollection, collectionAddress]);
+    collectionAddress,
+    patientSignature,
+    signedBy
+  }), [selectedPatient, selectedTests, discount, paidAmount, isHomeCollection, collectionAddress, patientSignature, signedBy]);
 
   const { hasDraft, draftData, lastSaved, clearDraft } = useOfflineDraft('diagnostics_order', orderFormData, isModalOpen);
 
@@ -49,6 +57,8 @@ const DiagnosticsOrders = () => {
       if (draftData.paidAmount !== undefined) setPaidAmount(draftData.paidAmount);
       if (draftData.isHomeCollection !== undefined) setIsHomeCollection(draftData.isHomeCollection);
       if (draftData.collectionAddress !== undefined) setCollectionAddress(draftData.collectionAddress);
+      if (draftData.patientSignature !== undefined) setPatientSignature(draftData.patientSignature);
+      if (draftData.signedBy !== undefined) setSignedBy(draftData.signedBy);
       toast.success('Test order draft restored!');
     }
   };
@@ -159,7 +169,9 @@ const DiagnosticsOrders = () => {
         totalAmount,
         paidAmount,
         isHomeCollection,
-        homeCollectionDetails: isHomeCollection ? { address: collectionAddress } : undefined
+        homeCollectionDetails: isHomeCollection ? { address: collectionAddress } : undefined,
+        patientSignature,
+        signedBy
       };
 
       if (!navigator.onLine) {
@@ -183,6 +195,8 @@ const DiagnosticsOrders = () => {
         setPaidAmount(0);
         setIsHomeCollection(false);
         setCollectionAddress('');
+        setPatientSignature(null);
+        setSignedBy('');
         return;
       }
 
@@ -200,6 +214,8 @@ const DiagnosticsOrders = () => {
       setPaidAmount(0);
       setIsHomeCollection(false);
       setCollectionAddress('');
+      setPatientSignature(null);
+      setSignedBy('');
     } catch (error) {
       haptics.error();
       toast.error(error.response?.data?.message || 'Error creating order');
@@ -666,6 +682,37 @@ const DiagnosticsOrders = () => {
                   </div>
                 </div>
 
+                {/* Section 4: Patient / Guardian Consent Signature */}
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center uppercase tracking-wider">
+                    <PenTool className="h-4 w-4 mr-2 text-indigo-600" /> Patient / Guardian Consent Signature
+                  </h3>
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                        <PenTool className="w-4 h-4" />
+                      </div>
+                      <div className="truncate">
+                        <p className="text-xs font-bold text-slate-800">Consent Sign-off</p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {patientSignature ? `Signed by: ${signedBy || 'Patient'}` : 'Capture digital consent signature on screen'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsSignatureModalOpen(true)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 shrink-0 ${
+                        patientSignature 
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-2xs'
+                      }`}
+                    >
+                      {patientSignature ? 'Re-sign' : 'Get Signature'}
+                    </button>
+                  </div>
+                </div>
+
               </div>
               
               <div className="p-3 sm:p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-2 sm:gap-3 shrink-0 sticky bottom-0">
@@ -775,6 +822,20 @@ const DiagnosticsOrders = () => {
           order={receiptModalOrder}
         />
       )}
+
+      {/* Patient Consent Touch Signature Modal */}
+      <SignaturePadModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        initialSignerName={patients.find(p => p._id === selectedPatient)?.name || ''}
+        roleLabel="Patient / Authorized Guardian"
+        title="Diagnostic Consent & Authorization"
+        subtitle="Sign on screen to authorize blood/specimen collection"
+        onSave={({ signatureDataUrl, signerName }) => {
+          setPatientSignature(signatureDataUrl);
+          setSignedBy(signerName);
+        }}
+      />
       </div>
     </PullToRefreshContainer>
   );

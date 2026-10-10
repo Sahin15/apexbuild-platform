@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, FileText, MessageCircle, Truck, X, User, IndianRupee, Camera, Barcode, Share2 } from 'lucide-react';
+import { Plus, Search, FileText, MessageCircle, Truck, X, User, IndianRupee, Camera, Barcode, Share2, PenTool } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import ReceiptModal from '../../components/distributor/ReceiptModal';
@@ -7,6 +7,7 @@ import CustomSelect from '../../components/common/CustomSelect';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 import BarcodeScannerModal from '../../components/common/BarcodeScannerModal';
+import SignaturePadModal from '../../components/common/SignaturePadModal';
 import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
 import haptics from '../../utils/haptics';
 import { notifyDeliveryRecorded, notifyLowStock } from '../../utils/notifications';
@@ -23,6 +24,7 @@ export default function DistributorSales() {
   const [showModal, setShowModal] = useState(false);
   const [activeReceipt, setActiveReceipt] = useState(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     customerId: '',
@@ -31,7 +33,9 @@ export default function DistributorSales() {
     discount: '',
     otherCharges: '',
     paidAmount: '',
-    paymentMethod: 'CASH'
+    paymentMethod: 'CASH',
+    customerSignature: null,
+    signedBy: ''
   });
 
   const { hasDraft, draftData, lastSaved, clearDraft } = useOfflineDraft('distributor_delivery', formData, showModal);
@@ -95,7 +99,7 @@ export default function DistributorSales() {
       toast.success('Offline mode: Delivery saved to sync queue! Will upload automatically once online.');
       clearDraft();
       setShowModal(false);
-      setFormData({ customerId: '', weight: '', sellingRate: '', discount: '', otherCharges: '', paidAmount: '', paymentMethod: 'CASH' });
+      setFormData({ customerId: '', weight: '', sellingRate: '', discount: '', otherCharges: '', paidAmount: '', paymentMethod: 'CASH', customerSignature: null, signedBy: '' });
       return;
     }
 
@@ -115,7 +119,7 @@ export default function DistributorSales() {
       }
       clearDraft();
       setShowModal(false);
-      setFormData({ customerId: '', weight: '', sellingRate: '', discount: '', otherCharges: '', paidAmount: '', paymentMethod: 'CASH' });
+      setFormData({ customerId: '', weight: '', sellingRate: '', discount: '', otherCharges: '', paidAmount: '', paymentMethod: 'CASH', customerSignature: null, signedBy: '' });
       fetchData();
     } catch (error) {
       haptics.error();
@@ -357,6 +361,32 @@ export default function DistributorSales() {
                     <span className="text-lg font-black">₹{totals.due.toLocaleString()}</span>
                   </div>
                 )}
+
+                {/* Proof of Delivery Touch Signature */}
+                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                      <PenTool className="w-4 h-4" />
+                    </div>
+                    <div className="truncate">
+                      <p className="text-xs font-bold text-slate-800">Receiver's Signature</p>
+                      <p className="text-[11px] text-slate-500 truncate">
+                        {formData.customerSignature ? `Signed by: ${formData.signedBy || 'Shopkeeper'}` : 'Capture on-screen digital signature'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSignatureModalOpen(true)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 shrink-0 ${
+                      formData.customerSignature 
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                        : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-2xs'
+                    }`}
+                  >
+                    {formData.customerSignature ? 'Re-sign' : 'Get Signature'}
+                  </button>
+                </div>
               </form>
             </div>
             
@@ -386,6 +416,22 @@ export default function DistributorSales() {
         }}
         title="Scan Delivery Receipt"
         subtitle="Align the receipt barcode or delivery slip under the camera"
+      />
+
+      {/* Touch Signature Modal */}
+      <SignaturePadModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        initialSignerName={customers.find(c => c._id === formData.customerId)?.ownerName || ''}
+        title="Delivery Proof of Receipt"
+        subtitle="Shopkeeper verifies weight and acceptance"
+        onSave={({ signatureDataUrl, signerName }) => {
+          setFormData(prev => ({
+            ...prev,
+            customerSignature: signatureDataUrl,
+            signedBy: signerName
+          }));
+        }}
       />
       </div>
     </PullToRefreshContainer>

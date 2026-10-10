@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, ShoppingCart, Truck, ExternalLink, Share2 } from 'lucide-react';
+import { Search, Plus, ShoppingCart, Truck, ExternalLink, Share2, PenTool } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
+import SignaturePadModal from '../../components/common/SignaturePadModal';
 import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
 import haptics from '../../utils/haptics';
 import { notifyOrderCreated } from '../../utils/notifications';
@@ -21,6 +22,8 @@ export default function SupplierOrders() {
   const [vehicles, setVehicles] = useState([]);
   const [drivers, setDrivers] = useState([]);
   
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  
   const [formData, setFormData] = useState({
     customer: '',
     orderDate: new Date().toISOString().split('T')[0],
@@ -30,7 +33,9 @@ export default function SupplierOrders() {
     paidAmount: 0,
     deliverImmediately: false,
     vehicle: '',
-    driver: ''
+    driver: '',
+    receiverSignature: null,
+    signedBy: ''
   });
 
   const { hasDraft, draftData, lastSaved, clearDraft } = useOfflineDraft('supplier_order', formData, showModal);
@@ -175,7 +180,7 @@ export default function SupplierOrders() {
       toast.success('Offline mode: Sales order saved to sync queue! Will upload automatically once online.');
       clearDraft();
       setShowModal(false);
-      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '' });
+      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '', receiverSignature: null, signedBy: '' });
       return;
     }
 
@@ -192,7 +197,7 @@ export default function SupplierOrders() {
       clearDraft();
       setShowModal(false);
       fetchData();
-      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '' });
+      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '', receiverSignature: null, signedBy: '' });
     } catch (error) {
       haptics.error();
       toast.error(error.response?.data?.message || 'Failed to create order');
@@ -533,6 +538,32 @@ export default function SupplierOrders() {
                       <span className="text-emerald-600">₹{(formData.items.reduce((a, b) => a + (Number(b.total) || 0), 0) + (Number(formData.transportCost) || 0) + (Number(formData.otherCost) || 0)).toLocaleString()}</span>
                     </div>
                   </div>
+
+                  {/* Proof of Delivery Touch Signature */}
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                        <PenTool className="w-4 h-4" />
+                      </div>
+                      <div className="truncate">
+                        <p className="text-xs font-bold text-slate-800">Receiver's Sign-off</p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {formData.receiverSignature ? `Signed by: ${formData.signedBy || 'Receiver'}` : 'Capture digital delivery acknowledgement'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsSignatureModalOpen(true)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 shrink-0 ${
+                        formData.receiverSignature 
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-2xs'
+                      }`}
+                    >
+                      {formData.receiverSignature ? 'Re-sign' : 'Get Signature'}
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>
@@ -624,6 +655,14 @@ export default function SupplierOrders() {
                     <span className="font-bold text-slate-800">Grand Total</span>
                     <span className="font-bold text-lg text-emerald-600">₹{selectedOrder.grandTotal?.toLocaleString()}</span>
                   </div>
+
+                  {selectedOrder.receiverSignature && (
+                    <div className="border-t border-dashed border-slate-200 pt-3 text-center">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-1">Receiver Acceptance Signature</p>
+                      <img src={selectedOrder.receiverSignature} alt="Receiver Signature" className="h-10 mx-auto object-contain" />
+                      <p className="text-xs font-bold text-slate-700 mt-1">{selectedOrder.signedBy || 'Authorized Receiver'}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -634,6 +673,23 @@ export default function SupplierOrders() {
           </div>
         </div>
       )}
+
+      {/* Proof of Delivery Touch Signature Modal */}
+      <SignaturePadModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        initialSignerName={customers.find(c => c._id === formData.customer)?.name || ''}
+        roleLabel="Receiver / Gate Supervisor"
+        title="Delivery Gate Sign-off"
+        subtitle="Sign on-screen to confirm receipt of materials"
+        onSave={({ signatureDataUrl, signerName }) => {
+          setFormData(prev => ({
+            ...prev,
+            receiverSignature: signatureDataUrl,
+            signedBy: signerName
+          }));
+        }}
+      />
       </div>
     </PullToRefreshContainer>
   );
