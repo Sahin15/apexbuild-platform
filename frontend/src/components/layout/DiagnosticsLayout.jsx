@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, Users, ClipboardList, TestTube2, Menu, Bell, 
   Search, Plus, Activity, IndianRupee, Package, Settings, LogOut, X, ChevronRight, FileText,
-  ChevronUp, User as UserIcon, HelpCircle, CreditCard, ShieldCheck, Lock
+  ChevronUp, User as UserIcon, HelpCircle, CreditCard, ShieldCheck, Lock, FlaskConical
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useEntitlements } from '../../context/EntitlementContext';
@@ -11,6 +11,8 @@ import { useBrandTheme } from '../../context/ThemeContext';
 import Header from './Header';
 import SidebarUserProfile from './SidebarUserProfile';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
+import PWAInstallBanner from '../common/PWAInstallBanner';
+import OfflineStatusBanner from '../common/OfflineStatusBanner';
 
 const DiagnosticsLayout = () => {
   const { user, logout } = useAuth();
@@ -20,6 +22,7 @@ const DiagnosticsLayout = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [isFabOpen, setIsFabOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   const [menuOpen, setMenuOpen] = useState(false);
@@ -103,7 +106,13 @@ const DiagnosticsLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row relative">
+      {/* Universal Offline Status Indicator */}
+      <OfflineStatusBanner />
+
+      {/* Universal PWA Mobile Install Banner */}
+      <PWAInstallBanner />
+
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-cyan-950 border-r border-cyan-900 fixed inset-y-0 z-20">
         <div className="h-16 flex items-center gap-3 px-6 bg-cyan-950 border-b border-cyan-900 shrink-0">
@@ -188,8 +197,8 @@ const DiagnosticsLayout = () => {
         <SidebarUserProfile />
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 md:ml-64 flex flex-col min-h-screen pb-16 md:pb-0">
+      {/* Main Content Area with Mobile Safe Bottom Padding */}
+      <main className="flex-1 md:ml-64 flex flex-col min-h-screen pb-28 md:pb-0 overscroll-contain">
         <Header setSidebarOpen={setIsMoreMenuOpen} />
 
         {/* Content Outlet */}
@@ -198,19 +207,76 @@ const DiagnosticsLayout = () => {
         </div>
       </main>
 
+      {/* Global FAB for Diagnostics Lab (Mobile Only) */}
+      <div className="md:hidden fixed bottom-20 right-4 z-30 flex flex-col items-end">
+        {isFabOpen && (
+          <div className="flex flex-col gap-3 mb-4 items-end animate-in slide-in-from-bottom-4 duration-200">
+            <button 
+              onClick={() => { setIsFabOpen(false); navigate('/diagnostics/orders'); }} 
+              className="flex items-center gap-3 group"
+            >
+              <span className="bg-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg text-slate-800 border border-slate-100">
+                New Order / Test
+              </span>
+              <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg text-cyan-600 border border-cyan-100">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+            </button>
+            <button 
+              onClick={() => { setIsFabOpen(false); navigate('/diagnostics/patients'); }} 
+              className="flex items-center gap-3 group"
+            >
+              <span className="bg-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg text-slate-800 border border-slate-100">
+                Add Patient
+              </span>
+              <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg text-cyan-600 border border-cyan-100">
+                <Users className="w-5 h-5" />
+              </div>
+            </button>
+            <button 
+              onClick={() => { setIsFabOpen(false); navigate('/diagnostics/samples'); }} 
+              className="flex items-center gap-3 group"
+            >
+              <span className="bg-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg text-slate-800 border border-slate-100">
+                Collect Sample
+              </span>
+              <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg text-cyan-600 border border-cyan-100">
+                <TestTube2 className="w-5 h-5" />
+              </div>
+            </button>
+          </div>
+        )}
+        
+        <button 
+          onClick={() => setIsFabOpen(!isFabOpen)}
+          style={{ backgroundColor: primaryColor || '#0284c7' }}
+          aria-label="Diagnostics Quick Actions"
+          className={`w-13 h-13 rounded-full flex items-center justify-center shadow-xl text-white transition-transform duration-200 touch-manipulation active:scale-95 ${isFabOpen ? 'rotate-45 brightness-90' : 'hover:brightness-110'}`}
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      </div>
+
+      {isFabOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-20" 
+          onClick={() => setIsFabOpen(false)}
+        />
+      )}
+
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-40 pb-safe">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-gray-200 z-40 pb-safe shadow-lg">
         <div className="flex justify-around items-center h-16">
           {navItems.map((item) => (
             <Link
               key={item.name}
               to={item.path}
-              style={isActive(item.path) ? { color: primaryColor } : {}}
-              className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
-                isActive(item.path) ? 'font-bold' : 'text-gray-500 hover:text-gray-900'
+              style={isActive(item.path) ? { color: primaryColor || '#0284c7' } : {}}
+              className={`flex flex-col items-center justify-center w-full h-full space-y-1 touch-manipulation ${
+                isActive(item.path) ? 'font-bold' : 'text-gray-400 hover:text-gray-800'
               }`}
             >
-              <item.icon className="h-6 w-6" style={isActive(item.path) ? { color: primaryColor } : {}} />
+              <item.icon className="h-5 w-5" strokeWidth={isActive(item.path) ? 2.5 : 2} style={isActive(item.path) ? { color: primaryColor || '#0284c7' } : {}} />
               <span className={`text-[10px] ${isActive(item.path) ? 'font-bold' : 'font-medium'}`}>{item.name}</span>
             </Link>
           ))}
@@ -218,11 +284,11 @@ const DiagnosticsLayout = () => {
           {/* More Menu Toggle */}
           <button
             onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
-              isMoreMenuOpen ? 'text-cyan-700' : 'text-gray-500'
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 touch-manipulation ${
+              isMoreMenuOpen ? 'text-cyan-700 font-bold' : 'text-gray-400 hover:text-gray-800'
             }`}
           >
-            <Menu className={`h-6 w-6 ${isMoreMenuOpen ? 'text-cyan-600' : ''}`} />
+            <Menu className={`h-5 w-5 ${isMoreMenuOpen ? 'text-cyan-600' : ''}`} />
             <span className="text-[10px] font-medium">More</span>
           </button>
         </div>

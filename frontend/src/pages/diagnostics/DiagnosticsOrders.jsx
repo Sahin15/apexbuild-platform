@@ -249,17 +249,30 @@ const DiagnosticsOrders = () => {
                       >
                         {order.paymentStatus}
                       </button>
-                      {['Partial Results', 'Completed'].includes(order.orderStatus) && (
+                      <div className="flex items-center gap-1.5 flex-wrap justify-end">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setReportOrderId(order._id);
+                            setReceiptModalOrder(order);
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded border border-slate-200 transition-colors shadow-2xs touch-manipulation"
+                          title="View / Print 80mm POS Slip"
                         >
-                          <FileText className="w-3 h-3" /> Report
+                          <Receipt className="w-3 h-3 text-slate-600" />
+                          <span>Bill</span>
                         </button>
-                      )}
+                        {['Partial Results', 'Completed'].includes(order.orderStatus) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReportOrderId(order._id);
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded touch-manipulation"
+                          >
+                            <FileText className="w-3 h-3" /> Report
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
