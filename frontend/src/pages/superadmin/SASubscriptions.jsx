@@ -254,8 +254,8 @@ export default function SASubscriptions() {
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Estimated MRR</div>
-          <div className="text-2xl font-black text-emerald-600">${totalMRR.toFixed(2)}</div>
-          <div className="text-xs text-emerald-700/80 mt-1">ARR: ${(totalMRR * 12).toFixed(2)}</div>
+          <div className="text-2xl font-black text-emerald-600">₹{totalMRR.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+          <div className="text-xs text-emerald-700/80 mt-1">ARR: ₹{(totalMRR * 12).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
@@ -345,17 +345,17 @@ export default function SASubscriptions() {
                       <span className="capitalize font-medium text-slate-700">{sub.billingCycle}</span>
                     </td>
                     <td className="px-6 py-4 text-xs text-slate-600">
-                      <div>Base: ${sub.basePrice}</div>
+                      <div>Base: ₹{sub.basePrice?.toLocaleString()}</div>
                       {sub.customPrice && sub.customPrice !== sub.basePrice && (
-                        <div className="text-indigo-600 font-bold">Custom: ${sub.customPrice}</div>
+                        <div className="text-indigo-600 font-bold">Custom: ₹{sub.customPrice?.toLocaleString()}</div>
                       )}
                       {sub.discount > 0 && (
-                        <div className="text-emerald-600 font-medium">Discount: -${sub.discount}</div>
+                        <div className="text-emerald-600 font-medium">Discount: -₹{sub.discount?.toLocaleString()}</div>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-extrabold text-slate-900 text-sm">
-                        ${sub.finalAmount?.toFixed(2)}
+                        ₹{sub.finalAmount?.toLocaleString()}
                         <span className="text-xs text-slate-400 font-normal">/{sub.billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
                       </div>
                     </td>
@@ -418,16 +418,29 @@ export default function SASubscriptions() {
             <form onSubmit={handleEditSubmit} className="p-6 space-y-4 text-sm">
               <div>
                 <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                  Assigned Plan Tier
+                  Assigned Plan Tier <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={editForm.osPlanId}
-                  onChange={e => setEditForm({ ...editForm, osPlanId: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  onChange={e => {
+                    const newPlanId = e.target.value;
+                    const newPlan = plans.find(p => p._id === newPlanId);
+                    const newPrice = newPlan ? (editForm.billingCycle === 'yearly' ? newPlan.yearlyPrice : newPlan.monthlyPrice) : '';
+                    setEditForm({ ...editForm, osPlanId: newPlanId, customPrice: String(newPrice) });
+                  }}
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-semibold focus:ring-2 focus:ring-indigo-500 outline-none"
                 >
-                  {plans.map(p => (
-                    <option key={p._id} value={p._id}>{p.name} (${p.monthlyPrice}/mo, ${p.yearlyPrice}/yr)</option>
-                  ))}
+                  {plans
+                    .filter(p => {
+                      const subProdId = editingSub?.osProductId?._id || editingSub?.osProductId;
+                      const planProdId = p.osProductId?._id || p.osProductId;
+                      return !subProdId || planProdId === subProdId;
+                    })
+                    .map(p => (
+                      <option key={p._id} value={p._id}>
+                        [{p.tier === 'ENTERPRISE' ? 'Tier 2 Enterprise' : 'Tier 1 Starter'}] {p.name} (₹{p.monthlyPrice}/mo, ₹{p.yearlyPrice}/yr)
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -463,12 +476,12 @@ export default function SASubscriptions() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    Custom Negotiated Price ($)
+                    Custom Negotiated Price (₹)
                   </label>
                   <input
                     type="number"
-                    step="0.01"
-                    placeholder="e.g. 79.00"
+                    step="1"
+                    placeholder="e.g. 1499"
                     value={editForm.customPrice}
                     onChange={e => setEditForm({ ...editForm, customPrice: e.target.value })}
                     className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -477,12 +490,12 @@ export default function SASubscriptions() {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    Contract Discount ($)
+                    Contract Discount (₹)
                   </label>
                   <input
                     type="number"
-                    step="0.01"
-                    placeholder="0.00"
+                    step="1"
+                    placeholder="0"
                     value={editForm.discount}
                     onChange={e => setEditForm({ ...editForm, discount: e.target.value })}
                     className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -503,7 +516,7 @@ export default function SASubscriptions() {
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center text-xs">
                 <span className="font-bold text-slate-600">Net Calculated Rate:</span>
                 <span className="font-extrabold text-emerald-600 text-sm">
-                  ${Math.max(0, (Number(editForm.customPrice) || 0) - (Number(editForm.discount) || 0)).toFixed(2)} / {editForm.billingCycle === 'yearly' ? 'yr' : 'mo'}
+                  ₹{Math.max(0, (Number(editForm.customPrice) || 0) - (Number(editForm.discount) || 0)).toLocaleString()} / {editForm.billingCycle === 'yearly' ? 'yr' : 'mo'}
                 </span>
               </div>
 
@@ -584,7 +597,9 @@ export default function SASubscriptions() {
                   {plans
                     .filter(p => (p.osProductId?._id || p.osProductId) === formData.osProductId)
                     .map(p => (
-                      <option key={p._id} value={p._id}>{p.name} - ${p.monthlyPrice}/mo</option>
+                      <option key={p._id} value={p._id}>
+                        [{p.tier === 'ENTERPRISE' ? 'Tier 2 Enterprise' : 'Tier 1 Starter'}] {p.name} - ₹{p.monthlyPrice}/mo
+                      </option>
                     ))}
                 </select>
               </div>
@@ -603,10 +618,10 @@ export default function SASubscriptions() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Custom Price ($)</label>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Custom Price (₹)</label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     placeholder="Leave blank for base"
                     value={formData.customPrice}
                     onChange={e => setFormData({ ...formData, customPrice: e.target.value })}
@@ -616,11 +631,11 @@ export default function SASubscriptions() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Discount ($)</label>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Discount (₹)</label>
                 <input
                   type="number"
-                  step="0.01"
-                  placeholder="0.00"
+                  step="1"
+                  placeholder="0"
                   value={formData.discount}
                   onChange={e => setFormData({ ...formData, discount: e.target.value })}
                   className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none"

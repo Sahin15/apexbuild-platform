@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const osPlanSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  tier: { type: String, enum: ['STARTER', 'ENTERPRISE'], default: 'STARTER' },
   osProductId: { type: mongoose.Schema.Types.ObjectId, ref: 'OSProduct', required: true },
   monthlyPrice: { type: Number, required: true },
   yearlyPrice: { type: Number, required: true },

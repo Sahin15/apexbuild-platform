@@ -149,6 +149,50 @@ export const FEATURE_REGISTRY = {
     os: 'DIAGNOSTICS',
     requiredTier: 'ENTERPRISE',
     description: 'Daily control run validation, standard deviation and analyzer QC'
+  },
+
+  // Chicken Distributor OS Features
+  dailySalesLedger: {
+    key: 'dailySalesLedger',
+    name: 'Sales Deliveries & Invoicing',
+    os: 'CHICKEN_DISTRIBUTOR',
+    requiredTier: 'STARTER',
+    description: 'Order billing, customer accounts, and bird weights'
+  },
+  supplierPurchases: {
+    key: 'supplierPurchases',
+    name: 'Supplier Procurement & Settlement',
+    os: 'CHICKEN_DISTRIBUTOR',
+    requiredTier: 'STARTER',
+    description: 'Poultry purchases, payment vouchers, and mortality entry'
+  },
+  preOrderEstimations: {
+    key: 'preOrderEstimations',
+    name: 'Advance Pre-Orders & Estimation Engine',
+    os: 'CHICKEN_DISTRIBUTOR',
+    requiredTier: 'PRO',
+    description: 'Next-day crate allocation and forecasting calculator'
+  },
+  driverMobileApp: {
+    key: 'driverMobileApp',
+    name: 'Driver Real-time Fleet Telemetry & App',
+    os: 'CHICKEN_DISTRIBUTOR',
+    requiredTier: 'PRO',
+    description: 'Driver vehicle run logs, diesel tracking and route trip audit'
+  },
+  multiDepotStock: {
+    key: 'multiDepotStock',
+    name: 'Multi-Depot Stock & Live Variance Ledger',
+    os: 'CHICKEN_DISTRIBUTOR',
+    requiredTier: 'ENTERPRISE',
+    description: 'Multi-location bird inventory, shrinkage and mortality variance P&L'
+  },
+  financialVariancePnL: {
+    key: 'financialVariancePnL',
+    name: 'Daily Margin & Variance P&L Analytics',
+    os: 'CHICKEN_DISTRIBUTOR',
+    requiredTier: 'ENTERPRISE',
+    description: 'Live weight variance reconciliation and daily margin P&L analytics'
   }
 };
 
@@ -177,8 +221,16 @@ class EntitlementService {
     }).populate('osPlanId').lean();
 
     const plan = sub?.osPlanId || null;
-    const tier = (plan?.tier || plan?.name?.toLowerCase().includes('enterprise') ? 'ENTERPRISE' : 
-                 (plan?.tier || plan?.name?.toLowerCase().includes('growth') || plan?.name?.toLowerCase().includes('pro') ? 'PRO' : 'STARTER')).toUpperCase();
+    const planTier = (plan?.tier || '').toUpperCase();
+    let tier = 'STARTER';
+    if (planTier === 'ENTERPRISE' || planTier === 'PRO') {
+      tier = 'ENTERPRISE';
+    } else if (plan?.name) {
+      const lower = plan.name.toLowerCase();
+      if (lower.includes('enterprise') || lower.includes('suite') || lower.includes('fleet') || lower.includes('lims')) {
+        tier = 'ENTERPRISE';
+      }
+    }
 
     // Default entitlements for this tier & OS
     const resolvedEntitlements = {};
@@ -280,10 +332,8 @@ class EntitlementService {
   }
 
   _isTierSufficient(currentTier, requiredTier) {
-    const rank = { 'STARTER': 1, 'GROWTH': 2, 'PRO': 2, 'ENTERPRISE': 3 };
-    const curRank = rank[currentTier] || 1;
-    const reqRank = rank[requiredTier] || 1;
-    return curRank >= reqRank;
+    if (requiredTier === 'STARTER') return true;
+    return currentTier === 'ENTERPRISE' || currentTier === 'PRO';
   }
 
   _getSuperadminEntitlements() {

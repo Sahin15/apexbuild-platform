@@ -5,9 +5,11 @@ import {
   LayoutDashboard, ShoppingCart, Package, Users, Truck, 
   Receipt, CreditCard, Wallet, Building2, LineChart, 
   Settings, Calculator, Menu, Bell, Plus, X, LogOut, ChevronRight, ChevronUp, User as UserIcon, HelpCircle,
-  UsersRound, Truck as TruckIcon
+  UsersRound, Truck as TruckIcon, Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useEntitlements } from '../../context/EntitlementContext';
+import { useBrandTheme } from '../../context/ThemeContext';
 import Header from './Header';
 import SidebarUserProfile from './SidebarUserProfile';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
@@ -17,15 +19,15 @@ const navItems = [
   { name: 'Sales/Deliveries', href: '/distributor/deliveries', icon: Truck, roles: ['OWNER', 'ADMIN', 'MANAGER', 'STAFF'] },
   { name: 'Customers', href: '/distributor/customers', icon: Users, roles: ['OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'ACCOUNTANT'] },
   { name: 'Payments', href: '/distributor/payments', icon: CreditCard, roles: ['OWNER', 'ADMIN', 'MANAGER', 'ACCOUNTANT'] },
-  { name: 'Pre-Orders', href: '/distributor/estimations', icon: Calculator, roles: ['OWNER', 'ADMIN', 'MANAGER', 'STAFF'] },
+  { name: 'Pre-Orders', href: '/distributor/estimations', icon: Calculator, roles: ['OWNER', 'ADMIN', 'MANAGER', 'STAFF'], feature: 'preOrderEstimations', tier: 'PRO' },
   { name: 'Purchases', href: '/distributor/purchases', icon: ShoppingCart, roles: ['OWNER', 'ADMIN', 'MANAGER', 'STAFF'] },
-  { name: 'Stock Ledger', href: '/distributor/stock', icon: Package, roles: ['OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'ACCOUNTANT'] },
+  { name: 'Stock Ledger', href: '/distributor/stock', icon: Package, roles: ['OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'ACCOUNTANT'], feature: 'multiDepotStock', tier: 'ENT' },
   { name: 'Expenses', href: '/distributor/expenses', icon: Wallet, roles: ['OWNER', 'ADMIN', 'MANAGER', 'ACCOUNTANT', 'STAFF', 'DRIVER'] },
   { name: 'Suppliers', href: '/distributor/suppliers', icon: Building2, roles: ['OWNER', 'ADMIN', 'MANAGER', 'ACCOUNTANT'] },
-  { name: 'Reports', href: '/distributor/reports', icon: LineChart, roles: ['OWNER', 'ADMIN', 'MANAGER', 'ACCOUNTANT'] },
+  { name: 'Reports', href: '/distributor/reports', icon: LineChart, roles: ['OWNER', 'ADMIN', 'MANAGER', 'ACCOUNTANT'], feature: 'financialVariancePnL', tier: 'ENT' },
   { name: 'Team', href: '/distributor/team', icon: UsersRound, roles: ['OWNER', 'ADMIN'] },
-  { name: 'Vehicles', href: '/distributor/vehicles', icon: TruckIcon, roles: ['OWNER', 'ADMIN', 'MANAGER'] },
-  { name: 'Driver App', href: '/distributor/driver', icon: TruckIcon, roles: ['DRIVER'] },
+  { name: 'Vehicles', href: '/distributor/vehicles', icon: TruckIcon, roles: ['OWNER', 'ADMIN', 'MANAGER'], feature: 'driverMobileApp', tier: 'PRO' },
+  { name: 'Driver App', href: '/distributor/driver', icon: TruckIcon, roles: ['DRIVER'], feature: 'driverMobileApp', tier: 'PRO' },
 ];
 
 const bottomNavItems = [
@@ -51,6 +53,8 @@ const secondaryNavItems = [
 
 export default function DistributorLayout() {
   const { user, logout } = useAuth();
+  const { hasEntitlement } = useEntitlements();
+  const { primaryColor } = useBrandTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -126,14 +130,19 @@ export default function DistributorLayout() {
       {/* Desktop Sidebar (hidden on mobile) */}
       <aside className="hidden md:flex flex-col w-64 bg-slate-900 border-r border-slate-800 text-slate-300 transition-all duration-300 flex-shrink-0 z-30">
         <div className="h-16 flex items-center gap-3 px-6 bg-slate-950 border-b border-slate-800 shrink-0">
-          <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-amber-600/30">
+          <div 
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md transition-colors"
+            style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}40` }}
+          >
             DT
           </div>
           <div className="flex flex-col">
             <span className="text-white text-base font-bold tracking-tight leading-none truncate max-w-[140px]">
               {user?.organizationId?.settings?.branding?.customAppName || 'ApexBuild'}
             </span>
-            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mt-0.5">Distributor OS</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: primaryColor }}>
+              Distributor OS
+            </span>
           </div>
         </div>
 
@@ -142,20 +151,27 @@ export default function DistributorLayout() {
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Main Menu</p>
             <div className="space-y-1">
               {navItems.filter(item => item.roles.includes(user?.role || 'VIEWER')).map((item) => {
-                const isActive = location.pathname.includes(item.href);
+                const isLocked = item.feature && !hasEntitlement(item.feature);
                 return (
                   <NavLink
                     key={item.name}
                     to={item.href}
+                    style={({ isActive }) => (isActive ? { backgroundColor: primaryColor } : {})}
                     className={({ isActive }) => `
                       flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors
                       ${isActive 
-                        ? 'bg-emerald-600 text-white shadow-sm' 
+                        ? 'text-white shadow-sm font-semibold' 
                         : 'text-slate-300 hover:bg-slate-800 hover:text-white'}
                     `}
                   >
                     <item.icon className="flex-shrink-0 h-5 w-5" aria-hidden="true" />
-                    {item.name}
+                    <span className="flex-1 truncate">{item.name}</span>
+                    {isLocked && (
+                      <span className="ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        <Lock className="w-2.5 h-2.5" />
+                        {item.tier || 'PRO'}
+                      </span>
+                    )}
                   </NavLink>
                 );
               })}
@@ -225,11 +241,12 @@ export default function DistributorLayout() {
               <NavLink
                 key={item.name}
                 to={item.href}
+                style={isActive ? { color: primaryColor } : {}}
                 className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-                  isActive ? 'text-emerald-600' : 'text-slate-500 hover:text-slate-900'
+                  isActive ? 'font-bold' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
-                <item.icon className={`w-6 h-6 ${isActive ? 'fill-emerald-50 text-emerald-600' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
+                <item.icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} style={isActive ? { color: primaryColor } : {}} />
                 <span className={`text-[10px] ${isActive ? 'font-bold' : 'font-medium'}`}>
                   {item.name}
                 </span>

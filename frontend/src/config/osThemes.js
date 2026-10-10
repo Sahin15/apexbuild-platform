@@ -7,6 +7,8 @@ export const OS_CONFIG = {
     shortCode: 'A',
     roleTag: 'CONTRACTOR',
     baseRoute: '',
+    defaultPrimary: '#2563EB',
+    defaultSecondary: '#0891B2',
     searchPlaceholder: 'Search projects, BOQ, DPR, materials, expenses...',
     theme: {
       colorName: 'blue',
@@ -44,6 +46,8 @@ export const OS_CONFIG = {
     shortCode: 'S',
     roleTag: 'SUPPLIER',
     baseRoute: '/supplier',
+    defaultPrimary: '#059669',
+    defaultSecondary: '#0D9488',
     searchPlaceholder: 'Search products, stock inventory, customers, challans...',
     theme: {
       colorName: 'emerald',
@@ -81,6 +85,8 @@ export const OS_CONFIG = {
     shortCode: 'DX',
     roleTag: 'DIAGNOSTICS',
     baseRoute: '/diagnostics',
+    defaultPrimary: '#0891B2',
+    defaultSecondary: '#2563EB',
     searchPlaceholder: 'Search patients, lab tests, samples, doctors...',
     theme: {
       colorName: 'cyan',
@@ -118,6 +124,8 @@ export const OS_CONFIG = {
     shortCode: 'DT',
     roleTag: 'DISTRIBUTOR',
     baseRoute: '/distributor',
+    defaultPrimary: '#D97706',
+    defaultSecondary: '#EA580C',
     searchPlaceholder: 'Search customers, stock, purchases, sales orders, fleet...',
     theme: {
       colorName: 'amber',
@@ -155,6 +163,8 @@ export const OS_CONFIG = {
     shortCode: 'SA',
     roleTag: 'SUPERADMIN',
     baseRoute: '/superadmin',
+    defaultPrimary: '#4F46E5',
+    defaultSecondary: '#7C3AED',
     searchPlaceholder: 'Search business accounts, plans, subscriptions, invoices...',
     theme: {
       colorName: 'indigo',

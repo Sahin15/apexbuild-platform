@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useEntitlements } from '../../context/EntitlementContext';
+import { useBrandTheme } from '../../context/ThemeContext';
 import Header from './Header';
 import SidebarUserProfile from './SidebarUserProfile';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
@@ -14,6 +15,7 @@ import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 const DiagnosticsLayout = () => {
   const { user, logout } = useAuth();
   const { hasEntitlement, planName, tier } = useEntitlements();
+  const { primaryColor } = useBrandTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -105,14 +107,19 @@ const DiagnosticsLayout = () => {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-cyan-950 border-r border-cyan-900 fixed inset-y-0 z-20">
         <div className="h-16 flex items-center gap-3 px-6 bg-cyan-950 border-b border-cyan-900 shrink-0">
-          <div className="w-8 h-8 bg-cyan-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-cyan-600/30">
+          <div 
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md transition-colors"
+            style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}40` }}
+          >
             DX
           </div>
           <div className="flex flex-col">
             <span className="text-white text-base font-bold tracking-tight leading-none truncate max-w-[140px]">
               {user?.organizationId?.settings?.branding?.customAppName || 'ApexBuild'}
             </span>
-            <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider mt-0.5">Diagnostics OS</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: primaryColor }}>
+              Diagnostics OS
+            </span>
           </div>
         </div>
 
@@ -120,17 +127,19 @@ const DiagnosticsLayout = () => {
           <nav className="px-4 space-y-1">
             {navItems.map((item) => {
               const isLocked = item.feature && !hasEntitlement(item.feature);
+              const active = isActive(item.path);
               return (
                 <Link
                   key={item.name}
                   to={item.path}
+                  style={active ? { backgroundColor: primaryColor } : {}}
                   className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'bg-cyan-600 text-white shadow-sm'
+                    active
+                      ? 'text-white shadow-sm font-semibold'
                       : 'text-cyan-100 hover:bg-cyan-800 hover:text-white'
                   }`}
                 >
-                  <item.icon className={`h-5 w-5 mr-3 shrink-0 ${isActive(item.path) ? 'text-white' : 'text-cyan-300'}`} />
+                  <item.icon className={`h-5 w-5 mr-3 shrink-0 ${active ? 'text-white' : 'text-cyan-300'}`} />
                   <span className="flex-1 truncate">{item.name}</span>
                   {isLocked && (
                     <span className="ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -143,22 +152,24 @@ const DiagnosticsLayout = () => {
             })}
 
             <div className="pt-4 mt-4 border-t border-cyan-900">
-              <p className="px-3 text-xs font-bold text-cyan-600 uppercase tracking-wider mb-2">
+              <p className="px-3 text-xs font-bold uppercase tracking-wider mb-2" style={{ color: primaryColor }}>
                 Management
               </p>
               {moreMenuLinks.map((item) => {
                 const isLocked = item.feature && !hasEntitlement(item.feature);
+                const active = isActive(item.path);
                 return (
                   <Link
                     key={item.name}
                     to={item.path}
+                    style={active ? { backgroundColor: primaryColor } : {}}
                     className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                      isActive(item.path)
-                        ? 'bg-cyan-600 text-white shadow-sm'
+                      active
+                        ? 'text-white shadow-sm font-semibold'
                         : 'text-cyan-100 hover:bg-cyan-800 hover:text-white'
                     }`}
                   >
-                    <item.icon className={`h-5 w-5 mr-3 shrink-0 ${isActive(item.path) ? 'text-white' : 'text-cyan-300'}`} />
+                    <item.icon className={`h-5 w-5 mr-3 shrink-0 ${active ? 'text-white' : 'text-cyan-300'}`} />
                     <span className="flex-1 truncate">{item.name}</span>
                     {isLocked && (
                       <span className="ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -194,12 +205,13 @@ const DiagnosticsLayout = () => {
             <Link
               key={item.name}
               to={item.path}
+              style={isActive(item.path) ? { color: primaryColor } : {}}
               className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
-                isActive(item.path) ? 'text-cyan-700' : 'text-gray-500 hover:text-gray-900'
+                isActive(item.path) ? 'font-bold' : 'text-gray-500 hover:text-gray-900'
               }`}
             >
-              <item.icon className={`h-6 w-6 ${isActive(item.path) ? 'fill-cyan-50 text-cyan-600' : ''}`} />
-              <span className="text-[10px] font-medium">{item.name}</span>
+              <item.icon className="h-6 w-6" style={isActive(item.path) ? { color: primaryColor } : {}} />
+              <span className={`text-[10px] ${isActive(item.path) ? 'font-bold' : 'font-medium'}`}>{item.name}</span>
             </Link>
           ))}
           

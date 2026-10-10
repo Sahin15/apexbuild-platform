@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { 
   Building, CreditCard, Save, CheckCircle2, Check, Palette, 
   UploadCloud, X, ShieldAlert, Sparkles, Phone, Percent, 
-  MapPin, FileText, ArrowUpRight, Crown, AlertCircle, RefreshCw
+  MapPin, FileText, ArrowUpRight, Crown, AlertCircle, RefreshCw,
+  ShieldCheck, Layers
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useEntitlements } from '../context/EntitlementContext';
-import { useLocation } from 'react-router-dom';
-import { getOSConfig } from '../config/osThemes';
+import { useBrandTheme } from '../context/ThemeContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -26,14 +26,14 @@ const POPULAR_COLORS = [
 export default function Settings() {
   const { user } = useAuth();
   const { tier: entitlementTier, planName: entitlementPlanName, refreshEntitlements } = useEntitlements();
-  const location = useLocation();
-  const osConfig = getOSConfig(user?.organizationId?.businessType, location.pathname);
+  const { primaryColor, secondaryColor, setCustomTheme, osConfig } = useBrandTheme();
 
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [billingCycle, setBillingCycle] = useState('annual');
   const [activeSubscription, setActiveSubscription] = useState(null);
+  const [availablePlans, setAvailablePlans] = useState([]);
 
   // Upgrade Request Modal State
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
@@ -50,7 +50,7 @@ export default function Settings() {
     address: '',
     invoiceHeader: '',
     invoiceFooter: 'Thank you for your business!',
-    subscription: 'Business',
+    subscription: '',
     settings: {
       taxRate: '0',
       invoiceHeader: '',
@@ -58,23 +58,30 @@ export default function Settings() {
       branding: {
         customAppName: '',
         logoUrl: '',
-        primaryColor: '#9333EA',
-        secondaryColor: '#4F46E5'
+        primaryColor: primaryColor,
+        secondaryColor: secondaryColor
       }
     }
   });
 
   useEffect(() => {
-    fetchOrganization();
+    fetchSettingsData();
   }, []);
 
-  const fetchOrganization = async () => {
+  const fetchSettingsData = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/organization');
-      const data = res.data?.data?.organization || {};
-      const sub = res.data?.data?.activeSubscription || null;
+      const [orgRes, plansRes] = await Promise.all([
+        api.get('/organization'),
+        api.get('/billing/available-plans')
+      ]);
+
+      const data = orgRes.data?.data?.organization || {};
+      const sub = orgRes.data?.data?.activeSubscription || null;
+      const plansFromDb = plansRes.data?.data?.plans || [];
+
       setActiveSubscription(sub);
+      setAvailablePlans(plansFromDb);
 
       setOrg(prev => {
         const orgSettings = data.settings || {};
@@ -86,7 +93,7 @@ export default function Settings() {
           taxRate: orgSettings.taxRate !== undefined ? String(orgSettings.taxRate) : (prev.taxRate || '0'),
           invoiceHeader: orgSettings.invoiceHeader || prev.invoiceHeader || '',
           invoiceFooter: orgSettings.invoiceFooter || prev.invoiceFooter || 'Thank you for your business!',
-          subscription: data.subscription || prev.subscription || 'Business',
+          subscription: data.subscription || sub?.osPlanId?.name || prev.subscription,
           settings: {
             taxRate: orgSettings.taxRate !== undefined ? String(orgSettings.taxRate) : '0',
             invoiceHeader: orgSettings.invoiceHeader || '',
@@ -94,8 +101,8 @@ export default function Settings() {
             branding: {
               customAppName: orgBranding.customAppName || '',
               logoUrl: data.logo || orgBranding.logoUrl || '',
-              primaryColor: orgBranding.primaryColor || '#9333EA',
-              secondaryColor: orgBranding.secondaryColor || '#4F46E5'
+              primaryColor: orgBranding.primaryColor || primaryColor,
+              secondaryColor: orgBranding.secondaryColor || secondaryColor
             }
           }
         };
@@ -127,7 +134,7 @@ export default function Settings() {
 
       await api.put('/organization', payload);
       toast.success('Business profile updated successfully');
-      fetchOrganization();
+      fetchSettingsData();
     } catch (error) {
       console.error('Error saving profile:', error);
       toast.error(error.response?.data?.message || 'Failed to save business profile');
@@ -140,22 +147,28 @@ export default function Settings() {
     e.preventDefault();
     try {
       setSaving(true);
+      const brandingData = {
+        customAppName: org.settings.branding.customAppName,
+        logoUrl: org.settings.branding.logoUrl || org.logo || '',
+        primaryColor: org.settings.branding.primaryColor || primaryColor,
+        secondaryColor: org.settings.branding.secondaryColor || secondaryColor
+      };
+
       const payload = {
-        logo: org.settings.branding.logoUrl || org.logo || '',
+        logo: brandingData.logoUrl,
         settings: {
           ...org.settings,
-          branding: {
-            customAppName: org.settings.branding.customAppName,
-            logoUrl: org.settings.branding.logoUrl || org.logo || '',
-            primaryColor: org.settings.branding.primaryColor,
-            secondaryColor: org.settings.branding.secondaryColor
-          }
+          branding: brandingData
         }
       };
 
       await api.put('/organization', payload);
-      toast.success('Branding & UI theme updated successfully');
-      fetchOrganization();
+      
+      // Update global theme context dynamically across the entire application
+      setCustomTheme(brandingData);
+      
+      toast.success('Brand theme updated! The entire OS now reflects your brand colors.');
+      fetchSettingsData();
     } catch (error) {
       console.error('Error saving branding:', error);
       toast.error(error.response?.data?.message || 'Failed to update branding settings');
@@ -237,79 +250,46 @@ export default function Settings() {
     }
   };
 
-  // Standardized Plan Tiers
-  const plans = [
+  // Determine active tier of current tenant
+  const activePlanName = activeSubscription?.osPlanId?.name || org.subscription || entitlementPlanName || '';
+  const isCurrentTierEnterprise = activePlanName.toLowerCase().includes('enterprise') || 
+                                  activePlanName.toLowerCase().includes('suite') || 
+                                  activePlanName.toLowerCase().includes('fleet') || 
+                                  activePlanName.toLowerCase().includes('lims') ||
+                                  entitlementTier === 'ENTERPRISE';
+
+  // Fallback 2 Plans if database query is still loading or offline
+  const fallbackPlans = [
     {
-      id: 'free',
-      name: 'Free',
-      tier: 'FREE',
-      description: 'Solo / starter tools for basic workspace exploration and test runs.',
-      monthlyPrice: 0,
-      annualPrice: 0,
-      features: [
-        '1 Admin User',
-        'Up to 25 items & records',
-        'Basic DPR & invoice overview',
-        'Community & document support',
-      ],
-      popular: false
-    },
-    {
-      id: 'starter',
-      name: 'Starter',
+      _id: 'tier1_fallback',
+      name: `${osConfig.name} Growth Plan`,
       tier: 'STARTER',
-      description: 'Perfect for growing small teams and contractors just getting started.',
-      monthlyPrice: 249,
-      annualPrice: 199,
-      features: [
-        'Up to 3 Admin Users',
-        '100 products & inventory records',
-        'Standard daily reporting & PDF export',
-        'Standard email support',
-      ],
-      popular: false
+      monthlyPrice: osConfig.key === 'CHICKEN_DISTRIBUTOR' ? 999 : (osConfig.key === 'DIAGNOSTICS' ? 1999 : 1499),
+      yearlyPrice: osConfig.key === 'CHICKEN_DISTRIBUTOR' ? 9990 : (osConfig.key === 'DIAGNOSTICS' ? 19990 : 14990),
+      description: 'Core operational tools, records, and billing for single-depot and growing teams.',
+      features: ['Up to 5 Users', 'Standard Daily Reports', 'Core Operations & Invoicing', 'Standard Support'],
+      usageLimits: { users: 5, storageGB: 15 }
     },
     {
-      id: 'pro',
-      name: 'Professional',
-      tier: 'PRO',
-      description: 'Ideal for established operations with large teams and multi-site workflows.',
-      monthlyPrice: 399,
-      annualPrice: 299,
-      features: [
-        'Up to 10 Admin & Staff Users',
-        'Unlimited items, vehicles & ledger',
-        'Advanced financial analytics & exports',
-        'Priority 24/7 phone support',
-        'Custom workspace branding'
-      ],
-      popular: false
-    },
-    {
-      id: 'business',
-      name: 'Business',
-      tier: 'BUSINESS',
-      description: 'Full enterprise-grade suite with dedicated account manager and white-labeling.',
-      monthlyPrice: 749,
-      annualPrice: 599,
-      features: [
-        'Unlimited team members & roles',
-        'Full White-Label branding & custom domain',
-        'Real-time audit logs & automated backups',
-        'Dedicated Superadmin HQ Account Manager',
-        'Custom integration & API access'
-      ],
-      popular: true
+      _id: 'tier2_fallback',
+      name: `${osConfig.name} Enterprise Suite`,
+      tier: 'ENTERPRISE',
+      monthlyPrice: osConfig.key === 'CHICKEN_DISTRIBUTOR' ? 2499 : (osConfig.key === 'DIAGNOSTICS' ? 4499 : 3499),
+      yearlyPrice: osConfig.key === 'CHICKEN_DISTRIBUTOR' ? 24990 : (osConfig.key === 'DIAGNOSTICS' ? 44990 : 34990),
+      description: 'Complete enterprise-grade suite with telematics, variance P&L, unlimited seats, and custom branding.',
+      features: ['Unlimited Users & Roles', 'Advanced Variance Analytics & Telematics', 'White-Label Branding', 'Dedicated 24/7 Support'],
+      usageLimits: { users: -1, storageGB: 100 }
     }
   ];
 
-  const currentTierNormalized = (activeSubscription?.osPlanId?.name || org.subscription || entitlementTier || 'Business').toUpperCase();
+  // Exactly 2 Plans
+  const displayPlans = availablePlans.length === 2 ? availablePlans : fallbackPlans;
 
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-8 flex flex-col items-center justify-center min-h-[50vh] text-slate-500">
-        <RefreshCw className="w-8 h-8 animate-spin text-purple-600 mb-3" />
-        <p className="font-semibold text-sm">Loading workspace settings...</p>
+        <RefreshCw className="w-8 h-8 animate-spin mb-3" style={{ color: primaryColor }} />
+        <p className="font-semibold text-sm">Loading workspace preferences...</p>
       </div>
     );
   }
@@ -320,9 +300,16 @@ export default function Settings() {
       {/* Page Title & Subtitle */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200 mb-2">
+          <div 
+            style={{ 
+              backgroundColor: `${primaryColor}14`, 
+              color: primaryColor,
+              borderColor: `${primaryColor}30`
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border mb-2"
+          >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Workspace Preferences</span>
+            <span>{osConfig.name} Preferences</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
             Settings & Workspace Control
@@ -333,27 +320,40 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Horizontal 3 Tabs matching screenshots */}
+      {/* Horizontal 3 Tabs matching OS Color Theme */}
       <div className="flex flex-col sm:flex-row gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
         
         {/* Tab 1: Business Profile */}
         <button 
           onClick={() => setActiveTab('profile')}
+          style={activeTab === 'profile' ? {
+            backgroundColor: `${primaryColor}12`,
+            borderColor: `${primaryColor}35`
+          } : {}}
           className={`flex items-center gap-3.5 px-5 py-3.5 rounded-xl transition-all cursor-pointer text-left flex-1 min-w-[220px] ${
             activeTab === 'profile' 
-              ? 'bg-purple-50/80 border border-purple-200 shadow-sm' 
+              ? 'border shadow-xs' 
               : 'hover:bg-slate-50 border border-transparent'
           }`}
         >
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-            activeTab === 'profile' 
-              ? 'bg-purple-600 text-white shadow-sm shadow-purple-600/30' 
-              : 'bg-slate-100 text-slate-500'
-          }`}>
+          <div 
+            style={activeTab === 'profile' ? {
+              backgroundColor: primaryColor,
+              color: '#ffffff'
+            } : {}}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+              activeTab === 'profile' 
+                ? 'shadow-sm' 
+                : 'bg-slate-100 text-slate-500'
+            }`}
+          >
             <Building className="w-5 h-5" />
           </div>
           <div>
-            <h3 className={`font-bold text-sm leading-tight ${activeTab === 'profile' ? 'text-purple-900' : 'text-slate-800'}`}>
+            <h3 
+              style={activeTab === 'profile' ? { color: primaryColor } : {}}
+              className="font-bold text-sm leading-tight text-slate-800"
+            >
               Business Profile
             </h3>
             <p className="text-xs text-slate-400 font-medium mt-0.5">
@@ -365,21 +365,34 @@ export default function Settings() {
         {/* Tab 2: Branding & UI */}
         <button 
           onClick={() => setActiveTab('branding')}
+          style={activeTab === 'branding' ? {
+            backgroundColor: `${primaryColor}12`,
+            borderColor: `${primaryColor}35`
+          } : {}}
           className={`flex items-center gap-3.5 px-5 py-3.5 rounded-xl transition-all cursor-pointer text-left flex-1 min-w-[220px] ${
             activeTab === 'branding' 
-              ? 'bg-purple-50/80 border border-purple-200 shadow-sm' 
+              ? 'border shadow-xs' 
               : 'hover:bg-slate-50 border border-transparent'
           }`}
         >
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-            activeTab === 'branding' 
-              ? 'bg-purple-600 text-white shadow-sm shadow-purple-600/30' 
-              : 'bg-slate-100 text-slate-500'
-          }`}>
+          <div 
+            style={activeTab === 'branding' ? {
+              backgroundColor: primaryColor,
+              color: '#ffffff'
+            } : {}}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+              activeTab === 'branding' 
+                ? 'shadow-sm' 
+                : 'bg-slate-100 text-slate-500'
+            }`}
+          >
             <Palette className="w-5 h-5" />
           </div>
           <div>
-            <h3 className={`font-bold text-sm leading-tight ${activeTab === 'branding' ? 'text-purple-900' : 'text-slate-800'}`}>
+            <h3 
+              style={activeTab === 'branding' ? { color: primaryColor } : {}}
+              className="font-bold text-sm leading-tight text-slate-800"
+            >
               Branding & UI
             </h3>
             <p className="text-xs text-slate-400 font-medium mt-0.5">
@@ -391,25 +404,38 @@ export default function Settings() {
         {/* Tab 3: Subscription & Plans */}
         <button 
           onClick={() => setActiveTab('billing')}
+          style={activeTab === 'billing' ? {
+            backgroundColor: `${primaryColor}12`,
+            borderColor: `${primaryColor}35`
+          } : {}}
           className={`flex items-center gap-3.5 px-5 py-3.5 rounded-xl transition-all cursor-pointer text-left flex-1 min-w-[220px] ${
             activeTab === 'billing' 
-              ? 'bg-purple-50/80 border border-purple-200 shadow-sm' 
+              ? 'border shadow-xs' 
               : 'hover:bg-slate-50 border border-transparent'
           }`}
         >
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-            activeTab === 'billing' 
-              ? 'bg-purple-600 text-white shadow-sm shadow-purple-600/30' 
-              : 'bg-slate-100 text-slate-500'
-          }`}>
+          <div 
+            style={activeTab === 'billing' ? {
+              backgroundColor: primaryColor,
+              color: '#ffffff'
+            } : {}}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+              activeTab === 'billing' 
+                ? 'shadow-sm' 
+                : 'bg-slate-100 text-slate-500'
+            }`}
+          >
             <CreditCard className="w-5 h-5" />
           </div>
           <div>
-            <h3 className={`font-bold text-sm leading-tight ${activeTab === 'billing' ? 'text-purple-900' : 'text-slate-800'}`}>
+            <h3 
+              style={activeTab === 'billing' ? { color: primaryColor } : {}}
+              className="font-bold text-sm leading-tight text-slate-800"
+            >
               Subscription & Plans
             </h3>
             <p className="text-xs text-slate-400 font-medium mt-0.5">
-              Billing & Tiers
+              2-Tier Platform Plans
             </p>
           </div>
         </button>
@@ -417,7 +443,7 @@ export default function Settings() {
       </div>
 
       {/* ========================================================================= */}
-      {/* TAB 1: Business Profile & Details (Exact Match to Image 1)                */}
+      {/* TAB 1: Business Profile & Details (Inherits Active OS Theme)              */}
       {/* ========================================================================= */}
       {activeTab === 'profile' && (
         <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 md:p-10 animate-in fade-in duration-300">
@@ -444,7 +470,8 @@ export default function Settings() {
                   value={org.name || ''} 
                   onChange={e => setOrg({ ...org, name: e.target.value })} 
                   placeholder="e.g. ApexBuild Enterprises"
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-all font-medium text-slate-800 outline-none" 
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-offset-1 transition-all font-medium text-slate-800 outline-none" 
+                  style={{ '--tw-ring-color': `${primaryColor}40` }}
                 />
               </div>
 
@@ -458,7 +485,7 @@ export default function Settings() {
                   value={org.ownerName || ''} 
                   onChange={e => setOrg({ ...org, ownerName: e.target.value })} 
                   placeholder="e.g. Rajesh Kumar"
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-all font-medium text-slate-800 outline-none" 
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-offset-1 transition-all font-medium text-slate-800 outline-none" 
                 />
               </div>
               
@@ -473,7 +500,7 @@ export default function Settings() {
                   value={org.phone || ''} 
                   onChange={e => setOrg({ ...org, phone: e.target.value })} 
                   placeholder="e.g. +91 98765 43210"
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-all font-medium text-slate-800 outline-none" 
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-offset-1 transition-all font-medium text-slate-800 outline-none" 
                 />
               </div>
 
@@ -491,7 +518,7 @@ export default function Settings() {
                   value={org.taxRate || '0'} 
                   onChange={e => setOrg({ ...org, taxRate: e.target.value })} 
                   placeholder="e.g. 18"
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-all font-medium text-slate-800 outline-none" 
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-offset-1 transition-all font-medium text-slate-800 outline-none" 
                 />
               </div>
 
@@ -506,7 +533,7 @@ export default function Settings() {
                   value={org.address || ''} 
                   onChange={e => setOrg({ ...org, address: e.target.value })} 
                   placeholder="Complete physical office / warehouse / site address..."
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-all font-medium text-slate-800 outline-none resize-none"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-offset-1 transition-all font-medium text-slate-800 outline-none resize-none"
                 />
               </div>
             </div>
@@ -514,7 +541,7 @@ export default function Settings() {
             {/* Invoice Header & Footer Notes */}
             <div className="pt-6 mt-6 border-t border-slate-100">
               <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-purple-600" />
+                <FileText className="w-4 h-4" style={{ color: primaryColor }} />
                 Invoice Header & Footer Notes
               </h3>
               <p className="text-xs text-slate-400 font-medium mb-4">
@@ -530,7 +557,7 @@ export default function Settings() {
                     value={org.invoiceHeader || ''} 
                     onChange={e => setOrg({ ...org, invoiceHeader: e.target.value })} 
                     placeholder="e.g. GSTIN: 19AAACC1234D1Z5 | PAN: AAACC1234D"
-                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-all font-medium text-slate-800 outline-none" 
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-offset-1 transition-all font-medium text-slate-800 outline-none" 
                   />
                 </div>
                 <div>
@@ -542,7 +569,7 @@ export default function Settings() {
                     value={org.invoiceFooter || ''} 
                     onChange={e => setOrg({ ...org, invoiceFooter: e.target.value })} 
                     placeholder="e.g. Thank you for your business! Goods once sold cannot be returned."
-                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-all font-medium text-slate-800 outline-none" 
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-offset-1 transition-all font-medium text-slate-800 outline-none" 
                   />
                 </div>
               </div>
@@ -553,7 +580,8 @@ export default function Settings() {
               <button 
                 type="submit" 
                 disabled={saving} 
-                className="bg-[#9333ea] hover:bg-[#7e22ce] text-white font-bold py-3 px-8 rounded-xl transition-all shadow-md shadow-purple-300/50 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                style={{ backgroundColor: primaryColor }}
+                className="hover:opacity-90 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {saving ? (
                   <>
@@ -573,16 +601,16 @@ export default function Settings() {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 2: Custom Branding & UI Theme (Exact Match to Image 2)               */}
+      {/* TAB 2: Custom Branding & UI Theme (Allows choosing color for entire OS)   */}
       {/* ========================================================================= */}
       {activeTab === 'branding' && (
         <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 md:p-10 space-y-8 animate-in fade-in duration-300">
           <div>
             <h2 className="text-xl md:text-2xl font-black text-slate-900">
-              Custom Branding & UI Theme
+              Custom Branding & Universal UI Theme
             </h2>
             <p className="text-sm text-slate-500 font-medium mt-1">
-              Customize application title, logo banner, and primary brand accent color.
+              Customize your workspace application title, business logo, and choose brand colors. The entire OS adopts your selected color.
             </p>
           </div>
 
@@ -607,11 +635,11 @@ export default function Settings() {
                       }
                     }
                   })}
-                  placeholder="e.g. ApexBuild Platform / My Firm Name"
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-all font-medium text-slate-800 outline-none"
+                  placeholder={`e.g. ${org.name || 'My Firm'} Platform`}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-offset-1 transition-all font-medium text-slate-800 outline-none"
                 />
                 <p className="text-xs text-slate-400 mt-1.5 font-medium">
-                  Displayed in navigation bar, sidebar branding, and exported customer documents.
+                  Displayed in navigation bar, sidebar branding, and exported customer documents across your workspace.
                 </p>
               </div>
 
@@ -627,18 +655,21 @@ export default function Settings() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                   
                   {/* File Upload Zone */}
-                  <label className="md:col-span-2 border-2 border-dashed border-slate-200 hover:border-purple-400 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors bg-slate-50/50 hover:bg-purple-50/30">
+                  <label className="md:col-span-2 border-2 border-dashed border-slate-200 hover:border-slate-400 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors bg-slate-50/50">
                     <input 
                       type="file" 
                       accept="image/png,image/jpeg,image/svg+xml" 
                       onChange={handleLogoUpload} 
                       className="hidden" 
                     />
-                    <div className="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+                    <div 
+                      style={{ backgroundColor: `${primaryColor}18`, color: primaryColor }}
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                    >
                       <UploadCloud className="w-6 h-6" />
                     </div>
                     <div className="text-center">
-                      <span className="text-sm font-bold text-purple-600 hover:underline">Click to upload logo</span>
+                      <span className="text-sm font-bold hover:underline" style={{ color: primaryColor }}>Click to upload logo</span>
                       <span className="text-sm text-slate-500"> or drag and drop</span>
                     </div>
                     <span className="text-[11px] text-slate-400 font-medium">PNG, JPG, SVG up to 2MB</span>
@@ -673,15 +704,15 @@ export default function Settings() {
               </div>
             </div>
 
-            {/* Dual-Color Brand Palette Section matching Image 2 */}
+            {/* Dual-Color Brand Palette Section */}
             <div className="pt-6 border-t border-slate-100 space-y-6">
               <div>
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Palette className="w-5 h-5 text-purple-600" />
-                  Dual-Color Brand Palette
+                  <Palette className="w-5 h-5" style={{ color: primaryColor }} />
+                  Dual-Color Brand Palette (Applies to Entire OS)
                 </h3>
                 <p className="text-xs text-slate-500 font-medium mt-1">
-                  Pair your Primary Brand Color with a complementary Secondary Accent. This gives your workspace depth, modern contrast, and prevents single-color fatigue.
+                  Choose your Primary Brand Color and complementary Secondary Accent. Saving here dynamically applies this color palette across the entire application interface.
                 </p>
               </div>
 
@@ -693,7 +724,7 @@ export default function Settings() {
                       Primary Brand Color (Main Identity)
                     </label>
                     <span className="text-[11px] text-slate-400 font-medium">
-                      Applied to active navigation bars, action buttons, and primary headings.
+                      Applied to active navigation bars, action buttons, and primary headings across the OS.
                     </span>
                   </div>
 
@@ -701,7 +732,7 @@ export default function Settings() {
                     <div className="flex items-center border border-slate-200 rounded-xl bg-white p-1">
                       <input 
                         type="color"
-                        value={org.settings?.branding?.primaryColor || '#9333EA'}
+                        value={org.settings?.branding?.primaryColor || primaryColor}
                         onChange={e => setOrg({
                           ...org,
                           settings: {
@@ -716,7 +747,7 @@ export default function Settings() {
                       />
                       <input 
                         type="text"
-                        value={org.settings?.branding?.primaryColor || '#9333EA'}
+                        value={org.settings?.branding?.primaryColor || primaryColor}
                         onChange={e => setOrg({
                           ...org,
                           settings: {
@@ -738,7 +769,7 @@ export default function Settings() {
                           ...org.settings,
                           branding: {
                             ...org.settings?.branding,
-                            primaryColor: '#9333EA'
+                            primaryColor: osConfig.defaultPrimary || '#2563EB'
                           }
                         }
                       })}
@@ -752,7 +783,7 @@ export default function Settings() {
                 {/* Popular Swatches */}
                 <div className="flex flex-wrap items-center gap-2.5 pt-2">
                   {POPULAR_COLORS.map(color => {
-                    const isSelected = (org.settings?.branding?.primaryColor || '#9333EA').toLowerCase() === color.hex.toLowerCase();
+                    const isSelected = (org.settings?.branding?.primaryColor || primaryColor).toLowerCase() === color.hex.toLowerCase();
                     return (
                       <button
                         key={`primary-${color.hex}`}
@@ -796,7 +827,7 @@ export default function Settings() {
                     <div className="flex items-center border border-slate-200 rounded-xl bg-white p-1">
                       <input 
                         type="color"
-                        value={org.settings?.branding?.secondaryColor || '#4F46E5'}
+                        value={org.settings?.branding?.secondaryColor || secondaryColor}
                         onChange={e => setOrg({
                           ...org,
                           settings: {
@@ -811,7 +842,7 @@ export default function Settings() {
                       />
                       <input 
                         type="text"
-                        value={org.settings?.branding?.secondaryColor || '#4F46E5'}
+                        value={org.settings?.branding?.secondaryColor || secondaryColor}
                         onChange={e => setOrg({
                           ...org,
                           settings: {
@@ -833,7 +864,7 @@ export default function Settings() {
                           ...org.settings,
                           branding: {
                             ...org.settings?.branding,
-                            secondaryColor: '#4F46E5'
+                            secondaryColor: osConfig.defaultSecondary || '#0891B2'
                           }
                         }
                       })}
@@ -847,7 +878,7 @@ export default function Settings() {
                 {/* Popular Swatches */}
                 <div className="flex flex-wrap items-center gap-2.5 pt-2">
                   {POPULAR_COLORS.map(color => {
-                    const isSelected = (org.settings?.branding?.secondaryColor || '#4F46E5').toLowerCase() === color.hex.toLowerCase();
+                    const isSelected = (org.settings?.branding?.secondaryColor || secondaryColor).toLowerCase() === color.hex.toLowerCase();
                     return (
                       <button
                         key={`secondary-${color.hex}`}
@@ -882,15 +913,15 @@ export default function Settings() {
                 </span>
                 <div className="flex flex-wrap items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
                   <div 
-                    style={{ backgroundColor: org.settings?.branding?.primaryColor || '#9333EA' }}
+                    style={{ backgroundColor: org.settings?.branding?.primaryColor || primaryColor }}
                     className="px-4 py-2 rounded-xl text-white text-xs font-bold shadow-sm"
                   >
                     Primary Button
                   </div>
                   <div 
                     style={{ 
-                      borderColor: org.settings?.branding?.primaryColor || '#9333EA',
-                      color: org.settings?.branding?.primaryColor || '#9333EA' 
+                      borderColor: org.settings?.branding?.primaryColor || primaryColor,
+                      color: org.settings?.branding?.primaryColor || primaryColor 
                     }}
                     className="px-4 py-2 rounded-xl text-xs font-bold border bg-white"
                   >
@@ -898,9 +929,9 @@ export default function Settings() {
                   </div>
                   <div 
                     style={{ 
-                      backgroundColor: `${org.settings?.branding?.secondaryColor || '#4F46E5'}15`,
-                      color: org.settings?.branding?.secondaryColor || '#4F46E5',
-                      borderColor: `${org.settings?.branding?.secondaryColor || '#4F46E5'}30`
+                      backgroundColor: `${org.settings?.branding?.secondaryColor || secondaryColor}15`,
+                      color: org.settings?.branding?.secondaryColor || secondaryColor,
+                      borderColor: `${org.settings?.branding?.secondaryColor || secondaryColor}30`
                     }}
                     className="px-3 py-1 rounded-full text-xs font-bold border"
                   >
@@ -919,17 +950,18 @@ export default function Settings() {
               <button 
                 type="submit" 
                 disabled={saving} 
-                className="bg-[#9333ea] hover:bg-[#7e22ce] text-white font-bold py-3 px-8 rounded-xl transition-all shadow-md shadow-purple-300/50 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                style={{ backgroundColor: primaryColor }}
+                className="hover:opacity-90 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {saving ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Saving Changes...</span>
+                    <span>Applying Brand Theme...</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    <span>Save Branding & UI Changes</span>
+                    <span>Save Branding & Apply to OS</span>
                   </>
                 )}
               </button>
@@ -939,7 +971,7 @@ export default function Settings() {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 3: Subscription & Plans (Exact Match to Image 3 - Superadmin Governed)*/}
+      {/* TAB 3: Subscription & Plans (EXACTLY 2 PLANS - NO FREE PLAN)              */}
       {/* ========================================================================= */}
       {activeTab === 'billing' && (
         <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 md:p-10 animate-in fade-in duration-300 space-y-8">
@@ -947,11 +979,16 @@ export default function Settings() {
           {/* Header + Billing Cadence Toggle */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl md:text-2xl font-black text-slate-900">
-                Subscription & Plan Management
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl md:text-2xl font-black text-slate-900">
+                  {osConfig.name} Subscriptions
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700">
+                  2 Plans Available
+                </span>
+              </div>
               <p className="text-sm text-slate-500 font-medium mt-1">
-                Review active workspace tier, features breakdown, and billing renewal options.
+                Active workspace subscription, renewal options, and 2-tier plan comparison.
               </p>
             </div>
             
@@ -979,27 +1016,33 @@ export default function Settings() {
               >
                 <span>Annual</span>
                 <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-1.5 py-0.5 rounded">
-                  Save 20%
+                  Save ~17%
                 </span>
               </button>
             </div>
           </div>
 
-          {/* Active Workspace Plan Card matching Screenshot */}
-          <div className="bg-white border-2 border-purple-100 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-purple-50 rounded-full blur-3xl -z-10 pointer-events-none" />
+          {/* Active Workspace Plan Card */}
+          <div 
+            style={{ borderColor: `${primaryColor}30` }}
+            className="bg-white border-2 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden"
+          >
+            <div 
+              style={{ backgroundColor: `${primaryColor}08` }}
+              className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -z-10 pointer-events-none" 
+            />
             
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                Active Plan
+                Active Subscription
               </div>
               
               <div className="flex items-center gap-2">
                 <h3 className="text-2xl md:text-3xl font-black text-slate-900">
-                  {activeSubscription?.osPlanId?.name || org.subscription || entitlementPlanName || 'Business'}
+                  {activeSubscription?.osPlanId?.name || org.subscription || (isCurrentTierEnterprise ? 'Enterprise Suite' : 'Growth Plan')}
                 </h3>
-                <Crown className="w-6 h-6 text-amber-500" />
+                {isCurrentTierEnterprise && <Crown className="w-6 h-6 text-amber-500" />}
               </div>
 
               <p className="text-sm font-medium text-slate-500">
@@ -1014,98 +1057,173 @@ export default function Settings() {
 
             <div className="text-left md:text-right w-full md:w-auto border-t border-slate-100 md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0 flex flex-col md:items-end gap-3">
               <p className="text-3xl md:text-4xl font-black text-slate-900 leading-none">
-                ₹{billingCycle === 'annual' ? '599' : '749'} 
+                ₹{billingCycle === 'annual' 
+                  ? Math.round((activeSubscription?.basePrice || (isCurrentTierEnterprise ? 34990 : 14990)) / 12).toLocaleString() 
+                  : ((isCurrentTierEnterprise ? 3499 : 1499)).toLocaleString()} 
                 <span className="text-sm font-medium text-slate-400 ml-1">/month</span>
               </p>
+              
               <button 
                 type="button"
-                onClick={() => openUpgradeModal({ name: 'Business', tier: 'BUSINESS', price: billingCycle === 'annual' ? 599 : 749 })}
-                className="w-full md:w-auto bg-[#9333ea] hover:bg-[#7e22ce] text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-md shadow-purple-300/40 text-sm cursor-pointer"
+                onClick={() => openUpgradeModal({
+                  name: activeSubscription?.osPlanId?.name || (isCurrentTierEnterprise ? 'Enterprise Suite' : 'Growth Plan'),
+                  tier: isCurrentTierEnterprise ? 'ENTERPRISE' : 'STARTER',
+                  monthlyPrice: isCurrentTierEnterprise ? 3499 : 1499,
+                  yearlyPrice: isCurrentTierEnterprise ? 34990 : 14990
+                })}
+                style={{ backgroundColor: primaryColor }}
+                className="w-full md:w-auto hover:opacity-90 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-md text-xs cursor-pointer"
               >
                 Manage Subscription
               </button>
             </div>
           </div>
 
-          {/* Available Subscription Plans Grid matching Screenshot */}
+          {/* EXACTLY 2 Available Plans Grid */}
           <div>
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">
-                  Available Subscription Plans
+                  Available {osConfig.name} Plans
                 </h3>
                 <p className="text-xs text-slate-400 font-medium mt-0.5">
-                  Select a tier below to submit an upgrade or renewal request to Superadmin HQ.
+                  Select a tier below to request an upgrade or plan modification from Superadmin HQ.
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {plans.map((plan) => {
-                const isCurrent = currentTierNormalized.includes(plan.tier);
-                const price = billingCycle === 'annual' ? plan.annualPrice : plan.monthlyPrice;
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {displayPlans.map((plan, idx) => {
+                const isPlanEnterprise = plan.tier === 'ENTERPRISE' || plan.name?.toLowerCase().includes('enterprise');
+                const isCurrent = (isPlanEnterprise && isCurrentTierEnterprise) || (!isPlanEnterprise && !isCurrentTierEnterprise);
+                const price = billingCycle === 'annual' ? Math.round(plan.yearlyPrice / 12) : plan.monthlyPrice;
 
                 return (
                   <div 
-                    key={plan.id}
-                    className={`bg-white rounded-3xl p-6 flex flex-col justify-between transition-all relative ${
+                    key={plan._id || idx}
+                    style={isCurrent ? { borderColor: primaryColor } : {}}
+                    className={`bg-white rounded-3xl p-8 flex flex-col justify-between transition-all relative ${
                       isCurrent 
-                        ? 'border-2 border-purple-600 shadow-lg shadow-purple-100' 
+                        ? 'border-2 shadow-xl shadow-slate-100' 
                         : 'border border-slate-200 hover:border-slate-300 hover:shadow-md'
                     }`}
                   >
                     {isCurrent && (
-                      <span className="absolute -top-3 left-6 bg-purple-600 text-white text-[10px] font-black px-3 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
-                        Current Tier
+                      <span 
+                        style={{ backgroundColor: primaryColor }}
+                        className="absolute -top-3.5 left-8 text-white text-[11px] font-black px-4 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1.5"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Current Active Plan</span>
                       </span>
                     )}
 
                     <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-lg font-black text-slate-900">{plan.name}</h4>
-                        {plan.popular && !isCurrent && (
-                          <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">
-                            Popular
+                      <div className="flex items-center justify-between mb-3">
+                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                          isPlanEnterprise 
+                            ? 'bg-amber-100 text-amber-900 border border-amber-200' 
+                            : 'bg-slate-100 text-slate-700'
+                        }`}>
+                          {isPlanEnterprise ? 'Tier 2: Enterprise Suite' : 'Tier 1: Growth Plan'}
+                        </span>
+                        
+                        {isPlanEnterprise && (
+                          <span className="bg-purple-100 text-purple-700 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            Full Unlocked
                           </span>
                         )}
                       </div>
 
-                      <p className="text-xs text-slate-500 font-medium min-h-[36px] mb-4 leading-relaxed">
-                        {plan.description}
+                      <h4 className="text-2xl font-black text-slate-900 mb-2">{plan.name}</h4>
+                      <p className="text-xs text-slate-500 font-medium min-h-[36px] mb-6 leading-relaxed">
+                        {plan.description || (isPlanEnterprise 
+                          ? 'Complete enterprise operational suite with advanced telematics, variance P&L, unlimited team members, and custom branding.'
+                          : 'Core operational tools, records, and billing for growing single-location businesses.')}
                       </p>
 
-                      <div className="mb-6">
-                        <span className="text-3xl font-black text-slate-900">₹{price}</span>
-                        <span className="text-xs font-medium text-slate-400 ml-1">/mo</span>
+                      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-4xl font-black text-slate-900">₹{price.toLocaleString()}</span>
+                          <span className="text-xs font-bold text-slate-400">/month</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 font-medium mt-1">
+                          {billingCycle === 'annual' ? `Billed annually at ₹${plan.yearlyPrice.toLocaleString()}/yr` : 'Billed on a monthly basis'}
+                        </p>
                       </div>
 
-                      <ul className="space-y-2.5 text-xs font-medium text-slate-600 border-t border-slate-100 pt-4">
-                        {plan.features.map((feature, idx) => (
-                          <li key={idx} className="flex items-start gap-2.5">
-                            <Check className={`w-4 h-4 shrink-0 mt-0.5 ${isCurrent ? 'text-purple-600' : 'text-emerald-500'}`} />
-                            <span className="leading-tight">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="space-y-3 border-t border-slate-100 pt-5">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                          Included Features & Entitlements:
+                        </p>
+
+                        <ul className="space-y-3 text-xs font-medium text-slate-700">
+                          {isPlanEnterprise ? (
+                            <>
+                              <li className="flex items-start gap-2.5 font-bold">
+                                <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                                <span>Unlimited Team Members & Role Permissions</span>
+                              </li>
+                              <li className="flex items-start gap-2.5">
+                                <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                                <span>Advanced Telematics & Fleet Tracking</span>
+                              </li>
+                              <li className="flex items-start gap-2.5">
+                                <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                                <span>Automated Financial Variance & Net P&L</span>
+                              </li>
+                              <li className="flex items-start gap-2.5">
+                                <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                                <span>White-Label Custom Branding (Applied to entire OS)</span>
+                              </li>
+                              <li className="flex items-start gap-2.5">
+                                <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                                <span>Dedicated 24/7 Superadmin HQ Account Manager</span>
+                              </li>
+                            </>
+                          ) : (
+                            <>
+                              <li className="flex items-start gap-2.5">
+                                <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                                <span>Up to 5 Team User Accounts</span>
+                              </li>
+                              <li className="flex items-start gap-2.5">
+                                <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                                <span>Core Operations, Customers & Billing</span>
+                              </li>
+                              <li className="flex items-start gap-2.5">
+                                <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                                <span>Standard Daily Progress Reports & PDF Exports</span>
+                              </li>
+                              <li className="flex items-start gap-2.5">
+                                <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                                <span>Standard Platform Email & Ticket Support</span>
+                              </li>
+                            </>
+                          )}
+                        </ul>
+                      </div>
                     </div>
 
-                    <div className="pt-6 mt-6 border-t border-slate-100">
+                    <div className="pt-8 mt-6 border-t border-slate-100">
                       {isCurrent ? (
                         <button 
                           disabled 
-                          className="w-full bg-purple-50 text-purple-700 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-default border border-purple-200"
+                          style={{ color: primaryColor, backgroundColor: `${primaryColor}14` }}
+                          className="w-full font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 cursor-default border"
                         >
-                          <CheckCircle2 className="w-4 h-4 text-purple-600" />
-                          <span>Active Tier</span>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Active on this Tier</span>
                         </button>
                       ) : (
                         <button
                           type="button"
                           onClick={() => openUpgradeModal(plan)}
-                          className="w-full bg-slate-100 hover:bg-purple-600 hover:text-white text-slate-800 font-bold py-2.5 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-1"
+                          style={{ backgroundColor: primaryColor }}
+                          className="w-full hover:opacity-90 text-white font-bold py-3 rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                          <span>Request {plan.name}</span>
-                          <ArrowUpRight className="w-3.5 h-3.5" />
+                          <span>{isPlanEnterprise ? 'Request Upgrade to Enterprise' : 'Request Switch to Growth'}</span>
+                          <ArrowUpRight className="w-4 h-4" />
                         </button>
                       )}
                     </div>
@@ -1142,12 +1260,15 @@ export default function Settings() {
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+                <div 
+                  style={{ backgroundColor: `${primaryColor}18`, color: primaryColor }}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                >
                   <Crown className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-slate-900">
-                    Request Subscription Upgrade
+                    Request Subscription Modification
                   </h3>
                   <p className="text-xs text-slate-400 font-medium">
                     Submit request directly to ApexBuild Superadmin HQ
@@ -1155,8 +1276,8 @@ export default function Settings() {
                 </div>
               </div>
               <button 
-                type="button"
-                onClick={() => setUpgradeModalOpen(false)}
+                type="button" 
+                onClick={() => setUpgradeModalOpen(false)} 
                 className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -1164,15 +1285,25 @@ export default function Settings() {
             </div>
 
             {/* Target Tier Summary */}
-            <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-100 flex items-center justify-between">
+            <div 
+              style={{ backgroundColor: `${primaryColor}0c`, borderColor: `${primaryColor}25` }}
+              className="p-4 rounded-2xl border flex items-center justify-between"
+            >
               <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-purple-600">Selected Tier</span>
-                <h4 className="text-base font-bold text-purple-950">{selectedUpgradePlan?.name} Tier</h4>
-                <p className="text-xs text-purple-700/80">Billing Cadence: {billingCycle === 'annual' ? 'Annual (20% Off)' : 'Monthly'}</p>
+                <span 
+                  style={{ color: primaryColor }}
+                  className="text-[10px] font-black uppercase tracking-wider"
+                >
+                  Selected Tier
+                </span>
+                <h4 className="text-base font-bold text-slate-900">{selectedUpgradePlan?.name}</h4>
+                <p className="text-xs text-slate-500">Billing: {billingCycle === 'annual' ? 'Annual (Save ~17%)' : 'Monthly'}</p>
               </div>
               <div className="text-right">
-                <span className="text-xl font-black text-purple-950">₹{selectedUpgradePlan ? (billingCycle === 'annual' ? selectedUpgradePlan.annualPrice : selectedUpgradePlan.monthlyPrice) : 0}</span>
-                <span className="text-xs text-purple-700 font-medium">/mo</span>
+                <span className="text-2xl font-black text-slate-900">
+                  ₹{selectedUpgradePlan ? (billingCycle === 'annual' ? Math.round(selectedUpgradePlan.yearlyPrice / 12) : selectedUpgradePlan.monthlyPrice).toLocaleString() : 0}
+                </span>
+                <span className="text-xs text-slate-500 font-medium ml-1">/mo</span>
               </div>
             </div>
 
@@ -1185,8 +1316,8 @@ export default function Settings() {
                   rows={3}
                   value={upgradeNote}
                   onChange={e => setUpgradeNote(e.target.value)}
-                  placeholder="e.g. Need 5 additional driver seats, custom billing entity name, or urgent activation..."
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-all font-medium text-slate-800 outline-none resize-none text-xs"
+                  placeholder="e.g. Requesting immediate plan activation or custom billing entity requirement..."
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-offset-1 transition-all font-medium text-slate-800 outline-none resize-none text-xs"
                 />
               </div>
 
@@ -1205,7 +1336,8 @@ export default function Settings() {
                 <button
                   type="submit"
                   disabled={submittingUpgrade}
-                  className="bg-[#9333ea] hover:bg-[#7e22ce] text-white font-bold py-2.5 px-6 rounded-xl text-xs transition-all shadow-md shadow-purple-300/40 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  style={{ backgroundColor: primaryColor }}
+                  className="hover:opacity-90 text-white font-bold py-2.5 px-6 rounded-xl text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {submittingUpgrade ? (
                     <>

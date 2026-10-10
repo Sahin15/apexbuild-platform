@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { EntitlementProvider } from './context/EntitlementContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
@@ -149,7 +150,8 @@ function App() {
         <Toaster position="top-right" />
         <MasqueradeBar />
         <Router>
-        <Routes>
+          <ThemeProvider>
+            <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -307,8 +309,9 @@ function App() {
           </Route>
 
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Router>
+            </Routes>
+          </ThemeProvider>
+        </Router>
       </EntitlementProvider>
     </AuthProvider>
   );

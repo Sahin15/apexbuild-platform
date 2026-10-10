@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useEntitlements } from '../../context/EntitlementContext';
+import { useBrandTheme } from '../../context/ThemeContext';
 import { 
   LayoutDashboard, 
   Briefcase, 
@@ -52,6 +53,7 @@ const navigation = [
 export default function Sidebar({ sidebarOpen, setSidebarOpen, navigation: customNavigation, title: customTitle, subtitle: customSubtitle }) {
   const { user } = useAuth();
   const { hasEntitlement } = useEntitlements();
+  const { primaryColor } = useBrandTheme();
   
   const navItems = customNavigation || navigation;
   const filteredNav = customNavigation ? navItems : navItems.filter(item => item.roles.includes(user?.role));
@@ -75,14 +77,19 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, navigation: custo
         {/* Logo area */}
         <div className="flex items-center justify-between h-16 px-6 bg-navy-900 border-b border-navy-800">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-blue-600/30">
+            <div 
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md transition-colors"
+              style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}40` }}
+            >
               A
             </div>
             <div className="flex flex-col">
               <span className="text-white text-base font-bold tracking-tight leading-none truncate max-w-[140px]">
                 {customTitle || user?.organizationId?.settings?.branding?.customAppName || 'ApexBuild'}
               </span>
-              <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mt-0.5">{customSubtitle || 'Contractor OS'}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: primaryColor }}>
+                {customSubtitle || 'Contractor OS'}
+              </span>
             </div>
           </div>
           <button 
@@ -102,10 +109,11 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, navigation: custo
                 <NavLink
                   key={item.name}
                   to={item.href}
+                  style={({ isActive }) => (isActive ? { backgroundColor: primaryColor } : {})}
                   className={({ isActive }) => `
                     flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
                     ${isActive 
-                      ? 'bg-primary-600 text-white' 
+                      ? 'text-white shadow-sm font-semibold' 
                       : 'text-slate-300 hover:bg-navy-800 hover:text-white'}
                   `}
                 >

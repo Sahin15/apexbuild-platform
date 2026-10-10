@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useEntitlements } from '../../context/EntitlementContext';
+import { useBrandTheme } from '../../context/ThemeContext';
 import SidebarUserProfile from './SidebarUserProfile';
 import { 
   LayoutDashboard, 
@@ -43,6 +44,7 @@ const navigation = [
 export default function SupplierSidebar({ sidebarOpen, setSidebarOpen }) {
   const { user } = useAuth();
   const { hasEntitlement } = useEntitlements();
+  const { primaryColor } = useBrandTheme();
   const filteredNav = navigation.filter(item => item.roles.includes(user?.role));
 
   return (
@@ -64,14 +66,19 @@ export default function SupplierSidebar({ sidebarOpen, setSidebarOpen }) {
         {/* Logo area */}
         <div className="flex items-center justify-between h-16 px-6 bg-slate-900 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 shrink-0 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-emerald-600/30">
+            <div 
+              className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md transition-colors"
+              style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}40` }}
+            >
               S
             </div>
             <div className="flex flex-col">
               <span className="text-white text-base font-bold tracking-tight leading-none truncate max-w-[140px]">
                 {user?.organizationId?.settings?.branding?.customAppName || 'ApexBuild'}
               </span>
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mt-0.5">Supplier OS</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: primaryColor }}>
+                Supplier OS
+              </span>
             </div>
           </div>
           <button 
@@ -91,10 +98,11 @@ export default function SupplierSidebar({ sidebarOpen, setSidebarOpen }) {
                 <NavLink
                   key={item.name}
                   to={item.href}
+                  style={({ isActive }) => (isActive ? { backgroundColor: primaryColor } : {})}
                   className={({ isActive }) => `
                     flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
                     ${isActive 
-                      ? 'bg-emerald-600 text-white shadow-sm' 
+                      ? 'text-white shadow-sm font-semibold' 
                       : 'text-slate-300 hover:bg-slate-800 hover:text-white'}
                   `}
                 >

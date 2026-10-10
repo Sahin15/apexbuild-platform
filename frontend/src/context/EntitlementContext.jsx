@@ -31,6 +31,15 @@ export const EntitlementProvider = ({ children }) => {
 
   useEffect(() => {
     fetchEntitlements();
+
+    const handleFocus = () => {
+      fetchEntitlements();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [fetchEntitlements, user?._id]);
 
   /**

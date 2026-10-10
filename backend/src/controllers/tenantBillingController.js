@@ -57,19 +57,18 @@ export const getAvailablePlans = async (req, res, next) => {
     const org = await Organization.findById(req.user.organizationId);
     if (!org) return next(new AppError('Organization not found', 404));
 
-    const slugMap = {
-      'CONTRACTOR': 'contractor',
-      'MATERIAL_SUPPLIER': 'supplier',
-      'CHICKEN_DISTRIBUTOR': 'distributor',
-      'DIAGNOSTICS': 'diagnostics'
-    };
-    
-    const osSlug = slugMap[org.businessType] || org.businessType.toLowerCase();
-    
-    const osProduct = await OSProduct.findOne({ slug: osSlug });
+    const osProduct = await OSProduct.findOne({
+      $or: [
+        { businessType: org.businessType },
+        { code: org.businessType },
+        { slug: `${org.businessType.toLowerCase().replace('_', '-')}-os` },
+        { slug: org.businessType.toLowerCase().replace('_', '-') }
+      ]
+    });
+
     if (!osProduct) return res.status(200).json({ status: 'success', data: { plans: [] } });
 
-    const plans = await OSPlan.find({ osProductId: osProduct._id, isActive: true });
+    const plans = await OSPlan.find({ osProductId: osProduct._id, isActive: true }).sort('monthlyPrice');
     res.status(200).json({ status: 'success', data: { plans } });
   } catch (error) { next(error); }
 };

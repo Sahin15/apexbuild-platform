@@ -7,11 +7,13 @@ import { useAuth } from '../../context/AuthContext';
 import { useEntitlements } from '../../context/EntitlementContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getOSConfig } from '../../config/osThemes';
+import { useBrandTheme } from '../../context/ThemeContext';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 
 export default function Header({ setSidebarOpen }) {
   const { user, logout } = useAuth();
   const { tier, planName } = useEntitlements();
+  const { primaryColor, secondaryColor, customAppName } = useBrandTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
@@ -107,7 +109,14 @@ export default function Header({ setSidebarOpen }) {
 
           {/* OS Identifier Badge */}
           <div className="pr-3 border-r border-slate-200 flex items-center">
-            <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${osConfig.theme.badgeBg}`}>
+            <span 
+              style={{
+                backgroundColor: `${primaryColor}14`,
+                color: primaryColor,
+                borderColor: `${primaryColor}30`
+              }}
+              className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border"
+            >
               {osConfig.name}
             </span>
           </div>
@@ -134,7 +143,12 @@ export default function Header({ setSidebarOpen }) {
         <div className="relative flex items-center" ref={dropdownRef}>
           <button 
             onClick={() => setProfileOpen(!profileOpen)}
-            className={`relative h-9 w-9 rounded-xl border flex items-center justify-center font-bold text-xs shadow-2xs hover:ring-2 hover:ring-offset-2 transition-all focus:outline-none cursor-pointer ${osConfig.theme.avatarBg} ${osConfig.theme.avatarRing}`}
+            style={{
+              backgroundColor: `${primaryColor}14`,
+              color: primaryColor,
+              borderColor: `${primaryColor}30`
+            }}
+            className="relative h-9 w-9 rounded-xl border flex items-center justify-center font-bold text-xs shadow-2xs transition-all focus:outline-none cursor-pointer"
             title="User Profile & Settings"
             aria-label="User Profile"
           >
@@ -148,7 +162,14 @@ export default function Header({ setSidebarOpen }) {
               {/* User & Workspace Identity Header */}
               <div className="p-4 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
                 <div className="flex items-start gap-3">
-                  <div className={`h-11 w-11 rounded-xl flex items-center justify-center font-black text-sm shrink-0 border shadow-xs ${osConfig.theme.avatarBg}`}>
+                  <div 
+                    style={{
+                      backgroundColor: `${primaryColor}18`,
+                      color: primaryColor,
+                      borderColor: `${primaryColor}30`
+                    }}
+                    className="h-11 w-11 rounded-xl flex items-center justify-center font-black text-sm shrink-0 border shadow-xs"
+                  >
                     {initials.toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -167,14 +188,28 @@ export default function Header({ setSidebarOpen }) {
                     
                     {/* Badge Chips Row */}
                     <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
-                      <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${osConfig.theme.badgeBg}`}>
+                      <span 
+                        style={{
+                          backgroundColor: `${primaryColor}14`,
+                          color: primaryColor,
+                          borderColor: `${primaryColor}30`
+                        }}
+                        className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border"
+                      >
                         {osConfig.name}
                       </span>
                       <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
                         {user?.role ? user.role.replace('_', ' ') : (isSuperAdmin ? 'Super Admin' : 'Member')}
                       </span>
                       {!isSuperAdmin && (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1 ${osConfig.theme.tierBadge}`}>
+                        <span 
+                          style={{
+                            backgroundColor: `${primaryColor}14`,
+                            color: primaryColor,
+                            borderColor: `${primaryColor}30`
+                          }}
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1"
+                        >
                           <Crown className="w-3 h-3" />
                           {tier ? `${tier} Plan` : (planName || 'Plan')}
                         </span>
