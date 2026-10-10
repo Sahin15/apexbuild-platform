@@ -208,7 +208,7 @@ export default function DistributorSuppliers() {
               </form>
             </div>
             
-            <div className="p-4 border-t border-slate-100 bg-white shrink-0 pb-safe">
+            <div className="p-4 border-t border-slate-100 bg-white shrink-0">
               <button form="supplierForm" type="submit" className="w-full py-4 bg-rose-600 text-white rounded-2xl text-lg font-black shadow-lg shadow-rose-200 hover:bg-rose-700 active:scale-95 transition-all">
                 {editingId ? 'Save Changes' : 'Add Supplier'}
               </button>

@@ -147,7 +147,7 @@ export default function DistributorCustomers() {
               <Link to={`/distributor/customers/${customer._id}`} className="block p-4">
                 <div className="flex justify-between items-start">
                   <div className="flex gap-3">
-                    <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold uppercase text-sm border border-indigo-100">
+                    <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-700 font-bold uppercase text-sm border border-amber-200">
                       {customer.shopName.substring(0, 2)}
                     </div>
                     <div>
@@ -231,7 +231,7 @@ export default function DistributorCustomers() {
                     </div>
                     <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
                       <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Def. Rate (₹) *</label>
-                      <input type="number" required min="1" step="0.5" inputMode="decimal" pattern="[0-9]*" value={formData.defaultSellingRate} onChange={e => setFormData({...formData, defaultSellingRate: e.target.value === '' ? '' : Number(e.target.value)})} className="w-full bg-transparent focus:outline-none text-lg font-bold text-indigo-600 placeholder-slate-400" placeholder="0" />
+                      <input type="number" required min="1" step="0.5" inputMode="decimal" pattern="[0-9]*" value={formData.defaultSellingRate} onChange={e => setFormData({...formData, defaultSellingRate: e.target.value === '' ? '' : Number(e.target.value)})} className="w-full bg-transparent focus:outline-none text-lg font-bold text-amber-700 placeholder-slate-400" placeholder="0" />
                     </div>
                   </div>
 
@@ -249,7 +249,7 @@ export default function DistributorCustomers() {
               </form>
             </div>
             
-            <div className="p-4 border-t border-slate-100 bg-white shrink-0 pb-safe">
+            <div className="p-4 border-t border-slate-100 bg-white shrink-0">
               <button form="customerForm" type="submit" className="w-full py-4 bg-emerald-600 text-white rounded-2xl text-lg font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all">
                 {editingId ? 'Save Changes' : 'Add Shop'}
               </button>

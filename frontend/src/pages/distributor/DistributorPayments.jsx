@@ -73,7 +73,7 @@ export default function DistributorPayments() {
       {/* Header Info */}
       <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+          <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-700">
             <Wallet className="w-5 h-5" />
           </div>
           <div>
@@ -83,7 +83,7 @@ export default function DistributorPayments() {
         </div>
         <button 
           onClick={() => setShowModal(true)} 
-          className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition-transform active:scale-95"
+          className="bg-amber-600 hover:bg-amber-700 text-white p-3 rounded-full shadow-lg shadow-amber-200 transition-transform active:scale-95"
         >
           <Plus className="w-5 h-5" />
         </button>
@@ -98,14 +98,14 @@ export default function DistributorPayments() {
             placeholder="Search party or ref..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm"
           />
         </div>
         <input 
           type="date" 
           value={filterDate} 
           onChange={e => setFilterDate(e.target.value)} 
-          className="h-full py-3 px-2 rounded-xl border border-slate-200 text-slate-700 focus:border-indigo-500 bg-white font-bold text-xs" 
+          className="h-full py-3 px-2 rounded-xl border border-slate-200 text-slate-700 focus:border-amber-500 bg-white font-bold text-xs" 
           title="Filter by Date"
         />
         {filterDate && (
@@ -252,7 +252,7 @@ export default function DistributorPayments() {
               </form>
             </div>
             
-            <div className="p-4 border-t border-slate-100 bg-white shrink-0 pb-safe">
+            <div className="p-4 border-t border-slate-100 bg-white shrink-0">
               <button form="paymentForm" type="submit" className={`w-full py-4 text-white rounded-2xl text-lg font-black shadow-lg active:scale-95 transition-all flex justify-center items-center gap-2 ${formData.type === 'CUSTOMER_COLLECTION' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200' : 'bg-red-600 hover:bg-red-700 shadow-red-200'}`}>
                 {formData.type === 'CUSTOMER_COLLECTION' ? 'Confirm Collection' : 'Confirm Payment'}
               </button>
