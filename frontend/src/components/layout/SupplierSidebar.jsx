@@ -17,12 +17,7 @@ import {
   Files,
   UsersRound,
   Settings,
-  HelpCircle,
   X,
-  LogOut,
-  User as UserIcon,
-  Crown,
-  ChevronUp,
   Lock
 } from 'lucide-react';
 
@@ -47,6 +42,7 @@ const navigation = [
 
 export default function SupplierSidebar({ sidebarOpen, setSidebarOpen }) {
   const { user } = useAuth();
+  const { hasEntitlement } = useEntitlements();
   const filteredNav = navigation.filter(item => item.roles.includes(user?.role));
 
   return (
