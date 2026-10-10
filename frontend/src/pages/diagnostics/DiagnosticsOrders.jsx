@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, Plus, Filter, ClipboardList, X, FileText, User, Activity, Eye, Receipt } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import DiagnosticsReportModal from '../../components/diagnostics/DiagnosticsReportModal';
 import PaymentReceiptModal from '../../components/diagnostics/PaymentReceiptModal';
+import useOfflineDraft from '../../hooks/useOfflineDraft';
+import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 
 const DiagnosticsOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -22,6 +24,30 @@ const DiagnosticsOrders = () => {
   // Home Collection State
   const [isHomeCollection, setIsHomeCollection] = useState(false);
   const [collectionAddress, setCollectionAddress] = useState('');
+
+  // Offline Draft Hook
+  const orderFormData = useMemo(() => ({
+    selectedPatient,
+    selectedTests,
+    discount,
+    paidAmount,
+    isHomeCollection,
+    collectionAddress
+  }), [selectedPatient, selectedTests, discount, paidAmount, isHomeCollection, collectionAddress]);
+
+  const { hasDraft, draftData, lastSaved, clearDraft } = useOfflineDraft('diagnostics_order', orderFormData, isModalOpen);
+
+  const restoreDraft = () => {
+    if (draftData) {
+      if (draftData.selectedPatient !== undefined) setSelectedPatient(draftData.selectedPatient);
+      if (draftData.selectedTests !== undefined) setSelectedTests(draftData.selectedTests);
+      if (draftData.discount !== undefined) setDiscount(draftData.discount);
+      if (draftData.paidAmount !== undefined) setPaidAmount(draftData.paidAmount);
+      if (draftData.isHomeCollection !== undefined) setIsHomeCollection(draftData.isHomeCollection);
+      if (draftData.collectionAddress !== undefined) setCollectionAddress(draftData.collectionAddress);
+      toast.success('Test order draft restored!');
+    }
+  };
 
   // Payment Collection State
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -124,6 +150,7 @@ const DiagnosticsOrders = () => {
       const res = await api.post('/diagnostics/orders', payload);
       setOrders([res.data.data.order, ...orders]);
       toast.success('Order created successfully!');
+      clearDraft();
       
       // Reset
       setIsModalOpen(false);
@@ -392,6 +419,15 @@ const DiagnosticsOrders = () => {
             
             <form onSubmit={handleCreateOrder} className="overflow-y-auto flex-1">
               <div className="p-4 md:p-6 space-y-6">
+                <OfflineDraftIndicator
+                  hasDraft={hasDraft}
+                  lastSaved={lastSaved}
+                  onRestore={restoreDraft}
+                  onDiscard={() => {
+                    clearDraft();
+                    toast.info('Draft discarded.');
+                  }}
+                />
                 
                 {/* Section 1: Patient */}
                 <div>

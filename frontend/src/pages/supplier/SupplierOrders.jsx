@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, ShoppingCart, Truck, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import useOfflineDraft from '../../hooks/useOfflineDraft';
+import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 
 export default function SupplierOrders() {
   const [orders, setOrders] = useState([]);
@@ -25,6 +27,8 @@ export default function SupplierOrders() {
     vehicle: '',
     driver: ''
   });
+
+  const { hasDraft, draftData, lastSaved, clearDraft } = useOfflineDraft('supplier_order', formData, showModal);
 
   useEffect(() => {
     fetchData();
@@ -135,6 +139,7 @@ export default function SupplierOrders() {
     try {
       await api.post('/supplier/orders', payload);
       toast.success('Sales order created successfully');
+      clearDraft();
       setShowModal(false);
       fetchData();
       setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '' });
@@ -319,6 +324,21 @@ export default function SupplierOrders() {
             
             <div className="p-4 sm:p-6 overflow-y-auto flex-1">
               <form id="orderForm" onSubmit={handleSubmit} className="space-y-6">
+                <OfflineDraftIndicator
+                  hasDraft={hasDraft}
+                  lastSaved={lastSaved}
+                  onRestore={() => {
+                    if (draftData) {
+                      setFormData(draftData);
+                      toast.success('Order draft restored!');
+                    }
+                  }}
+                  onDiscard={() => {
+                    clearDraft();
+                    toast.info('Draft discarded.');
+                  }}
+                />
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="label">Customer *</label>

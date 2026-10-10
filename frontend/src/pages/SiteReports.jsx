@@ -33,6 +33,8 @@ import {
   TrendingUp,
   Download
 } from 'lucide-react';
+import useOfflineDraft from '../hooks/useOfflineDraft';
+import OfflineDraftIndicator from '../components/common/OfflineDraftIndicator';
 
 export default function SiteReports({ isProjectView }) {
   const { id: routeProjectId } = useParams();
@@ -49,8 +51,6 @@ export default function SiteReports({ isProjectView }) {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isForm62ModalOpen, setIsForm62ModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
-
-  // Create Modal Tab
   const [activeTab, setActiveTab] = useState('general');
 
   // Form State
@@ -97,6 +97,10 @@ export default function SiteReports({ isProjectView }) {
   };
 
   const [formData, setFormData] = useState(initialForm);
+
+  // Offline Draft Hook
+  const dprDraftKey = `contractor_dpr_${projectId || routeProjectId || 'default'}`;
+  const { hasDraft, draftData, lastSaved, clearDraft } = useOfflineDraft(dprDraftKey, formData, isCreateModalOpen);
 
   const fetchReports = async () => {
     try {
@@ -268,6 +272,7 @@ export default function SiteReports({ isProjectView }) {
 
       await api.post('/site-reports', payload);
       toast.success('Daily Progress Report submitted successfully!');
+      clearDraft();
       setIsCreateModalOpen(false);
       fetchReports();
       fetchSummary();
@@ -821,6 +826,21 @@ export default function SiteReports({ isProjectView }) {
             {/* Modal Body */}
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
               <div className="p-6 overflow-y-auto flex-1 space-y-5">
+                <OfflineDraftIndicator
+                  hasDraft={hasDraft}
+                  lastSaved={lastSaved}
+                  onRestore={() => {
+                    if (draftData) {
+                      setFormData(draftData);
+                      toast.success('DPR draft restored!');
+                    }
+                  }}
+                  onDiscard={() => {
+                    clearDraft();
+                    toast.info('Draft discarded.');
+                  }}
+                />
+
                 {/* TAB 1: General & Weather */}
                 {activeTab === 'general' && (
                   <div className="space-y-4">

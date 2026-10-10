@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 import api from '../../services/api';
 import ReceiptModal from '../../components/distributor/ReceiptModal';
 import CustomSelect from '../../components/common/CustomSelect';
+import useOfflineDraft from '../../hooks/useOfflineDraft';
+import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 
 export default function DistributorSales() {
   const [sales, setSales] = useState([]);
@@ -24,6 +26,8 @@ export default function DistributorSales() {
     paidAmount: '',
     paymentMethod: 'CASH'
   });
+
+  const { hasDraft, draftData, lastSaved, clearDraft } = useOfflineDraft('distributor_delivery', formData, showModal);
 
   const fetchData = async () => {
     try {
@@ -64,6 +68,7 @@ export default function DistributorSales() {
     try {
       await api.post('/distributor/sales', formData);
       toast.success('Delivery recorded successfully');
+      clearDraft();
       setShowModal(false);
       setFormData({ customerId: '', weight: '', sellingRate: '', discount: '', otherCharges: '', paidAmount: '', paymentMethod: 'CASH' });
       fetchData();
@@ -219,6 +224,21 @@ export default function DistributorSales() {
             
             <div className="overflow-y-auto flex-1 p-4 pb-safe">
               <form id="deliveryForm" onSubmit={handleSubmit} className="space-y-5">
+                <OfflineDraftIndicator
+                  hasDraft={hasDraft}
+                  lastSaved={lastSaved}
+                  onRestore={() => {
+                    if (draftData) {
+                      setFormData(draftData);
+                      toast.success('Delivery draft restored!');
+                    }
+                  }}
+                  onDiscard={() => {
+                    clearDraft();
+                    toast.info('Draft discarded.');
+                  }}
+                />
+
                 <div className="relative z-50">
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-2"><User className="w-4 h-4"/> Select Shop</label>
                   <CustomSelect 
