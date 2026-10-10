@@ -8,7 +8,8 @@ import Project from '../src/models/Project.js';
 import User from '../src/models/User.js';
 
 async function seed() {
-  await mongoose.connect(process.env.MONGO_URI);
+  const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/apexbuild';
+  await mongoose.connect(mongoUri);
   console.log('Connected to MongoDB');
 
   const contractor = await User.findOne({ email: 'contractor@example.com' });

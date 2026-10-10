@@ -15,7 +15,8 @@ import SupplierDriver from '../src/models/SupplierDriver.js';
 import SupplierInventoryLedger from '../src/models/SupplierInventoryLedger.js';
 
 async function seed() {
-  await mongoose.connect(process.env.MONGO_URI);
+  const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/apexbuild';
+  await mongoose.connect(mongoUri);
   console.log('Connected to MongoDB');
 
   const supplierUser = await User.findOne({ email: 'supplier@example.com' });
