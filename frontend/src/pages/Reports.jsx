@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Download, FileText, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Download, FileText, X, TrendingUp, ArrowRight, Wallet, CheckCircle2 } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -49,9 +50,37 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">Reports & Analytics</h1>
-        <p className="text-slate-500">Generate insights and export data for your business.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Reports & Analytics</h1>
+          <p className="text-slate-500">Generate executive insights, financial statements, and export data.</p>
+        </div>
+      </div>
+
+      {/* Featured Live P&L and Cash Flow Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border border-slate-800">
+        <div className="space-y-2 max-w-2xl">
+          <div className="flex items-center gap-2">
+            <span className="bg-emerald-500/20 text-emerald-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+              <TrendingUp className="w-3.5 h-3.5" /> Real-Time Engine
+            </span>
+            <span className="bg-indigo-500/20 text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-indigo-500/30 flex items-center gap-1">
+              <Wallet className="w-3.5 h-3.5" /> Working Capital & Bank Liquidity
+            </span>
+          </div>
+          <h2 className="text-xl md:text-2xl font-black tracking-tight">Project Profit & Loss & Cash Flow Snapshot</h2>
+          <p className="text-slate-300 text-sm">
+            Live dashboard of certified work billed vs actual money spent on Materials (GRN), Labour (Muster Roll), and Site Operations.
+          </p>
+        </div>
+
+        <Link
+          to="/cashflow"
+          className="btn bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold px-5 py-3 rounded-xl shadow-lg inline-flex items-center gap-2 text-sm whitespace-nowrap flex-shrink-0 transition-all"
+        >
+          <span>Open Live Cash Flow & P&L</span>
+          <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

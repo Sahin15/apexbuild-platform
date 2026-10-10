@@ -7,7 +7,7 @@ import {
 } from '../controllers/superAdminController.js';
 
 import { 
-  getBusinessAccounts, updateBusinessAccount, 
+  getBusinessAccounts, updateBusinessAccount, createBusinessAccount,
   getBusinessPartners, createBusinessPartner,
   getTeamMembers, createTeamMember
 } from '../controllers/saBusinessController.js';
@@ -62,6 +62,7 @@ router.patch('/organizations/:id/subscription', updateOrganizationSubscription);
 
 // Business Accounts & Partners
 router.get('/business-accounts', getBusinessAccounts);
+router.post('/business-accounts', createBusinessAccount);
 router.patch('/business-accounts/:id', updateBusinessAccount);
 router.get('/business-partners', getBusinessPartners);
 router.post('/business-partners', createBusinessPartner);

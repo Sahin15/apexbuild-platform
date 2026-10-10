@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, Users, ClipboardList, TestTube2, Menu, Bell, 
   Search, Plus, Activity, DollarSign, Package, Settings, LogOut, X, ChevronRight, FileText,
-  ChevronUp, User as UserIcon, HelpCircle, CreditCard
+  ChevronUp, User as UserIcon, HelpCircle, CreditCard, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
@@ -67,6 +67,7 @@ const DiagnosticsLayout = () => {
   ];
 
   const moreMenuLinks = [
+    { name: 'Quality Control (QC)', path: '/diagnostics/qc', icon: ShieldCheck },
     { name: 'Tests & Panels', path: '/diagnostics/tests', icon: Activity },
     { name: 'Doctors', path: '/diagnostics/doctors', icon: Users },
     { name: 'Reports', path: '/diagnostics/reports', icon: FileText },
@@ -86,6 +87,7 @@ const DiagnosticsLayout = () => {
     if (path.includes('/samples')) return 'Samples';
     if (path.includes('/results')) return 'Result Entry';
     if (path.includes('/reports')) return 'Reports';
+    if (path.includes('/qc')) return 'Quality Control (IQC)';
     if (path.includes('/inventory')) return 'Inventory';
     if (path.includes('/settings')) return 'Settings';
     if (path.includes('/payments')) return 'Payments';

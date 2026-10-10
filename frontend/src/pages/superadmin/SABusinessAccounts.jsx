@@ -14,8 +14,10 @@ export default function SABusinessAccounts() {
   const [loading, setLoading] = useState(true);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', businessType: 'CONTRACTOR' });
+  const [formData, setFormData] = useState({ orgName: '', orgEmail: '', businessType: 'CONTRACTOR', ownerName: '', ownerEmail: '', phone: '', password: '', osProductId: '', osPlanId: '' });
   
+  const [osProducts, setOsProducts] = useState([]);
+  const [osPlans, setOsPlans] = useState([]);
   // Pagination & Filtering
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -40,12 +42,20 @@ export default function SABusinessAccounts() {
       if (filterType !== 'ALL') params.businessType = filterType;
       if (filterStatus !== 'ALL') params.status = filterStatus;
 
-      const res = await api.get('/platform/business-accounts', { params });
+      const [res, productsRes, plansRes] = await Promise.all([
+        api.get('/platform/business-accounts', { params }),
+        api.get('/platform/os-products'),
+        api.get('/platform/os-plans')
+      ]);
+      
       setAccounts(res.data.data.accounts);
       setTotalPages(res.data.data.pagination.pages);
       setTotalRecords(res.data.data.pagination.total);
+      
+      if (productsRes.data?.data?.products) setOsProducts(productsRes.data.data.products);
+      if (plansRes.data?.data?.plans) setOsPlans(plansRes.data.data.plans);
     } catch (error) {
-      toast.error('Failed to load business accounts');
+      toast.error('Failed to load business accounts data');
     } finally {
       setLoading(false);
     }
@@ -87,7 +97,7 @@ export default function SABusinessAccounts() {
       await api.post('/platform/business-accounts', formData);
       toast.success('Business account created successfully');
       setIsModalOpen(false);
-      setFormData({ name: '', email: '', phone: '', businessType: 'CONTRACTOR' });
+      setFormData({ orgName: '', orgEmail: '', businessType: 'CONTRACTOR', ownerName: '', ownerEmail: '', phone: '', password: '', osProductId: '', osPlanId: '' });
       fetchAccounts();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create account');
@@ -370,27 +380,70 @@ export default function SABusinessAccounts() {
             
             <div className="p-6 overflow-y-auto">
               <form id="accountForm" onSubmit={handleCreate} className="space-y-5">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Business Name <span className="text-rose-500">*</span></label>
-                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Acme Corp" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Admin Email <span className="text-rose-500">*</span></label>
-                  <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="admin@acme.com" />
-                  <p className="text-xs text-slate-500 mt-1">This email will be used to login as the Organization Owner.</p>
-                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Phone Number</label>
-                    <input type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="+1234567890" />
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Organization Name <span className="text-rose-500">*</span></label>
+                    <input required type="text" value={formData.orgName} onChange={e => setFormData({...formData, orgName: e.target.value})} className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Acme Corp" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Business Type <span className="text-rose-500">*</span></label>
-                    <select required value={formData.businessType} onChange={e => setFormData({...formData, businessType: e.target.value})} className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none">
-                      {businessTypes.filter(t => t !== 'ALL' && t !== 'SUPERADMIN').map(type => (
-                        <option key={type} value={type}>{type.replace('_', ' ')}</option>
-                      ))}
-                    </select>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Organization Email <span className="text-rose-500">*</span></label>
+                    <input required type="email" value={formData.orgEmail} onChange={e => setFormData({...formData, orgEmail: e.target.value})} className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="info@acme.com" />
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 pt-4 mt-2">
+                  <h3 className="font-bold text-slate-800 mb-3 text-sm">Owner Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Owner Name <span className="text-rose-500">*</span></label>
+                      <input required type="text" value={formData.ownerName} onChange={e => setFormData({...formData, ownerName: e.target.value})} className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="John Doe" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Owner Email <span className="text-rose-500">*</span></label>
+                      <input required type="email" value={formData.ownerEmail} onChange={e => setFormData({...formData, ownerEmail: e.target.value})} className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="john@acme.com" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Owner Phone</label>
+                      <input type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="+1234567890" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Initial Password <span className="text-rose-500">*</span></label>
+                      <input required type="text" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Secure Password" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 pt-4 mt-2">
+                  <h3 className="font-bold text-slate-800 mb-3 text-sm">OS Allocation</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Business Type <span className="text-rose-500">*</span></label>
+                      <select required value={formData.businessType} onChange={e => setFormData({...formData, businessType: e.target.value})} className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        {businessTypes.filter(t => t !== 'ALL' && t !== 'SUPERADMIN').map(type => (
+                          <option key={type} value={type}>{type.replace('_', ' ')}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">OS Product</label>
+                      <select value={formData.osProductId} onChange={e => setFormData({...formData, osProductId: e.target.value, osPlanId: ''})} className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="">None (Setup Later)</option>
+                        {osProducts.map(p => (
+                          <option key={p._id} value={p._id}>{p.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">OS Plan</label>
+                      <select disabled={!formData.osProductId} value={formData.osPlanId} onChange={e => setFormData({...formData, osPlanId: e.target.value})} className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-60 cursor-pointer">
+                        <option value="">Select Plan...</option>
+                        {osPlans.filter(p => p.osProductId?._id === formData.osProductId || p.osProductId === formData.osProductId).map(p => (
+                          <option key={p._id} value={p._id}>{p.name} - ${p.monthlyPrice}/mo</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               </form>

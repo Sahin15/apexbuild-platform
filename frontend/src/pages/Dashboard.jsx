@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { 
@@ -38,6 +39,7 @@ const StatCard = ({ title, value, icon: Icon, trend, colorClass, gradient }) => 
 );
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState('This Month');
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
@@ -376,7 +378,10 @@ export default function Dashboard() {
               <h2 className="text-xl font-extrabold text-slate-800">Priority Sites Overview</h2>
               <p className="text-sm font-medium text-slate-500 mt-1">High-value active projects status</p>
             </div>
-            <button className="text-sm font-bold text-primary-600 hover:text-primary-700 flex items-center bg-primary-50 px-4 py-2.5 rounded-lg hover:bg-primary-100 transition-colors shadow-sm">
+            <button 
+              onClick={() => navigate('/projects')}
+              className="text-sm font-bold text-primary-600 hover:text-primary-700 flex items-center bg-primary-50 px-4 py-2.5 rounded-lg hover:bg-primary-100 transition-colors shadow-sm"
+            >
               View All Sites <ArrowRight className="w-4 h-4 ml-1.5" />
             </button>
           </div>
@@ -439,52 +444,101 @@ export default function Dashboard() {
             <h2 className="text-xl font-extrabold text-red-700 flex items-center gap-2">
               <AlertCircle className="w-6 h-6" /> Action Center
             </h2>
-            <p className="text-sm font-semibold text-red-600/70 mt-1">Requires immediate attention</p>
+            <p className="text-sm font-semibold text-red-600/70 mt-1">Immediate Site & Financial Actions</p>
           </div>
           <div className="divide-y divide-slate-100 flex-1">
-            <div className="p-5 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer group">
+            {/* 1. Critical Quality Snag */}
+            <div 
+              onClick={() => navigate('/snags')}
+              className="p-5 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer group"
+            >
               <div className="bg-red-100 p-3 rounded-xl text-red-600 h-fit shadow-sm group-hover:scale-110 group-hover:shadow-md transition-all">
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-extrabold text-slate-800">Critical Material Shortage</p>
-                <p className="text-sm font-medium text-slate-600 mt-1">TMT Bars 12mm at <span className="font-bold text-slate-800">Salt Lake Site</span></p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-extrabold text-slate-800">Critical Site Snags (2 Open)</p>
+                  <span className="text-[10px] font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">BLOCKS POUR</span>
+                </div>
+                <p className="text-sm font-medium text-slate-600 mt-1">Honeycombing Column C3 & Cover Blocks</p>
                 <div className="mt-3 flex items-center gap-3">
-                  <button className="text-xs bg-red-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-700 shadow-sm transition-colors">Order Now</button>
-                  <span className="text-xs font-semibold text-red-500 bg-red-50 px-2 py-1 rounded-md">Expected runout: Today</span>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); navigate('/snags'); }}
+                    className="text-xs bg-red-600 text-white px-3.5 py-1.5 rounded-lg font-bold hover:bg-red-700 shadow-sm transition-colors"
+                  >
+                    Open Punch List
+                  </button>
+                  <span className="text-xs font-semibold text-red-500 bg-red-50 px-2 py-1 rounded-md">Rectification Due Today</span>
                 </div>
               </div>
             </div>
             
-            <div className="p-5 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer group">
+            {/* 2. Site Petty Cash Vouchers */}
+            <div 
+              onClick={() => navigate('/expenses')}
+              className="p-5 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer group"
+            >
               <div className="bg-amber-100 p-3 rounded-xl text-amber-600 h-fit shadow-sm group-hover:scale-110 group-hover:shadow-md transition-all">
                 <FileText className="w-6 h-6" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-extrabold text-slate-800">Subcontractor Bill Approval</p>
-                <p className="text-sm font-medium text-slate-600 mt-1">RA Bill #04 - <span className="font-bold text-slate-800">New Town Complex</span></p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-extrabold text-slate-800">Supervisor Petty Cash Float</p>
+                  <span className="text-[10px] font-black text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">3 PENDING</span>
+                </div>
+                <p className="text-sm font-medium text-slate-600 mt-1">Emergency repairs & local diesel vouchers</p>
                 <div className="mt-3 flex justify-between items-center">
-                  <span className="text-base font-black text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg">₹4.50 L</span>
-                  <button className="text-xs bg-white border-2 border-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-50 hover:border-slate-300 transition-colors">Review</button>
+                  <span className="text-sm font-black text-amber-800 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">₹7,000 Total</span>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); navigate('/expenses'); }}
+                    className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg font-bold transition-colors shadow-sm"
+                  >
+                    1-Click Approve
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="p-5 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer group">
-              <div className="bg-purple-100 p-3 rounded-xl text-purple-600 h-fit shadow-sm group-hover:scale-110 group-hover:shadow-md transition-all">
+            {/* 3. GFC Drawing Revision Vault */}
+            <div 
+              onClick={() => navigate('/documents')}
+              className="p-5 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer group"
+            >
+              <div className="bg-emerald-100 p-3 rounded-xl text-emerald-600 h-fit shadow-sm group-hover:scale-110 group-hover:shadow-md transition-all">
                 <Clock className="w-6 h-6" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-extrabold text-slate-800">Milestone Deadline</p>
-                <p className="text-sm font-medium text-slate-600 mt-1">Slab Casting (Floor 3) at <span className="font-bold text-slate-800">Rajarhat</span></p>
-                <p className="text-xs font-bold text-purple-600 mt-2 bg-purple-50 inline-block px-2.5 py-1 rounded-md">Due in 2 Days</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-extrabold text-slate-800">Active GFC Blueprints</p>
+                  <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">4 APPROVED</span>
+                </div>
+                <p className="text-sm font-medium text-slate-600 mt-1">STR-COL-004 (R2) & STR-FDN-001 (R1)</p>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md">Cube Pass: 100%</span>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); navigate('/documents'); }}
+                    className="text-xs bg-white border border-slate-200 text-slate-700 px-3.5 py-1.5 rounded-lg font-bold hover:bg-slate-50 transition-colors"
+                  >
+                    Open Vault
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-          <div className="p-4 bg-slate-50/80 text-center border-t border-slate-100">
-              <button className="text-sm font-bold text-slate-600 hover:text-primary-600 transition-colors">
-                View All Action Items
-              </button>
+          <div className="p-4 bg-slate-50/80 text-center border-t border-slate-100 flex items-center justify-center gap-4">
+            <button 
+              onClick={() => navigate('/cashflow')}
+              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
+            >
+              Project Cash Flow & P&L →
+            </button>
+            <span className="text-slate-300">•</span>
+            <button 
+              onClick={() => navigate('/equipment')}
+              className="text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              Machinery & Fuel Logs →
+            </button>
           </div>
         </div>
       </div>

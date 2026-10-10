@@ -16,10 +16,9 @@ const boqItemSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Ensure remainingQuantity and amount are calculated correctly
-boqItemSchema.pre('save', function (next) {
-  this.amount = this.quantity * this.rate;
-  this.remainingQuantity = this.quantity - this.completedQuantity;
-  next();
+boqItemSchema.pre('save', function () {
+  this.amount = (this.quantity || 0) * (this.rate || 0);
+  this.remainingQuantity = Math.max(0, (this.quantity || 0) - (this.completedQuantity || 0));
 });
 
 export default mongoose.model('BOQItem', boqItemSchema);

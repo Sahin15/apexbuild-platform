@@ -6,6 +6,9 @@ const attendanceSchema = new mongoose.Schema({
   workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Worker', required: true },
   date: { type: Date, required: true },
   status: { type: String, enum: ['Present', 'Absent', 'Half-Day'], required: true },
+  hoursWorked: { type: Number, default: 8 },
+  overtimeHours: { type: Number, default: 0 },
+  taskLocation: { type: String, default: '' },
   markedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
@@ -13,3 +16,4 @@ const attendanceSchema = new mongoose.Schema({
 attendanceSchema.index({ workerId: 1, date: 1 }, { unique: true });
 
 export default mongoose.model('Attendance', attendanceSchema);
+

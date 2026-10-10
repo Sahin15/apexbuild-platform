@@ -41,6 +41,9 @@ import userRoutes from './routes/userRoutes.js';
 import clientRoutes from './routes/clientRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import equipmentRoutes from './routes/equipmentRoutes.js';
+import snagRoutes from './routes/snagRoutes.js';
+import pettyCashRoutes from './routes/pettyCashRoutes.js';
 import organizationRoutes from './routes/organizationRoutes.js';
 import tenantSupportRoutes from './routes/tenantSupportRoutes.js';
 
@@ -91,6 +94,11 @@ app.use('/api/v1/labour', labourRoutes);
 app.use('/api/v1/projects/:projectId/labour', labourRoutes);
 app.use('/api/v1/billing', billingRoutes);
 app.use('/api/v1/projects/:projectId/billing', billingRoutes);
+app.use('/api/v1/equipment', equipmentRoutes);
+app.use('/api/v1/projects/:projectId/equipment', equipmentRoutes);
+app.use('/api/v1/snags', snagRoutes);
+app.use('/api/v1/projects/:projectId/snags', snagRoutes);
+app.use('/api/v1/petty-cash', pettyCashRoutes);
 app.use('/api/v1/organization', organizationRoutes);
 app.use('/api/v1/support', tenantSupportRoutes);
 

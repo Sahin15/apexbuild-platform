@@ -1,10 +1,11 @@
-MongoServerError: E11000 duplicate key error collection: apexbuild.orders index: orderId_1 dup key: { orderId: "ORD-2026-00001" }
-    at InsertOneOperation.handleOk (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-const\backend\node_modules\mongodb\lib\operations\insert.js:55:19)
-    at executeOperationWithRetries (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-const\backend\node_modules\mongodb\lib\operations\execute_operation.js:218:34)
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at async executeOperation (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-const\backend\node_modules\mongodb\lib\operations\execute_operation.js:85:16)
-    at async Collection.insertOne (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-const\backend\node_modules\mongodb\lib\collection.js:154:16)
-    at async model.$__save (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-const\backend\node_modules\mongoose\lib\model.js:435:16)
-    at async maybeTracedSave (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-const\backend\node_modules\mongoose\lib\model.js:676:7)
-    at async Function.create (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-const\backend\node_modules\mongoose\lib\model.js:2807:5)
-    at async createOrder (file:///C:/Users/Sahin%20Mondal/OneDrive/Desktop/apexbuild-const/backend/src/controllers/diagnosticsOrderController.js:37:17)
+Error: Not Found - /api/v1/reports/cashflow
+    at notFound (file:///C:/Users/Sahin%20Mondal/OneDrive/Desktop/apexbuild-platform/backend/src/middlewares/errorMiddleware.js:4:17)
+    at Layer.handleRequest (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-platform\backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-platform\backend\node_modules\router\index.js:342:13)
+    at C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-platform\backend\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-platform\backend\node_modules\router\index.js:582:12)
+    at next (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-platform\backend\node_modules\router\index.js:291:5)
+    at C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-platform\backend\node_modules\router\index.js:688:15
+    at next (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-platform\backend\node_modules\router\index.js:276:14)
+    at file:///C:/Users/Sahin%20Mondal/OneDrive/Desktop/apexbuild-platform/backend/src/middlewares/authMiddleware.js:47:5
+    at Layer.handleRequest (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-platform\backend\node_modules\router\lib\layer.js:152:17)

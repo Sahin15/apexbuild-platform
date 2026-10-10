@@ -43,6 +43,20 @@ const orderSchema = new mongoose.Schema({
     default: 'Registered' 
   },
   
+  priority: {
+    type: String,
+    enum: ['Routine', 'Urgent', 'STAT'],
+    default: 'Routine',
+    index: true
+  },
+  expectedDeliveryDate: { type: Date },
+  tatStatus: {
+    type: String,
+    enum: ['ON_TRACK', 'NEAR_BREACH', 'BREACHED', 'COMPLETED'],
+    default: 'ON_TRACK',
+    index: true
+  },
+  
   isHomeCollection: { type: Boolean, default: false },
   homeCollectionDetails: {
     address: { type: String },
@@ -51,7 +65,18 @@ const orderSchema = new mongoose.Schema({
     status: { type: String, enum: ['Scheduled', 'En Route', 'Reached', 'Collected', 'Cancelled'], default: 'Scheduled' }
   },
   
-  paymentMethod: { type: String, enum: ['Cash', 'UPI', 'Card', 'Bank Transfer', 'Other'] },
+  paymentMethod: { type: String, enum: ['Cash', 'UPI', 'Card', 'Bank Transfer', 'Cheque', 'Other'], default: 'Cash' },
+  
+  payments: [{
+    receiptNumber: { type: String },
+    receiptId: { type: mongoose.Schema.Types.ObjectId, ref: 'LabPaymentReceipt' },
+    amount: { type: Number, required: true },
+    paymentMethod: { type: String, enum: ['Cash', 'UPI', 'Card', 'Bank Transfer', 'Cheque', 'Other'], default: 'Cash' },
+    transactionReference: { type: String, default: '' },
+    cashierName: { type: String, default: 'Cashier' },
+    paidAt: { type: Date, default: Date.now }
+  }],
+  
   notes: { type: String },
   
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }

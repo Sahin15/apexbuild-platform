@@ -22,7 +22,10 @@ import {
   LogOut,
   User as UserIcon,
   Crown,
-  ChevronUp
+  ChevronUp,
+  TrendingUp,
+  Truck,
+  CheckSquare
 } from 'lucide-react';
 
 const navigation = [
@@ -31,12 +34,15 @@ const navigation = [
   { name: 'Projects', href: '/projects', icon: Briefcase, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER', 'SUPERVISOR', 'VIEWER'] },
   { name: 'BOQ & Estimates', href: '/boq', icon: Calculator, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER', 'ACCOUNTANT'] },
   { name: 'Site Reports', href: '/site-reports', icon: ClipboardList, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER', 'SUPERVISOR', 'VIEWER'] },
+  { name: 'Site Snags', href: '/snags', icon: CheckSquare, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER', 'SUPERVISOR', 'VIEWER'] },
   { name: 'Labour', href: '/labour', icon: Users, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER', 'SUPERVISOR', 'ACCOUNTANT'] },
   { name: 'Materials', href: '/materials', icon: Package, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER', 'SUPERVISOR', 'STORE_MANAGER'] },
-  { name: 'Expenses', href: '/expenses', icon: Receipt, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'ACCOUNTANT'] },
+  { name: 'Machinery & Fuel', href: '/equipment', icon: Truck, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER', 'SUPERVISOR', 'ACCOUNTANT'] },
+  { name: 'Petty Cash & Expenses', href: '/expenses', icon: Receipt, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER', 'SUPERVISOR', 'ACCOUNTANT'] },
   { name: 'Measurements', href: '/measurements', icon: Ruler, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER'] },
   { name: 'Billing & RA', href: '/billing', icon: FileSpreadsheet, roles: ['OWNER', 'ADMIN', 'ACCOUNTANT'] },
-  { name: 'Documents', href: '/documents', icon: Files, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER', 'SUPERVISOR', 'STORE_MANAGER', 'ACCOUNTANT', 'VIEWER'] },
+  { name: 'Cash Flow & P&L', href: '/cashflow', icon: TrendingUp, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'ACCOUNTANT'] },
+  { name: 'Drawings & Vault', href: '/documents', icon: Files, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER', 'SUPERVISOR', 'STORE_MANAGER', 'ACCOUNTANT', 'VIEWER'] },
   { name: 'Team', href: '/team', icon: UsersRound, roles: ['OWNER', 'ADMIN'] },
   { name: 'Reports', href: '/reports', icon: LineChart, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'ACCOUNTANT'] },
   { name: 'Settings', href: '/settings', icon: Settings, roles: ['OWNER', 'ADMIN'] },

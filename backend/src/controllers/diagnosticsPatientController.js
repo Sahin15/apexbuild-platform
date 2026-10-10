@@ -111,3 +111,68 @@ export const updatePatient = async (req, res, next) => {
     next(error);
   }
 };
+
+// Get longitudinal cumulative parameter trends across patient visits
+export const getPatientCumulativeTrends = async (req, res, next) => {
+  try {
+    const orgId = req.user.organizationId._id || req.user.organizationId;
+    const patientId = req.params.id;
+
+    const results = await Result.find({ patient: patientId, organizationId: orgId })
+      .populate('order', 'orderNumber createdAt orderStatus')
+      .populate('test', 'name category method')
+      .sort({ createdAt: 1 }); // chronological
+
+    // Group parameters across all tests and dates
+    const parameterMap = {};
+
+    results.forEach(resItem => {
+      const orderDate = resItem.order?.createdAt || resItem.createdAt;
+      const orderNumber = resItem.order?.orderNumber || 'ORD-HIST';
+
+      (resItem.parameters || []).forEach(param => {
+        if (!param.name) return;
+        const paramKey = param.name.trim();
+
+        if (!parameterMap[paramKey]) {
+          parameterMap[paramKey] = {
+            parameterName: paramKey,
+            unit: param.unit || '',
+            referenceRange: param.referenceRange || '',
+            testName: resItem.test?.name || 'Lab Test',
+            history: []
+          };
+        }
+
+        const numVal = parseFloat(String(param.value || '').replace(/,/g, ''));
+
+        parameterMap[paramKey].history.push({
+          resultId: resItem._id,
+          orderNumber,
+          date: orderDate,
+          dateFormatted: new Date(orderDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          rawValue: param.value,
+          numericValue: !isNaN(numVal) ? numVal : null,
+          isAbnormal: param.isAbnormal || false,
+          flag: param.flag || 'NORMAL',
+          remarks: resItem.remarks || ''
+        });
+      });
+    });
+
+    const trendableParameters = Object.values(parameterMap).filter(p => 
+      p.history.some(h => h.numericValue !== null)
+    );
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        parameters: trendableParameters,
+        allParameters: Object.values(parameterMap)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

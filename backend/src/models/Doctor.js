@@ -11,6 +11,18 @@ const doctorSchema = new mongoose.Schema({
   city: { type: String },
   state: { type: String },
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+  
+  // Commission & Incentive Engine fields
+  commissionRate: { type: Number, default: 15 }, // percentage (e.g. 15%)
+  panNumber: { type: String },
+  bankDetails: {
+    accountName: { type: String },
+    accountNumber: { type: String },
+    ifscCode: { type: String },
+    bankName: { type: String },
+    upiId: { type: String }
+  },
+  
   notes: { type: String },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });

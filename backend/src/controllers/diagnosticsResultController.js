@@ -2,6 +2,8 @@ import Result from '../models/Result.js';
 import Order from '../models/Order.js';
 import Sample from '../models/Sample.js';
 import AppError from '../utils/AppError.js';
+import { autoDepleteReagents } from './diagnosticsInventoryController.js';
+import { scanAndCreateCriticalAlerts } from './diagnosticsAlertController.js';
 
 export const getPendingResults = async (req, res, next) => {
   try {
@@ -61,13 +63,19 @@ export const saveResult = async (req, res, next) => {
       { status: 'Tested' }
     );
 
+    // Auto-deplete any inventory reagents or tubes linked to this test
+    await autoDepleteReagents(orgId, testId, orderId, req.user._id);
+
+    // Scan for NABL Critical Panic Values & Auto-Create Alerts
+    const criticalAlerts = await scanAndCreateCriticalAlerts(orderId, testId, result._id, parameters, orgId);
+
     // Update order status logic (if all tests have Verified results -> Completed)
     // For simplicity, just mark 'Partial Results'
     await Order.findByIdAndUpdate(orderId, { orderStatus: 'Partial Results' });
 
     res.status(200).json({
       status: 'success',
-      data: { result }
+      data: { result, criticalAlerts }
     });
   } catch (error) {
     next(error);
@@ -81,18 +89,23 @@ export const getResultsByOrder = async (req, res, next) => {
 
     const order = await Order.findOne({ _id: orderId, organizationId: orgId })
       .populate('patient')
-      .populate('referringDoctor');
+      .populate('referringDoctor')
+      .populate('organizationId', 'name legalName email phone address city state pincode gstNumber logo settings')
+      .populate('tests.test', 'name category method testId sampleType');
 
     if (!order) return next(new AppError('Order not found', 404));
 
     const results = await Result.find({ order: orderId, organizationId: orgId })
-      .populate('test', 'name category method testId')
+      .populate('test', 'name category method testId sampleType')
       .populate('enteredBy', 'name')
-      .populate('verifiedBy', 'name');
+      .populate('verifiedBy', 'name')
+      .populate('sample');
+
+    const samples = await Sample.find({ order: orderId, organizationId: orgId });
 
     res.status(200).json({
       status: 'success',
-      data: { order, results }
+      data: { order, results, samples }
     });
   } catch (error) {
     next(error);

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const dir = 'c:/Users/Sahin Mondal/OneDrive/Desktop/apexbuild-const/frontend/src/pages/distributor';
+const dir = 'c:/Users/Sahin Mondal/OneDrive/Desktop/apexbuild-platform/frontend/src/pages/distributor';
 
 fs.readdirSync(dir).forEach(file => {
   if (file.endsWith('.jsx')) {

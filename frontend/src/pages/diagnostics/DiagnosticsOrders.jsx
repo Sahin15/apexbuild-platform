@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Plus, Filter, ClipboardList, X, FileText, User, Activity } from 'lucide-react';
+import { Search, Plus, Filter, ClipboardList, X, FileText, User, Activity, Eye, Receipt } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import DiagnosticsReportModal from '../../components/diagnostics/DiagnosticsReportModal';
+import PaymentReceiptModal from '../../components/diagnostics/PaymentReceiptModal';
 
 const DiagnosticsOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -25,6 +27,10 @@ const DiagnosticsOrders = () => {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedOrderForPayment, setSelectedOrderForPayment] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
+
+  // Diagnostics Report Modal State
+  const [reportOrderId, setReportOrderId] = useState(null);
+  const [receiptModalOrder, setReceiptModalOrder] = useState(null);
 
   // Searchable Multi-Select State
   const [testSearchQuery, setTestSearchQuery] = useState('');
@@ -228,7 +234,7 @@ const DiagnosticsOrders = () => {
                       <p>{order.tests?.length || 0} Test(s)</p>
                       <p className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex flex-col items-end gap-1.5">
                       <p className="font-bold text-gray-900">₹{order.totalAmount}</p>
                       <button 
                         onClick={(e) => {
@@ -243,6 +249,17 @@ const DiagnosticsOrders = () => {
                       >
                         {order.paymentStatus}
                       </button>
+                      {['Partial Results', 'Completed'].includes(order.orderStatus) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReportOrderId(order._id);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded"
+                        >
+                          <FileText className="w-3 h-3" /> Report
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -260,6 +277,7 @@ const DiagnosticsOrders = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Report</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -304,6 +322,37 @@ const DiagnosticsOrders = () => {
                         >
                           {order.paymentStatus}
                         </button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReceiptModalOrder(order);
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200 transition-colors shadow-2xs"
+                            title="View / Print 80mm POS Slip or A4 Tax Invoice"
+                          >
+                            <Receipt className="w-3.5 h-3.5 text-slate-600" />
+                            <span>Bill</span>
+                          </button>
+
+                          {['Partial Results', 'Completed'].includes(order.orderStatus) ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setReportOrderId(order._id);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors shadow-2xs"
+                              title="View & Download PDF Lab Report"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-blue-600" />
+                              <span>Report</span>
+                            </button>
+                          ) : (
+                            <span className="text-gray-300 text-xs">-</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -573,6 +622,29 @@ const DiagnosticsOrders = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Diagnostics Report Modal */}
+      {reportOrderId && (
+        <DiagnosticsReportModal
+          orderId={reportOrderId}
+          onClose={() => setReportOrderId(null)}
+          onVerified={() => {
+            // refresh orders
+            api.get('/diagnostics/orders').then(res => {
+              if (res.data?.data?.orders) setOrders(res.data.data.orders);
+            });
+          }}
+        />
+      )}
+
+      {/* Payment Receipt / Invoice Modal */}
+      {receiptModalOrder && (
+        <PaymentReceiptModal
+          isOpen={!!receiptModalOrder}
+          onClose={() => setReceiptModalOrder(null)}
+          order={receiptModalOrder}
+        />
       )}
     </div>
   );

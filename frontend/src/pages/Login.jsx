@@ -16,12 +16,17 @@ export default function Login() {
       // The context has been updated, but since we just awaited login, we can get user from localStorage or just wait for the router to redirect, 
       // but let's grab it from local storage directly to ensure we have the latest
       const user = JSON.parse(localStorage.getItem('user'));
-      if (user?.organizationId?.businessType === 'SUPERADMIN') {
+      const bType = user?.organizationId?.businessType;
+      if (bType === 'SUPERADMIN') {
          navigate('/superadmin/dashboard', { replace: true });
-      } else if (user?.organizationId?.businessType === 'MATERIAL_SUPPLIER') {
+      } else if (bType === 'MATERIAL_SUPPLIER' || bType === 'SUPPLIER') {
          navigate('/supplier/dashboard', { replace: true });
+      } else if (bType === 'CHICKEN_DISTRIBUTOR' || bType === 'DISTRIBUTOR') {
+         navigate('/distributor/dashboard', { replace: true });
+      } else if (bType === 'DIAGNOSTICS') {
+         navigate('/diagnostics/dashboard', { replace: true });
       } else {
-         navigate('/dashboard', { replace: true });
+         navigate('/dashboard', { replace: true }); // Default Contractor
       }
     }
   };

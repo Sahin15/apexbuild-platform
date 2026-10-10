@@ -3,11 +3,74 @@ import BusinessPartner from '../models/BusinessPartner.js';
 import AppError from '../utils/AppError.js';
 import User from '../models/User.js';
 import AuditLog from '../models/AuditLog.js';
+import Subscription from '../models/Subscription.js';
+import OSPlan from '../models/OSPlan.js';
 
 export const getBusinessAccounts = async (req, res, next) => {
   try {
     const orgs = await Organization.find({ businessType: { $ne: 'SUPERADMIN' } }).populate('partnerId').sort('-createdAt');
     res.status(200).json({ status: 'success', data: { accounts: orgs } });
+  } catch (error) { next(error); }
+};
+
+export const createBusinessAccount = async (req, res, next) => {
+  try {
+    const { orgName, orgEmail, businessType, ownerName, ownerEmail, phone, password, osProductId, osPlanId } = req.body;
+
+    const existingUser = await User.findOne({ email: ownerEmail });
+    if (existingUser) return next(new AppError('Owner email already in use', 400));
+
+    // 1. Create Organization
+    const organization = await Organization.create({
+      name: orgName,
+      email: orgEmail,
+      businessType: businessType || 'CONTRACTOR',
+      status: 'active'
+    });
+
+    // 2. Create Owner User
+    const user = await User.create({
+      organizationId: organization._id,
+      name: ownerName,
+      email: ownerEmail,
+      phone,
+      passwordHash: password,
+      role: 'OWNER',
+      status: 'active'
+    });
+    user.passwordHash = undefined;
+
+    // 3. Create Subscription if Plan is provided
+    let subscription = null;
+    if (osProductId && osPlanId) {
+      const plan = await OSPlan.findById(osPlanId);
+      if (plan) {
+        subscription = await Subscription.create({
+          organizationId: organization._id,
+          osProductId,
+          osPlanId,
+          status: 'ACTIVE',
+          billingCycle: 'monthly',
+          basePrice: plan.monthlyPrice,
+          finalAmount: plan.monthlyPrice,
+          startDate: new Date(),
+          renewalDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+          createdBy: req.user._id
+        });
+      }
+    }
+
+    await AuditLog.create({
+      action: 'BUSINESS_ACCOUNT_CREATED',
+      adminId: req.user._id,
+      entityType: 'Organization',
+      entityId: organization._id,
+      newValue: { orgName, ownerEmail, osPlanId },
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    res.status(201).json({ status: 'success', data: { account: organization, owner: user, subscription } });
   } catch (error) { next(error); }
 };
 

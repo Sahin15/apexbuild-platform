@@ -19,7 +19,8 @@ const testSchema = new mongoose.Schema({
   containerType: { type: String }, // e.g., EDTA, SST, Plain
   price: { type: Number, required: true },
   preparationInstructions: { type: String }, // e.g., Fasting 10-12 hours
-  turnaroundTime: { type: String }, // e.g., 24 Hours, 2 Days
+  turnaroundTime: { type: String, default: '4 Hours' }, // e.g., 2 Hours, 24 Hours
+  tatHours: { type: Number, default: 4 }, // Standard turnaround time SLA in hours
   method: { type: String },
   notes: { type: String },
   parameters: [parameterSchema],

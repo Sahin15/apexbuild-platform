@@ -16,6 +16,9 @@ import Billing from './pages/Billing';
 import Documents from './pages/Documents';
 import Team from './pages/Team';
 import Reports from './pages/Reports';
+import ProjectCashFlow from './pages/ProjectCashFlow';
+import Equipment from './pages/Equipment';
+import Snags from './pages/Snags';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import HelpSupport from './pages/HelpSupport';
@@ -102,6 +105,7 @@ import DiagnosticsReports from './pages/diagnostics/DiagnosticsReports';
 import DiagnosticsInventory from './pages/diagnostics/DiagnosticsInventory';
 import DiagnosticsSettings from './pages/diagnostics/DiagnosticsSettings';
 import DiagnosticsPayments from './pages/diagnostics/DiagnosticsPayments';
+import DiagnosticsQC from './pages/diagnostics/DiagnosticsQC';
 import PlatformBilling from './pages/PlatformBilling';
 
 const ProtectedRoute = ({ children, allowedBusinessTypes }) => {
@@ -161,11 +165,14 @@ function App() {
             <Route path="clients" element={<Clients />} />
             <Route path="boq" element={<BOQ />} />
             <Route path="site-reports" element={<SiteReports />} />
+            <Route path="snags" element={<Snags />} />
             <Route path="labour" element={<Labour />} />
             <Route path="materials" element={<Materials />} />
+            <Route path="equipment" element={<Equipment />} />
             <Route path="expenses" element={<Expenses />} />
             <Route path="measurements" element={<Measurements />} />
             <Route path="billing" element={<Billing />} />
+            <Route path="cashflow" element={<ProjectCashFlow />} />
             <Route path="documents" element={<Documents />} />
             <Route path="team" element={<Team />} />
             <Route path="reports" element={<Reports />} />
@@ -290,6 +297,7 @@ function App() {
             <Route path="payments" element={<DiagnosticsPayments />} />
             <Route path="tests" element={<DiagnosticsTests />} />
             <Route path="doctors" element={<DiagnosticsDoctors />} />
+            <Route path="qc" element={<DiagnosticsQC />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
             <Route path="subscription" element={<PlatformBilling />} />
