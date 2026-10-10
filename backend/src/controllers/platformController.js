@@ -96,6 +96,25 @@ export const verifyPlatformBusinessAccount = async (req, res, next) => {
   }
 };
 
+// Tenancy Workspace Isolation Endpoints
+export const getPlatformTenancyWorkspaces = async (req, res, next) => {
+  try {
+    const data = await PlatformBusinessService.getTenancyWorkspacesOverview();
+    res.status(200).json({ status: 'success', data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPlatformTenancyAudit = async (req, res, next) => {
+  try {
+    const data = await PlatformBusinessService.getTenancySecurityAudit();
+    res.status(200).json({ status: 'success', data });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // OS Product Endpoints
 export const getPlatformOSProducts = async (req, res, next) => {
   try {

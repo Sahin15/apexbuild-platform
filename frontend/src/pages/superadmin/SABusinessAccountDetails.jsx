@@ -52,12 +52,22 @@ export default function SABusinessAccountDetails() {
     try {
       // Assuming a dedicated impersonate endpoint exists like before
       const res = await api.post(`/superadmin/impersonate/${id}`);
-      toast.success('Masquerading initiated');
+      toast.success(`Entering isolated workspace: ${account?.name || 'Tenant'}`);
       localStorage.setItem('originalToken', localStorage.getItem('token'));
       localStorage.setItem('originalUser', localStorage.getItem('user'));
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.data.user));
-      window.location.href = '/dashboard'; 
+      
+      const bType = account?.businessType || res.data.data?.user?.organizationId?.businessType;
+      if (bType === 'MATERIAL_SUPPLIER') {
+        window.location.href = '/supplier/dashboard';
+      } else if (bType === 'DIAGNOSTICS') {
+        window.location.href = '/diagnostics/dashboard';
+      } else if (bType === 'CHICKEN_DISTRIBUTOR') {
+        window.location.href = '/distributor/dashboard';
+      } else {
+        window.location.href = '/dashboard';
+      }
     } catch (error) {
       toast.error('Failed to impersonate tenant');
     }

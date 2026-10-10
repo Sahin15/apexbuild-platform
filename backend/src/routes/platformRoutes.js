@@ -6,6 +6,8 @@ import {
   createPlatformBusinessAccount,
   updatePlatformBusinessAccount,
   verifyPlatformBusinessAccount,
+  getPlatformTenancyWorkspaces,
+  getPlatformTenancyAudit,
   getPlatformOSProducts,
   createPlatformOSProduct,
   updatePlatformOSProduct,
@@ -105,6 +107,10 @@ router.get('/business-accounts/:id', getPlatformBusinessAccountDetails);
 router.patch('/business-accounts/:id', updatePlatformBusinessAccount);
 router.post('/business-accounts/:id/verify', verifyPlatformBusinessAccount);
 router.patch('/business-accounts/:id/verify', verifyPlatformBusinessAccount);
+
+// Tenancy Workspace Isolation & Audit Endpoints
+router.get('/tenancy-workspaces', getPlatformTenancyWorkspaces);
+router.get('/tenancy-audit', getPlatformTenancyAudit);
 
 // OS Products endpoints
 router.get('/os-products', getPlatformOSProducts);
