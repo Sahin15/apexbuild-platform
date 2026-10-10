@@ -7,6 +7,7 @@ import PaymentReceiptModal from '../../components/diagnostics/PaymentReceiptModa
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 import haptics from '../../utils/haptics';
+import { enqueueSyncOperation } from '../../services/syncQueue';
 
 const DiagnosticsOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -158,6 +159,30 @@ const DiagnosticsOrders = () => {
         isHomeCollection,
         homeCollectionDetails: isHomeCollection ? { address: collectionAddress } : undefined
       };
+
+      if (!navigator.onLine) {
+        const patientObj = patients.find(p => p._id === selectedPatient);
+        enqueueSyncOperation({
+          endpoint: '/diagnostics/orders',
+          method: 'POST',
+          payload,
+          title: `Lab Test Order for ${patientObj?.name || 'Patient'} (${testItems.length} test${testItems.length > 1 ? 's' : ''})`,
+          platform: 'DIAGNOSTICS_LAB'
+        });
+        haptics.success();
+        toast.success('Offline mode: Lab test order saved to sync queue! Will upload automatically once online.');
+        clearDraft();
+        
+        // Reset
+        setIsModalOpen(false);
+        setSelectedPatient('');
+        setSelectedTests([]);
+        setDiscount(0);
+        setPaidAmount(0);
+        setIsHomeCollection(false);
+        setCollectionAddress('');
+        return;
+      }
 
       const res = await api.post('/diagnostics/orders', payload);
       setOrders([res.data.data.order, ...orders]);

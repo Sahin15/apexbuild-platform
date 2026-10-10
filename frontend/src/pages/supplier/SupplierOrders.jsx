@@ -6,6 +6,7 @@ import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 import haptics from '../../utils/haptics';
 import { notifyOrderCreated } from '../../utils/notifications';
+import { enqueueSyncOperation } from '../../services/syncQueue';
 
 export default function SupplierOrders() {
   const [orders, setOrders] = useState([]);
@@ -158,6 +159,23 @@ export default function SupplierOrders() {
       grandTotal,
       dueAmount
     };
+
+    if (!navigator.onLine) {
+      const custObj = customers.find(c => c._id === formData.customer);
+      enqueueSyncOperation({
+        endpoint: '/supplier/orders',
+        method: 'POST',
+        payload,
+        title: `Sales Order for ${custObj?.name || 'Customer'} (₹${grandTotal.toLocaleString('en-IN')})`,
+        platform: 'MATERIAL_SUPPLIER'
+      });
+      haptics.success();
+      toast.success('Offline mode: Sales order saved to sync queue! Will upload automatically once online.');
+      clearDraft();
+      setShowModal(false);
+      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '' });
+      return;
+    }
 
     try {
       const res = await api.post('/supplier/orders', payload);

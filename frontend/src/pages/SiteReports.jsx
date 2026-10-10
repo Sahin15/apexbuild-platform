@@ -40,6 +40,7 @@ import OfflineDraftIndicator from '../components/common/OfflineDraftIndicator';
 import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
 import haptics from '../utils/haptics';
 import { notifyDprSubmitted } from '../utils/notifications';
+import { enqueueSyncOperation } from '../services/syncQueue';
 
 export default function SiteReports({ isProjectView }) {
   const { id: routeProjectId } = useParams();
@@ -288,6 +289,21 @@ export default function SiteReports({ isProjectView }) {
         ...formData,
         projectId: targetProjId
       };
+
+      if (!navigator.onLine) {
+        enqueueSyncOperation({
+          endpoint: '/site-reports',
+          method: 'POST',
+          payload,
+          title: `DPR ${formData.dprNo} (${activeProjectObj?.name || 'Site'})`,
+          platform: 'CONTRACTOR_CIVIL'
+        });
+        haptics.success();
+        toast.success('Offline mode: DPR saved to sync queue! Will upload automatically once online.');
+        clearDraft();
+        setIsCreateModalOpen(false);
+        return;
+      }
 
       await api.post('/site-reports', payload);
       haptics.success();

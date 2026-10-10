@@ -9,6 +9,7 @@ import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator
 import BarcodeScannerModal from '../../components/common/BarcodeScannerModal';
 import haptics from '../../utils/haptics';
 import { notifyDeliveryRecorded, notifyLowStock } from '../../utils/notifications';
+import { enqueueSyncOperation } from '../../services/syncQueue';
 
 export default function DistributorSales() {
   const [sales, setSales] = useState([]);
@@ -76,6 +77,23 @@ export default function DistributorSales() {
     if (Number(formData.weight) > currentStock) {
       haptics.warning();
       toast.error(`Cannot deliver ${formData.weight} kg. Only ${currentStock} kg in stock.`);
+      return;
+    }
+
+    if (!navigator.onLine) {
+      const custObj = customers.find(c => c._id === formData.customerId);
+      enqueueSyncOperation({
+        endpoint: '/distributor/sales',
+        method: 'POST',
+        payload: formData,
+        title: `Delivery to ${custObj?.shopName || 'Shop'} (${formData.weight} KG)`,
+        platform: 'CHICKEN_DISTRIBUTOR'
+      });
+      haptics.success();
+      toast.success('Offline mode: Delivery saved to sync queue! Will upload automatically once online.');
+      clearDraft();
+      setShowModal(false);
+      setFormData({ customerId: '', weight: '', sellingRate: '', discount: '', otherCharges: '', paidAmount: '', paymentMethod: 'CASH' });
       return;
     }
 
