@@ -1,9 +1,60 @@
 {
-  "short_name": "Diagnostics",
-  "name": "ApexBuild Diagnostics OS",
-  "description": "Comprehensive Lab & Pathology Management System",
-  "start_url": "/login",
+  "name": "ApexBuild Business OS",
+  "short_name": "ApexBuild",
+  "description": "Multi-Tenant Business Operating System & Mobile Field Suite",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#2563eb",
-  "background_color": "#ffffff"
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "en",
+  "scope": "/",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Distributor Sales",
+      "short_name": "Deliveries",
+      "description": "Record Chicken Delivery and Sales",
+      "url": "/distributor/deliveries",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Civil Daily Muster",
+      "short_name": "Attendance",
+      "description": "Contractor Civil Labour Attendance & Muster",
+      "url": "/labour",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Supplier Orders",
+      "short_name": "Orders",
+      "description": "Material Supplier Dispatch Orders",
+      "url": "/supplier/orders",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Diagnostic Tests",
+      "short_name": "Lab Orders",
+      "description": "Patient Test Bookings and Reports",
+      "url": "/diagnostics/orders",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
 }

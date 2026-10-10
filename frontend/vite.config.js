@@ -76,28 +76,28 @@ export default defineConfig({
             name: 'Distributor Sales',
             short_name: 'Deliveries',
             description: 'Record Chicken Delivery and Sales',
-            url: '/chicken-distributor/sales',
+            url: '/distributor/deliveries',
             icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
           },
           {
-            name: 'Civil Daily Progress',
-            short_name: 'DPR Form',
-            description: 'Civil Site Daily Progress Reports',
-            url: '/contractor/civil/site-reports',
+            name: 'Civil Daily Reports',
+            short_name: 'Site DPR',
+            description: 'Civil Site Daily Progress & Attendance',
+            url: '/site-reports',
             icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
           },
           {
             name: 'Supplier Orders',
             short_name: 'Orders',
             description: 'Material Supplier Dispatch Orders',
-            url: '/material-supplier/orders',
+            url: '/supplier/orders',
             icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
           },
           {
             name: 'Diagnostic Tests',
             short_name: 'Lab Orders',
             description: 'Patient Test Bookings and Reports',
-            url: '/diagnostics-lab/orders',
+            url: '/diagnostics/orders',
             icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
           }
         ]
