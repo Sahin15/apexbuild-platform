@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import api from '../../services/api';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
+import haptics from '../../utils/haptics';
 
 export default function SupplierOrders() {
   const [orders, setOrders] = useState([]);
@@ -62,6 +63,7 @@ export default function SupplierOrders() {
   };
 
   const addItem = () => {
+    haptics.medium();
     setFormData({
       ...formData,
       items: [...formData.items, { product: '', quantity: 1, mrp: 0, discountType: 'none', discountValue: 0, rate: 0, total: 0 }]
@@ -102,18 +104,31 @@ export default function SupplierOrders() {
   };
 
   const removeItem = (index) => {
+    haptics.heavy();
     const newItems = formData.items.filter((_, i) => i !== index);
     setFormData({ ...formData, items: newItems });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.items.length === 0) return toast.error('Add at least one item');
-    if (formData.items.some(i => !i.product)) return toast.error('Select product for all items');
+    if (formData.items.length === 0) {
+      haptics.warning();
+      return toast.error('Add at least one item');
+    }
+    if (formData.items.some(i => !i.product)) {
+      haptics.warning();
+      return toast.error('Select product for all items');
+    }
     
     if (formData.deliverImmediately) {
-      if (!formData.vehicle) return toast.error('Select a vehicle for immediate delivery');
-      if (!formData.driver) return toast.error('Select a driver for immediate delivery');
+      if (!formData.vehicle) {
+        haptics.warning();
+        return toast.error('Select a vehicle for immediate delivery');
+      }
+      if (!formData.driver) {
+        haptics.warning();
+        return toast.error('Select a driver for immediate delivery');
+      }
     }
 
     const subTotal = formData.items.reduce((acc, item) => acc + item.total, 0);
@@ -145,12 +160,14 @@ export default function SupplierOrders() {
 
     try {
       await api.post('/supplier/orders', payload);
+      haptics.success();
       toast.success('Sales order created successfully');
       clearDraft();
       setShowModal(false);
       fetchData();
       setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '' });
     } catch (error) {
+      haptics.error();
       toast.error(error.response?.data?.message || 'Failed to create order');
     }
   };
@@ -158,9 +175,11 @@ export default function SupplierOrders() {
   const updateStatus = async (id, status) => {
     try {
       await api.patch(`/supplier/orders/${id}/status`, { status });
+      haptics.success();
       toast.success(`Order status updated to ${status}`);
       fetchData();
     } catch (error) {
+      haptics.error();
       toast.error('Failed to update status');
     }
   };

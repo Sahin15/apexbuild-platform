@@ -38,6 +38,7 @@ import {
 import useOfflineDraft from '../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../components/common/OfflineDraftIndicator';
 import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
+import haptics from '../utils/haptics';
 
 export default function SiteReports({ isProjectView }) {
   const { id: routeProjectId } = useParams();
@@ -277,7 +278,10 @@ export default function SiteReports({ isProjectView }) {
     e.preventDefault();
     try {
       const targetProjId = formData.projectId || projectId || routeProjectId;
-      if (!targetProjId) return toast.error('Please select an active project');
+      if (!targetProjId) {
+        haptics.warning();
+        return toast.error('Please select an active project');
+      }
 
       const payload = {
         ...formData,
@@ -285,12 +289,14 @@ export default function SiteReports({ isProjectView }) {
       };
 
       await api.post('/site-reports', payload);
+      haptics.success();
       toast.success('Daily Progress Report submitted successfully!');
       clearDraft();
       setIsCreateModalOpen(false);
       fetchReports();
       fetchSummary();
     } catch (error) {
+      haptics.error();
       toast.error(error.response?.data?.message || 'Failed to submit DPR');
     }
   };
@@ -299,11 +305,13 @@ export default function SiteReports({ isProjectView }) {
   const handleApprove = async (reportId) => {
     try {
       await api.post(`/site-reports/${reportId}/approve`);
+      haptics.success();
       toast.success('DPR officially approved & signed off!');
       if (isViewModalOpen) setIsViewModalOpen(false);
       fetchReports();
       fetchSummary();
     } catch (error) {
+      haptics.error();
       toast.error(error.response?.data?.message || 'Failed to approve report');
     }
   };
@@ -314,11 +322,13 @@ export default function SiteReports({ isProjectView }) {
     if (!reason) return;
     try {
       await api.post(`/site-reports/${reportId}/reject`, { reason });
+      haptics.warning();
       toast.success('Report marked for revision');
       if (isViewModalOpen) setIsViewModalOpen(false);
       fetchReports();
       fetchSummary();
     } catch (error) {
+      haptics.error();
       toast.error(error.response?.data?.message || 'Failed to reject report');
     }
   };
@@ -328,6 +338,7 @@ export default function SiteReports({ isProjectView }) {
     if (!window.confirm('Are you sure you want to delete this Daily Site Diary record?')) return;
     try {
       await api.delete(`/site-reports/${reportId}`);
+      haptics.heavy();
       toast.success('Daily report deleted');
       fetchReports();
       fetchSummary();

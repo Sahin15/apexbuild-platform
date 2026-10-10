@@ -6,6 +6,7 @@ import DiagnosticsReportModal from '../../components/diagnostics/DiagnosticsRepo
 import PaymentReceiptModal from '../../components/diagnostics/PaymentReceiptModal';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
+import haptics from '../../utils/haptics';
 
 const DiagnosticsOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -140,6 +141,7 @@ const DiagnosticsOrders = () => {
   const handleCreateOrder = async (e) => {
     e.preventDefault();
     if (!selectedPatient || selectedTests.length === 0) {
+      haptics.warning();
       return toast.error('Please select a patient and at least one test.');
     }
 
@@ -159,6 +161,7 @@ const DiagnosticsOrders = () => {
 
       const res = await api.post('/diagnostics/orders', payload);
       setOrders([res.data.data.order, ...orders]);
+      haptics.success();
       toast.success('Order created successfully!');
       clearDraft();
       
@@ -171,23 +174,29 @@ const DiagnosticsOrders = () => {
       setIsHomeCollection(false);
       setCollectionAddress('');
     } catch (error) {
+      haptics.error();
       toast.error(error.response?.data?.message || 'Error creating order');
     }
   };
 
   const handleCollectPayment = async (e) => {
     e.preventDefault();
-    if (!paymentAmount || Number(paymentAmount) <= 0) return toast.error('Enter a valid amount');
+    if (!paymentAmount || Number(paymentAmount) <= 0) {
+      haptics.warning();
+      return toast.error('Enter a valid amount');
+    }
     try {
       const res = await api.patch(`/diagnostics/orders/${selectedOrderForPayment._id}/payment`, {
         amount: Number(paymentAmount)
       });
       setOrders(orders.map(o => o._id === selectedOrderForPayment._id ? res.data.data.order : o));
+      haptics.success();
       toast.success('Payment recorded successfully');
       setPaymentModalOpen(false);
       setSelectedOrderForPayment(null);
       setPaymentAmount('');
     } catch (error) {
+      haptics.error();
       toast.error(error.response?.data?.message || 'Failed to record payment');
     }
   };

@@ -7,6 +7,7 @@ import CustomSelect from '../../components/common/CustomSelect';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 import BarcodeScannerModal from '../../components/common/BarcodeScannerModal';
+import haptics from '../../utils/haptics';
 
 export default function DistributorSales() {
   const [sales, setSales] = useState([]);
@@ -72,23 +73,27 @@ export default function DistributorSales() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (Number(formData.weight) > currentStock) {
+      haptics.warning();
       toast.error(`Cannot deliver ${formData.weight} kg. Only ${currentStock} kg in stock.`);
       return;
     }
 
     try {
       await api.post('/distributor/sales', formData);
+      haptics.success();
       toast.success('Delivery recorded successfully');
       clearDraft();
       setShowModal(false);
       setFormData({ customerId: '', weight: '', sellingRate: '', discount: '', otherCharges: '', paidAmount: '', paymentMethod: 'CASH' });
       fetchData();
     } catch (error) {
+      haptics.error();
       toast.error(error.response?.data?.message || 'Failed to record delivery');
     }
   };
 
   const handleWhatsApp = (sale) => {
+    haptics.medium();
     if (!sale.customer?.phone) {
       toast.error('Customer phone number not available');
       return;

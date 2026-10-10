@@ -32,6 +32,7 @@ import {
   Barcode
 } from 'lucide-react';
 import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
+import haptics from '../utils/haptics';
 
 export default function Labour({ isProjectView = false }) {
   const { id: routeProjectId } = useParams();
@@ -163,15 +164,18 @@ export default function Labour({ isProjectView = false }) {
       const targetProjId = projectId || routeProjectId;
       if (editingWorkerId) {
         await api.patch(`/labour/workers/${editingWorkerId}`, workerForm);
+        haptics.success();
         toast.success('Worker details updated');
       } else {
         await api.post('/labour/workers', { ...workerForm, projectId: targetProjId });
+        haptics.success();
         toast.success('Worker enrolled in site directory');
       }
       setIsWorkerModalOpen(false);
       setEditingWorkerId(null);
       fetchData();
     } catch (error) {
+      haptics.error();
       toast.error(error.response?.data?.message || 'Failed to save worker');
     }
   };
@@ -196,9 +200,11 @@ export default function Labour({ isProjectView = false }) {
     if (!window.confirm('Are you sure you want to remove this worker?')) return;
     try {
       await api.delete(`/labour/workers/${workerId}`);
+      haptics.heavy();
       toast.success('Worker removed');
       fetchData();
     } catch (error) {
+      haptics.error();
       toast.error('Failed to delete worker');
     }
   };
@@ -213,10 +219,12 @@ export default function Labour({ isProjectView = false }) {
         projectId: targetProjId,
         records: dailyAttendanceRecords
       });
+      haptics.success();
       toast.success('Attendance & Overtime recorded successfully!');
       setIsAttendanceModalOpen(false);
       fetchData();
     } catch (error) {
+      haptics.error();
       toast.error(error.response?.data?.message || 'Failed to record attendance');
     }
   };
@@ -231,11 +239,13 @@ export default function Labour({ isProjectView = false }) {
         notes: advanceForm.notes,
         paymentMode: advanceForm.paymentMode
       });
+      haptics.success();
       toast.success(`Advance of ₹${advanceForm.amount} given to ${activeWorkerForAdvance.name}`);
       setIsAdvanceModalOpen(false);
       setAdvanceForm({ amount: '', notes: 'Site cash advance for rations / batta', paymentMode: 'CASH' });
       fetchData();
     } catch (error) {
+      haptics.error();
       toast.error(error.response?.data?.message || 'Failed to record advance');
     }
   };
@@ -251,10 +261,12 @@ export default function Labour({ isProjectView = false }) {
         endDate: wageGenForm.endDate,
         thekedaar: wageGenForm.thekedaar
       });
+      haptics.success();
       toast.success(`Wage Sheet ${res.data.data.wageSheet.sheetNo} generated successfully!`);
       setIsGenerateWageModalOpen(false);
       fetchData();
     } catch (error) {
+      haptics.error();
       toast.error(error.response?.data?.message || 'Failed to generate wage sheet');
     }
   };

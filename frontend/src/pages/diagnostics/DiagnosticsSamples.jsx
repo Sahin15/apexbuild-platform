@@ -21,6 +21,7 @@ import toast from 'react-hot-toast';
 import BarcodePrintModal from '../../components/diagnostics/BarcodePrintModal';
 import { getTubeConfig } from '../../components/diagnostics/BarcodeSticker';
 import BarcodeScannerModal from '../../components/common/BarcodeScannerModal';
+import haptics from '../../utils/haptics';
 
 const DiagnosticsSamples = () => {
   const [samples, setSamples] = useState([]);
@@ -62,6 +63,11 @@ const DiagnosticsSamples = () => {
       }
       
       const res = await api.patch(`/diagnostics/samples/${sampleId}/status`, payload);
+      if (newStatusToSet === 'Rejected') {
+        haptics.warning();
+      } else {
+        haptics.success();
+      }
       toast.success(`Sample marked as ${newStatusToSet}`);
       
       const updatedSample = res.data.data.sample;
@@ -71,6 +77,7 @@ const DiagnosticsSamples = () => {
         setNewStatus(updatedSample.status);
       }
     } catch (error) {
+      haptics.error();
       toast.error(error.response?.data?.message || 'Failed to update sample');
     }
   };
@@ -83,12 +90,15 @@ const DiagnosticsSamples = () => {
         const res = await api.patch(`/diagnostics/samples/${sample._id}/status`, { status: 'Collected' });
         const updated = res.data.data.sample;
         setSamples(samples.map(s => s._id === sample._id ? updated : s));
+        haptics.success();
         toast.success(`Sample collected! Opening barcode label...`);
         setBarcodeModalSamples([updated]);
       } else {
+        haptics.medium();
         setBarcodeModalSamples([sample]);
       }
     } catch (error) {
+      haptics.error();
       toast.error('Failed to mark sample as collected');
     }
   };
