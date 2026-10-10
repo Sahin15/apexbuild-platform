@@ -71,8 +71,15 @@ export default function Header({ setSidebarOpen }) {
         {/* Workspace Indicator */}
         <div className="hidden md:flex items-center px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
           <div className="flex flex-col text-right mr-3 pr-3 border-r border-slate-200">
-            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Workspace</span>
-            <span className="text-sm font-bold text-slate-700 truncate max-w-[150px]">
+            <div className="flex items-center justify-end gap-1">
+              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Workspace</span>
+              {user?.organizationId?.businessType !== 'SUPERADMIN' && (
+                <span className="text-[9px] font-bold px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded">
+                  🔒 Isolated
+                </span>
+              )}
+            </div>
+            <span className="text-sm font-bold text-slate-800 truncate max-w-[180px]" title={user?.organizationId?.name}>
               {user?.organizationId?.name || 'ApexBuild'}
             </span>
           </div>
