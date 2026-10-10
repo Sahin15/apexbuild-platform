@@ -31,10 +31,13 @@ import {
   Sparkles,
   ArrowRight,
   TrendingUp,
-  Download
+  Download,
+  Camera,
+  Barcode
 } from 'lucide-react';
 import useOfflineDraft from '../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../components/common/OfflineDraftIndicator';
+import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
 
 export default function SiteReports({ isProjectView }) {
   const { id: routeProjectId } = useParams();
@@ -43,6 +46,7 @@ export default function SiteReports({ isProjectView }) {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [reports, setReports] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -468,15 +472,23 @@ export default function SiteReports({ isProjectView }) {
 
       {/* Filter and Search Bar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex-1 w-full max-w-md relative">
+        <div className="flex-1 w-full max-w-md relative flex items-center">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by DPR No, site engineer, work activity, or notes..."
+            placeholder="Search by DPR No, challan, engineer, activity..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+            className="w-full pl-9 pr-10 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
           />
+          <button
+            type="button"
+            onClick={() => setIsScannerOpen(true)}
+            title="Scan Challan Barcode / QR"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+          >
+            <Camera className="w-4 h-4" />
+          </button>
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
@@ -1994,6 +2006,18 @@ export default function SiteReports({ isProjectView }) {
           </div>
         </div>
       )}
+
+      {/* Mobile Camera Barcode & QR Scanner */}
+      <BarcodeScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={(code) => {
+          setSearchTerm(code);
+          toast.success(`Scanned: ${code}`);
+        }}
+        title="Scan Delivery Challan / QR"
+        subtitle="Align the delivery gate challan QR code or vehicle tag"
+      />
     </div>
   );
 }

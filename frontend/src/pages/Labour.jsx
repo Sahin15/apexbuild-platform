@@ -27,8 +27,11 @@ import {
   ChevronRight,
   ClipboardCheck,
   Building2,
-  FileCheck
+  FileCheck,
+  Camera,
+  Barcode
 } from 'lucide-react';
+import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
 
 export default function Labour({ isProjectView = false }) {
   const { id: routeProjectId } = useParams();
@@ -49,6 +52,7 @@ export default function Labour({ isProjectView = false }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedThekedaar, setSelectedThekedaar] = useState('ALL');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   // Modals
   const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
@@ -458,15 +462,23 @@ export default function Labour({ isProjectView = false }) {
           <div className="p-4 space-y-4">
             {/* Toolbar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="relative flex-1 w-full max-w-sm">
+              <div className="relative flex-1 w-full max-w-sm flex items-center">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search workers by name, trade or code..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full pl-9 pr-9 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
+                <button
+                  type="button"
+                  onClick={() => setIsScannerOpen(true)}
+                  title="Scan Worker Badge / QR"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                </button>
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
@@ -1485,6 +1497,18 @@ export default function Labour({ isProjectView = false }) {
           </div>
         </div>
       )}
+
+      {/* Mobile Camera Barcode & QR Scanner */}
+      <BarcodeScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={(code) => {
+          setSearchTerm(code);
+          toast.success(`Scanned: ${code}`);
+        }}
+        title="Scan Worker Badge / ID"
+        subtitle="Align the worker badge barcode or QR code"
+      />
     </div>
   );
 }

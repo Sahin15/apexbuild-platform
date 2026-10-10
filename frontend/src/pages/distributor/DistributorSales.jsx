@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, FileText, MessageCircle, Truck, X, User, IndianRupee } from 'lucide-react';
+import { Plus, Search, FileText, MessageCircle, Truck, X, User, IndianRupee, Camera, Barcode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import ReceiptModal from '../../components/distributor/ReceiptModal';
 import CustomSelect from '../../components/common/CustomSelect';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
+import BarcodeScannerModal from '../../components/common/BarcodeScannerModal';
 
 export default function DistributorSales() {
   const [sales, setSales] = useState([]);
@@ -16,6 +17,7 @@ export default function DistributorSales() {
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]); // Default to Today
   const [showModal, setShowModal] = useState(false);
   const [activeReceipt, setActiveReceipt] = useState(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     customerId: '',
@@ -141,11 +143,19 @@ export default function DistributorSales() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
           <input 
             type="text" 
-            placeholder="Search shop..." 
+            placeholder="Search shop or receipt..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm"
+            className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm"
           />
+          <button
+            type="button"
+            onClick={() => setIsScannerOpen(true)}
+            title="Scan Receipt / Barcode"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+          >
+            <Camera className="w-4 h-4" />
+          </button>
         </div>
         <input 
           type="date" 
@@ -321,6 +331,18 @@ export default function DistributorSales() {
           onClose={() => setActiveReceipt(null)} 
         />
       )}
+
+      {/* Mobile Camera Barcode Scanner */}
+      <BarcodeScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={(code) => {
+          setSearchTerm(code);
+          toast.success(`Scanned: ${code}`);
+        }}
+        title="Scan Delivery Receipt"
+        subtitle="Align the receipt barcode or delivery slip under the camera"
+      />
     </div>
   );
 }
