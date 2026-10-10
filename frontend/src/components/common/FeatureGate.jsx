@@ -36,8 +36,8 @@ export default function FeatureGate({
     );
   }
 
-  // If user has the feature entitlement, render child components normally
-  if (hasEntitlement(feature)) {
+  // If user has the feature entitlement, or is on the ENTERPRISE top plan, render child components normally
+  if (hasEntitlement(feature) || tier === 'ENTERPRISE') {
     return children;
   }
 

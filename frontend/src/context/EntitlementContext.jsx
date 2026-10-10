@@ -54,6 +54,10 @@ export const EntitlementProvider = ({ children }) => {
     if (user?.platformRole === 'SUPER_ADMIN') {
       return true;
     }
+    // Any tenant on the ENTERPRISE top plan has all features fully unlocked
+    if (entitlements?.tier === 'ENTERPRISE') {
+      return true;
+    }
     const feats = entitlements?.features || entitlements?.entitlements;
     if (!feats) {
       return false;
