@@ -3,6 +3,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 
 dotenv.config();
@@ -127,7 +128,12 @@ app.use('/api/v1/diagnostics', diagnosticsRoutes);
 
 // Health Route
 app.get('/api/v1/health', (req, res) => {
-  res.status(200).json({ status: 'success', message: 'ApexBuild API is running' });
+  res.status(200).json({
+    status: 'success',
+    message: 'ApexBuild API is running',
+    database: mongoose.connection.name,
+    dbConnected: mongoose.connection.readyState === 1
+  });
 });
 
 // 404 & Error Handling

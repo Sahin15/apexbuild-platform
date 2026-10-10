@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "seed": "node src/scripts/seedAllOSDemoData.js",
+    "migrate:atlas": "node src/scripts/migrateLocalToAtlas.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
