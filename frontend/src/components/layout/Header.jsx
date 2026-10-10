@@ -1,12 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
-import { Menu, Search, Bell, ChevronDown, LogOut, User as UserIcon, Settings, HelpCircle, Shield, Building2 } from 'lucide-react';
+import { 
+  Menu, Search, Bell, ChevronDown, LogOut, User as UserIcon, 
+  Settings, HelpCircle, Shield, Building2, CreditCard, ChevronRight, Crown
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useEntitlements } from '../../context/EntitlementContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getOSConfig } from '../../config/osThemes';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 
 export default function Header({ setSidebarOpen }) {
   const { user, logout } = useAuth();
+  const { tier, planName } = useEntitlements();
   const navigate = useNavigate();
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
@@ -37,6 +42,7 @@ export default function Header({ setSidebarOpen }) {
 
   const getProfilePath = () => `${osConfig.baseRoute}/profile`;
   const getSettingsPath = () => `${osConfig.baseRoute}/settings`;
+  const getSubscriptionPath = () => isSuperAdmin ? '/superadmin/subscriptions' : `${osConfig.baseRoute}/subscription`;
   const getSupportPath = () => `${osConfig.baseRoute}/support`;
 
   const initials = user?.name ? user.name.charAt(0) : (isSuperAdmin ? 'SA' : 'U');
@@ -128,73 +134,220 @@ export default function Header({ setSidebarOpen }) {
         <div className="relative flex items-center" ref={dropdownRef}>
           <button 
             onClick={() => setProfileOpen(!profileOpen)}
-            className={`h-9 w-9 rounded-xl border flex items-center justify-center font-bold text-xs shadow-2xs hover:ring-2 hover:ring-offset-2 transition-all focus:outline-none cursor-pointer ${osConfig.theme.avatarBg} ${osConfig.theme.avatarRing}`}
+            className={`relative h-9 w-9 rounded-xl border flex items-center justify-center font-bold text-xs shadow-2xs hover:ring-2 hover:ring-offset-2 transition-all focus:outline-none cursor-pointer ${osConfig.theme.avatarBg} ${osConfig.theme.avatarRing}`}
+            title="User Profile & Settings"
+            aria-label="User Profile"
           >
-            {initials.toUpperCase()}
+            <span>{initials.toUpperCase()}</span>
+            <span className="absolute -bottom-0.5 -right-0.5 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
           </button>
 
           {profileOpen && (
-            <div className="absolute right-0 top-full mt-2 w-60 rounded-2xl shadow-xl bg-white ring-1 ring-black/5 divide-y divide-slate-100 overflow-hidden transform opacity-100 scale-100 transition-all z-50">
+            <div className="absolute right-0 top-full mt-2.5 w-80 rounded-2xl shadow-2xl shadow-slate-900/15 bg-white border border-slate-200/90 overflow-hidden transform opacity-100 scale-100 transition-all z-50 animate-in fade-in zoom-in-95 duration-150">
               
-              {/* Profile Card Header */}
-              <div className="px-4 py-3 bg-slate-50/70">
-                <div className="flex items-center justify-between mb-1">
-                  <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${osConfig.theme.badgeBg}`}>
-                    {osConfig.name}
-                  </span>
-                  <span className="text-[10px] font-semibold text-slate-500 uppercase">
-                    {user?.role ? user.role.replace('_', ' ') : 'Member'}
+              {/* User & Workspace Identity Header */}
+              <div className="p-4 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+                <div className="flex items-start gap-3">
+                  <div className={`h-11 w-11 rounded-xl flex items-center justify-center font-black text-sm shrink-0 border shadow-xs ${osConfig.theme.avatarBg}`}>
+                    {initials.toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="text-sm font-bold text-slate-900 truncate" title={user?.name || 'User'}>
+                        {user?.name || 'User'}
+                      </p>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200/60 shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Active
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 truncate mt-0.5" title={user?.email || 'user@example.com'}>
+                      {user?.email || 'user@example.com'}
+                    </p>
+                    
+                    {/* Badge Chips Row */}
+                    <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+                      <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${osConfig.theme.badgeBg}`}>
+                        {osConfig.name}
+                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                        {user?.role ? user.role.replace('_', ' ') : (isSuperAdmin ? 'Super Admin' : 'Member')}
+                      </span>
+                      {!isSuperAdmin && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1 ${osConfig.theme.tierBadge}`}>
+                          <Crown className="w-3 h-3" />
+                          {tier ? `${tier} Plan` : (planName || 'Plan')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Workspace Context Box */}
+                <div className="mt-3.5 px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span 
+                      className="text-xs font-semibold text-slate-700 truncate" 
+                      title={user?.organizationId?.name || (isSuperAdmin ? 'ApexBuild Platform HQ' : 'Workspace')}
+                    >
+                      {user?.organizationId?.name || (isSuperAdmin ? 'ApexBuild Platform HQ' : 'ApexBuild')}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-white text-slate-600 border border-slate-200 shrink-0">
+                    {isSuperAdmin ? '👑 HQ Master' : '🔒 Tenant'}
                   </span>
                 </div>
-                <p className="text-sm font-bold text-slate-900 truncate">{user?.name || 'User'}</p>
-                <p className="text-xs text-slate-500 truncate">{user?.email || 'user@example.com'}</p>
-                <p className="text-[11px] font-medium text-slate-400 truncate mt-0.5">
-                  {user?.organizationId?.name || (isSuperAdmin ? 'ApexBuild Platform HQ' : 'Organization')}
-                </p>
               </div>
 
-              {/* Navigation Options */}
-              <div className="py-1">
-                <button 
+              {/* Group 1: Personal & Workspace Navigation */}
+              <div className="p-1.5 space-y-0.5">
+                <button
                   onClick={() => {
                     setProfileOpen(false);
                     navigate(getProfilePath());
                   }}
-                  className={`group flex items-center w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 ${osConfig.theme.hoverText} transition-colors cursor-pointer`}
+                  className={`group flex items-center justify-between w-full px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${osConfig.theme.menuHoverBg}`}
                 >
-                  <UserIcon className="mr-3 h-4 w-4 text-slate-400 group-hover:currentColor" />
-                  My Profile
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${osConfig.theme.iconBg} transition-colors`}>
+                      <UserIcon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 group-hover:text-slate-900">
+                        My Profile
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        Personal info & password
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 transition-colors" />
                 </button>
-                <button 
+
+                <button
                   onClick={() => {
                     setProfileOpen(false);
                     navigate(getSettingsPath());
                   }}
-                  className={`group flex items-center w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 ${osConfig.theme.hoverText} transition-colors cursor-pointer`}
+                  className={`group flex items-center justify-between w-full px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${osConfig.theme.menuHoverBg}`}
                 >
-                  <Settings className="mr-3 h-4 w-4 text-slate-400 group-hover:currentColor" />
-                  Account Settings
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${osConfig.theme.iconBg} transition-colors`}>
+                      <Settings className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 group-hover:text-slate-900">
+                        Account Settings
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        Workspace & preferences
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 transition-colors" />
                 </button>
-                <button 
+              </div>
+
+              {/* Section Divider */}
+              <div className="h-px bg-slate-100 mx-3" />
+
+              {/* Group 2: Subscriptions, Tools & Support */}
+              <div className="p-1.5 space-y-0.5">
+                <button
+                  onClick={() => {
+                    setProfileOpen(false);
+                    navigate(getSubscriptionPath());
+                  }}
+                  className={`group flex items-center justify-between w-full px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${osConfig.theme.menuHoverBg}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${osConfig.theme.iconBg} transition-colors`}>
+                      <CreditCard className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 group-hover:text-slate-900">
+                        {isSuperAdmin ? 'Platform Subscriptions' : 'Plan & Billing'}
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        {isSuperAdmin ? 'Tenant pricing & plans' : 'Quotas, upgrades & invoices'}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 transition-colors" />
+                </button>
+
+                {isSuperAdmin && (
+                  <button
+                    onClick={() => {
+                      setProfileOpen(false);
+                      navigate('/superadmin/audit-logs');
+                    }}
+                    className={`group flex items-center justify-between w-full px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${osConfig.theme.menuHoverBg}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${osConfig.theme.iconBg} transition-colors`}>
+                        <Shield className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-800 group-hover:text-slate-900">
+                          Audit Logs
+                        </p>
+                        <p className="text-[10px] text-slate-400">
+                          Security & system trail
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 transition-colors" />
+                  </button>
+                )}
+
+                <button
                   onClick={() => {
                     setProfileOpen(false);
                     navigate(getSupportPath());
                   }}
-                  className={`group flex items-center w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 ${osConfig.theme.hoverText} transition-colors cursor-pointer`}
+                  className={`group flex items-center justify-between w-full px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${osConfig.theme.menuHoverBg}`}
                 >
-                  <HelpCircle className="mr-3 h-4 w-4 text-slate-400 group-hover:currentColor" />
-                  Help & Support
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${osConfig.theme.iconBg} transition-colors`}>
+                      <HelpCircle className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 group-hover:text-slate-900">
+                        Help & Support
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        Documentation & support desk
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 transition-colors" />
                 </button>
               </div>
 
-              {/* Sign Out Action */}
-              <div className="py-1">
+              {/* Sign Out Footer */}
+              <div className="p-1.5 bg-slate-50/70 border-t border-slate-100">
                 <button
                   onClick={handleLogoutClick}
-                  className="group flex items-center w-full px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                  className="group flex items-center justify-between w-full px-3 py-2 rounded-xl text-left hover:bg-rose-50/80 transition-colors cursor-pointer"
                 >
-                  <LogOut className="mr-3 h-4 w-4 text-rose-400 group-hover:text-rose-600" />
-                  Sign out
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-rose-50 text-rose-500 group-hover:bg-rose-100 group-hover:text-rose-600 transition-colors">
+                      <LogOut className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-rose-600 group-hover:text-rose-700">
+                        Sign out
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        End your current session
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 group-hover:text-rose-500 transition-colors uppercase tracking-wider">
+                    Exit
+                  </span>
                 </button>
               </div>
 

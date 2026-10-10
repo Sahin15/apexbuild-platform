@@ -161,6 +161,9 @@ export default function SupplierSidebar({ sidebarOpen, setSidebarOpen }) {
                 <button onClick={() => { setMenuOpen(false); navigate('/supplier/settings'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
                   <Settings className="mr-2 h-4 w-4 text-slate-400 group-hover:text-emerald-400" /> Settings
                 </button>
+                <button onClick={() => { setMenuOpen(false); navigate('/supplier/subscription'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+                  <CreditCard className="mr-2 h-4 w-4 text-slate-400 group-hover:text-emerald-400" /> Plan & Billing
+                </button>
                 <button onClick={() => { setMenuOpen(false); navigate('/supplier/support'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
                   <HelpCircle className="mr-2 h-4 w-4 text-slate-400 group-hover:text-emerald-400" /> Help & Support
                 </button>

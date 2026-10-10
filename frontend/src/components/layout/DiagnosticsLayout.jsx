@@ -185,6 +185,9 @@ const DiagnosticsLayout = () => {
                 <button onClick={() => { setMenuOpen(false); navigate('/diagnostics/settings'); }} className="group flex w-full items-center px-3 py-2 text-sm text-cyan-100 hover:bg-cyan-800 hover:text-white transition-colors">
                   <Settings className="mr-2 h-4 w-4 text-cyan-400 group-hover:text-cyan-300" /> Settings
                 </button>
+                <button onClick={() => { setMenuOpen(false); navigate('/diagnostics/subscription'); }} className="group flex w-full items-center px-3 py-2 text-sm text-cyan-100 hover:bg-cyan-800 hover:text-white transition-colors">
+                  <CreditCard className="mr-2 h-4 w-4 text-cyan-400 group-hover:text-cyan-300" /> Plan & Billing
+                </button>
                 <button onClick={() => { setMenuOpen(false); navigate('/diagnostics/support'); }} className="group flex w-full items-center px-3 py-2 text-sm text-cyan-100 hover:bg-cyan-800 hover:text-white transition-colors">
                   <HelpCircle className="mr-2 h-4 w-4 text-cyan-400 group-hover:text-cyan-300" /> Help & Support
                 </button>

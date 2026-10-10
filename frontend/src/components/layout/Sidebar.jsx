@@ -27,7 +27,8 @@ import {
   TrendingUp,
   Truck,
   CheckSquare,
-  Lock
+  Lock,
+  CreditCard
 } from 'lucide-react';
 
 const navigation = [
@@ -165,6 +166,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, navigation: custo
                 </button>
                 <button onClick={() => { setMenuOpen(false); navigate('/settings'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-navy-700 hover:text-white transition-colors">
                   <Settings className="mr-2 h-4 w-4 text-slate-400 group-hover:text-primary-400" /> Settings
+                </button>
+                <button onClick={() => { setMenuOpen(false); navigate('/subscription'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-navy-700 hover:text-white transition-colors">
+                  <CreditCard className="mr-2 h-4 w-4 text-slate-400 group-hover:text-primary-400" /> Plan & Billing
                 </button>
                 <button onClick={() => { setMenuOpen(false); navigate('/support'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-navy-700 hover:text-white transition-colors">
                   <HelpCircle className="mr-2 h-4 w-4 text-slate-400 group-hover:text-primary-400" /> Help & Support

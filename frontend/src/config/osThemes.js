@@ -22,6 +22,12 @@ export const OS_CONFIG = {
       sidebarBorder: 'border-navy-800',
       accentText: 'text-blue-500',
       roleColor: 'text-blue-600',
+      menuHoverBg: 'hover:bg-blue-50/80',
+      menuHoverText: 'group-hover:text-blue-600',
+      menuActiveText: 'text-blue-700',
+      iconBg: 'bg-blue-50 text-blue-600 group-hover:bg-blue-100 group-hover:text-blue-700',
+      accentDot: 'bg-blue-500',
+      tierBadge: 'bg-blue-50 text-blue-700 border-blue-200',
     }
   },
   MATERIAL_SUPPLIER: {
@@ -47,6 +53,12 @@ export const OS_CONFIG = {
       sidebarBorder: 'border-slate-800',
       accentText: 'text-emerald-500',
       roleColor: 'text-emerald-600',
+      menuHoverBg: 'hover:bg-emerald-50/80',
+      menuHoverText: 'group-hover:text-emerald-600',
+      menuActiveText: 'text-emerald-700',
+      iconBg: 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 group-hover:text-emerald-700',
+      accentDot: 'bg-emerald-500',
+      tierBadge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     }
   },
   DIAGNOSTICS: {
@@ -72,6 +84,12 @@ export const OS_CONFIG = {
       sidebarBorder: 'border-cyan-900',
       accentText: 'text-cyan-400',
       roleColor: 'text-cyan-600',
+      menuHoverBg: 'hover:bg-cyan-50/80',
+      menuHoverText: 'group-hover:text-cyan-600',
+      menuActiveText: 'text-cyan-700',
+      iconBg: 'bg-cyan-50 text-cyan-600 group-hover:bg-cyan-100 group-hover:text-cyan-700',
+      accentDot: 'bg-cyan-500',
+      tierBadge: 'bg-cyan-50 text-cyan-700 border-cyan-200',
     }
   },
   CHICKEN_DISTRIBUTOR: {
@@ -97,6 +115,12 @@ export const OS_CONFIG = {
       sidebarBorder: 'border-slate-800',
       accentText: 'text-amber-500',
       roleColor: 'text-amber-600',
+      menuHoverBg: 'hover:bg-amber-50/80',
+      menuHoverText: 'group-hover:text-amber-600',
+      menuActiveText: 'text-amber-700',
+      iconBg: 'bg-amber-50 text-amber-600 group-hover:bg-amber-100 group-hover:text-amber-700',
+      accentDot: 'bg-amber-500',
+      tierBadge: 'bg-amber-50 text-amber-700 border-amber-200',
     }
   },
   SUPERADMIN: {
@@ -122,6 +146,12 @@ export const OS_CONFIG = {
       sidebarBorder: 'border-slate-800',
       accentText: 'text-indigo-400',
       roleColor: 'text-indigo-600',
+      menuHoverBg: 'hover:bg-indigo-50/80',
+      menuHoverText: 'group-hover:text-indigo-600',
+      menuActiveText: 'text-indigo-700',
+      iconBg: 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 group-hover:text-indigo-700',
+      accentDot: 'bg-indigo-500',
+      tierBadge: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     }
   }
 };

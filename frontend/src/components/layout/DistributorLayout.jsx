@@ -170,13 +170,16 @@ export default function DistributorLayout() {
               
               <div className="py-1">
                 <button onClick={() => { setMenuOpen(false); navigate('/distributor/profile'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                  <UserIcon className="mr-2 h-4 w-4 text-slate-400 group-hover:text-emerald-400" /> My Profile
+                  <UserIcon className="mr-2 h-4 w-4 text-slate-400 group-hover:text-amber-400" /> My Profile
                 </button>
                 <button onClick={() => { setMenuOpen(false); navigate('/distributor/settings'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                  <Settings className="mr-2 h-4 w-4 text-slate-400 group-hover:text-emerald-400" /> Settings
+                  <Settings className="mr-2 h-4 w-4 text-slate-400 group-hover:text-amber-400" /> Settings
+                </button>
+                <button onClick={() => { setMenuOpen(false); navigate('/distributor/subscription'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+                  <CreditCard className="mr-2 h-4 w-4 text-slate-400 group-hover:text-amber-400" /> Plan & Billing
                 </button>
                 <button onClick={() => { setMenuOpen(false); navigate('/distributor/support'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                  <HelpCircle className="mr-2 h-4 w-4 text-slate-400 group-hover:text-emerald-400" /> Help & Support
+                  <HelpCircle className="mr-2 h-4 w-4 text-slate-400 group-hover:text-amber-400" /> Help & Support
                 </button>
               </div>
               <div className="py-1 border-t border-slate-700">
@@ -196,9 +199,9 @@ export default function DistributorLayout() {
                 {user?.name?.charAt(0) || 'U'}
               </div>
               <div className="text-left truncate">
-                <p className="text-sm font-semibold text-white truncate w-32 group-hover:text-emerald-400 transition-colors">{user?.name || 'User'}</p>
+                <p className="text-sm font-semibold text-white truncate w-32 group-hover:text-amber-400 transition-colors">{user?.name || 'User'}</p>
                 <p className="text-[10px] font-medium text-slate-400 truncate tracking-wide uppercase">
-                  DISTRIBUTOR
+                  DISTRIBUTOR {user?.role ? user.role.replace('_', ' ') : ''}
                 </p>
               </div>
             </div>
