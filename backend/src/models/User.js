@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
   address: { type: String },
   emergencyContactName: { type: String },
   emergencyContactPhone: { type: String },
-  status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+  status: { type: String, enum: ['active', 'inactive', 'pending', 'suspended'], default: 'active' },
   lastLoginAt: { type: Date }
 }, { timestamps: true });
 

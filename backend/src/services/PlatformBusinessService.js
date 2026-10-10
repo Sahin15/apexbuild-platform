@@ -2,6 +2,8 @@ import Organization from '../models/Organization.js';
 import User from '../models/User.js';
 import Subscription from '../models/Subscription.js';
 import AuditLog from '../models/AuditLog.js';
+import OSPlan from '../models/OSPlan.js';
+import Invoice from '../models/Invoice.js';
 
 class PlatformBusinessService {
   async getPaginatedAccounts(query) {
@@ -55,7 +57,10 @@ class PlatformBusinessService {
     // Attempt to get last login across users
     const lastLoginUser = await User.findOne({ organizationId: id }).sort('-lastLoginAt').lean();
     
-    const subscriptions = await Subscription.find({ organizationId: id }).lean();
+    const subscriptions = await Subscription.find({ organizationId: id })
+      .populate('osProductId')
+      .populate('osPlanId')
+      .lean();
 
     return {
       ...account,
@@ -87,16 +92,14 @@ class PlatformBusinessService {
       status: 'pending'
     });
 
-    // We don't necessarily create a user here, or we can create a temporary admin user
-    // A standard SaaS would create the OWNER user
-    const tempPasswordHash = 'xyz1234567890dummyhash'; // will be hashed by pre-save hook
+    const tempPasswordHash = 'xyz1234567890dummyhash';
     await User.create({
       organizationId: account._id,
       name: `${name} Admin`,
       email,
       passwordHash: tempPasswordHash,
       role: 'OWNER',
-      status: 'inactive' // pending invite acceptance
+      status: 'inactive'
     });
 
     await AuditLog.create({
@@ -132,6 +135,120 @@ class PlatformBusinessService {
     });
 
     return account;
+  }
+
+  async verifyAndActivateAccount(id, verificationData, adminId, ip, userAgent) {
+    const org = await Organization.findById(id);
+    if (!org) return null;
+
+    const {
+      osProductId,
+      osPlanId,
+      billingCycle = 'monthly',
+      customPrice,
+      discount = 0,
+      setupFee = 0,
+      internalNotes
+    } = verificationData;
+
+    let plan = null;
+    if (osPlanId) {
+      plan = await OSPlan.findById(osPlanId);
+    }
+
+    const basePrice = plan ? (billingCycle === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice) : 0;
+    const finalPrice = customPrice !== undefined && customPrice !== '' ? Number(customPrice) : basePrice;
+    const discountAmount = Number(discount) || 0;
+    const recurringAmount = Math.max(0, finalPrice - discountAmount);
+    const implementationCost = Number(setupFee) || (plan?.setupFee || 0);
+
+    // 1. Activate Organization
+    org.status = 'active';
+    org.approvalDate = new Date();
+    if (internalNotes) org.internalNotes = internalNotes;
+    if (plan) org.subscription = plan.name;
+    await org.save();
+
+    // 2. Activate all users for this Organization
+    await User.updateMany({ organizationId: org._id }, { status: 'active' });
+
+    // 3. Create or Update Subscription if plan provided
+    let subscription = null;
+    if (plan) {
+      const nextBilling = new Date();
+      if (billingCycle === 'yearly') {
+        nextBilling.setFullYear(nextBilling.getFullYear() + 1);
+      } else {
+        nextBilling.setMonth(nextBilling.getMonth() + 1);
+      }
+
+      subscription = await Subscription.findOneAndUpdate(
+        { organizationId: org._id },
+        {
+          organizationId: org._id,
+          osProductId: osProductId || plan.osProductId,
+          osPlanId: plan._id,
+          billingCycle,
+          basePrice,
+          customPrice: finalPrice,
+          discount: discountAmount,
+          finalAmount: recurringAmount,
+          status: 'ACTIVE',
+          startDate: new Date(),
+          nextBillingDate: nextBilling,
+          createdBy: adminId,
+          updatedBy: adminId
+        },
+        { upsert: true, new: true }
+      );
+
+      // 4. Create Initial Invoice if applicable
+      const totalFirstInvoice = recurringAmount + implementationCost;
+      if (totalFirstInvoice > 0) {
+        const invoiceCount = await Invoice.countDocuments();
+        const invoiceNumber = `INV-${new Date().getFullYear()}-${String(invoiceCount + 1001).padStart(5, '0')}`;
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 14);
+
+        await Invoice.create({
+          invoiceNumber,
+          organizationId: org._id,
+          osProductId: osProductId || plan.osProductId,
+          subscriptionId: subscription._id,
+          osPlanId: plan._id,
+          type: implementationCost > 0 ? 'IMPLEMENTATION' : 'SUBSCRIPTION',
+          implementationFee: implementationCost,
+          subscriptionFee: recurringAmount,
+          discount: discountAmount,
+          total: totalFirstInvoice,
+          paidAmount: 0,
+          dueAmount: totalFirstInvoice,
+          status: 'ISSUED',
+          issueDate: new Date(),
+          dueDate
+        });
+      }
+    }
+
+    // 5. Create Audit Trail
+    await AuditLog.create({
+      action: 'BUSINESS_ACCOUNT_VERIFIED_AND_ACTIVATED',
+      adminId,
+      entityType: 'Organization',
+      entityId: org._id,
+      newValue: {
+        status: 'active',
+        planName: plan?.name,
+        billingCycle,
+        recurringAmount,
+        implementationCost,
+        internalNotes
+      },
+      ipAddress: ip,
+      userAgent
+    });
+
+    return { account: org, subscription };
   }
 }
 

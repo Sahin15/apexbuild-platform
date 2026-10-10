@@ -5,6 +5,7 @@ import {
   getPlatformBusinessAccountDetails, 
   createPlatformBusinessAccount,
   updatePlatformBusinessAccount,
+  verifyPlatformBusinessAccount,
   getPlatformOSProducts,
   createPlatformOSProduct,
   updatePlatformOSProduct,
@@ -99,6 +100,8 @@ router.get('/business-accounts', getPlatformBusinessAccounts);
 router.post('/business-accounts', createPlatformBusinessAccount);
 router.get('/business-accounts/:id', getPlatformBusinessAccountDetails);
 router.patch('/business-accounts/:id', updatePlatformBusinessAccount);
+router.post('/business-accounts/:id/verify', verifyPlatformBusinessAccount);
+router.patch('/business-accounts/:id/verify', verifyPlatformBusinessAccount);
 
 // OS Products endpoints
 router.get('/os-products', getPlatformOSProducts);

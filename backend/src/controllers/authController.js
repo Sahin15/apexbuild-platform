@@ -26,28 +26,65 @@ const createSendToken = (user, statusCode, res) => {
 
 export const registerOrganization = async (req, res, next) => {
   try {
-    const { orgName, orgEmail, userName, userEmail, password, phone, businessType } = req.body;
+    const { orgName, orgEmail, userName, userEmail, password, phone, businessType, city, state, notes } = req.body;
 
-    // 1. Create Organization
+    if (!orgName || !orgEmail || !userName || !userEmail || !password) {
+      return next(new AppError('Please provide all required registration fields', 400));
+    }
+
+    const existingUser = await User.findOne({ email: userEmail.toLowerCase() });
+    if (existingUser) {
+      return next(new AppError('User with this email already exists', 400));
+    }
+
+    const existingOrg = await Organization.findOne({ email: orgEmail.toLowerCase() });
+    if (existingOrg) {
+      return next(new AppError('Organization with this email already exists', 400));
+    }
+
+    // 1. Create Organization in pending status
     const organization = await Organization.create({
       name: orgName,
-      email: orgEmail,
-      businessType: businessType || 'CONTRACTOR'
+      email: orgEmail.toLowerCase(),
+      phone: phone || '',
+      city: city || '',
+      state: state || '',
+      notes: notes || '',
+      ownerName: userName,
+      businessType: businessType || 'CONTRACTOR',
+      status: 'pending',
+      registrationDate: new Date()
     });
 
-    // 2. Create Owner User
+    // 2. Create Owner User in pending status
     const user = await User.create({
       organizationId: organization._id,
       name: userName,
-      email: userEmail,
-      phone,
+      email: userEmail.toLowerCase(),
+      phone: phone || '',
       passwordHash: password,
-      role: 'OWNER'
+      role: 'OWNER',
+      status: 'pending'
     });
 
-    const populatedUser = await User.findById(user._id).populate('organizationId');
-
-    createSendToken(populatedUser, 201, res);
+    // 3. Return confirmation response with Application ID (No JWT issued until Superadmin verifies)
+    res.status(201).json({
+      status: 'success',
+      pendingVerification: true,
+      message: 'Business registration application submitted successfully! Your account has entered the Superadmin Verification Queue.',
+      data: {
+        applicationId: organization._id,
+        orgName: organization.name,
+        businessType: organization.businessType,
+        ownerName: user.name,
+        userEmail: user.email,
+        phone: user.phone,
+        city: organization.city,
+        state: organization.state,
+        registrationDate: organization.registrationDate,
+        status: 'pending'
+      }
+    });
   } catch (error) {
     next(error);
   }
@@ -61,14 +98,19 @@ export const login = async (req, res, next) => {
       return next(new AppError('Please provide email and password', 400));
     }
 
-    const user = await User.findOne({ email }).select('+passwordHash').populate('organizationId');
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash').populate('organizationId');
 
     if (!user || !(await user.comparePassword(password, user.passwordHash))) {
       return next(new AppError('Incorrect email or password', 401));
     }
 
+    // Check if account or organization is pending verification
+    if (user.status === 'pending' || user.organizationId?.status === 'pending') {
+      return next(new AppError('Your business registration is currently under review in the ApexBuild Superadmin Verification Queue. You will be notified once verified and activated.', 403));
+    }
+
     if (user.status !== 'active') {
-      return next(new AppError('Account is inactive. Please contact support.', 401));
+      return next(new AppError('Account is inactive or suspended. Please contact ApexBuild support.', 401));
     }
 
     user.lastLoginAt = Date.now();

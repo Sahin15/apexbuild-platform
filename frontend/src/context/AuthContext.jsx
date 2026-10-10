@@ -50,19 +50,25 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/register', userData);
       
+      if (response.data.pendingVerification) {
+        toast.success(response.data.message || 'Application submitted for verification!');
+        return { success: true, pendingVerification: true, data: response.data.data };
+      }
+
       const { token, data } = response.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
-      setToken(token);
-      setUser(data.user);
-      
-      toast.success('Registration successful!');
-      return true;
+      if (token && data?.user) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setToken(token);
+        setUser(data.user);
+        toast.success('Registration successful!');
+        return { success: true, pendingVerification: false, data: data.user };
+      }
+
+      return { success: true, data: response.data.data };
     } catch (error) {
       toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
-      return false;
+      return { success: false, error: error.response?.data?.message };
     } finally {
       setLoading(false);
     }

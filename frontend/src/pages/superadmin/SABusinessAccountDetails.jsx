@@ -129,6 +129,26 @@ export default function SABusinessAccountDetails() {
         <ArrowLeft className="w-4 h-4" /> Back to Directory
       </button>
 
+      {account.status === 'pending' && (
+        <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <h4 className="font-bold text-amber-900 text-sm">Application Under Review (Pending Superadmin Verification)</h4>
+              <p className="text-xs text-amber-700">This business submitted registration and cannot log in until an OS Plan is provisioned and approved.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/superadmin/business-accounts?tab=queue')}
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors whitespace-nowrap"
+          >
+            Review in Queue & Provision ➔
+          </button>
+        </div>
+      )}
+
       {/* Header Profile */}
       <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
@@ -174,8 +194,11 @@ export default function SABusinessAccountDetails() {
             
             {account.status === 'pending' && (
               <>
-                <button onClick={() => handleStatusUpdate('active')} className="px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-sm">
-                  Approve Account
+                <button 
+                  onClick={() => navigate('/superadmin/business-accounts?tab=queue')} 
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-lg shadow-sm flex items-center gap-1.5"
+                >
+                  <ShieldCheck className="w-4 h-4" /> Verify & Provision
                 </button>
                 <button onClick={() => handleStatusUpdate('rejected')} className="px-4 py-2 bg-white border border-rose-200 text-rose-600 font-bold rounded-lg hover:bg-rose-50 shadow-sm">
                   Reject

@@ -76,6 +76,26 @@ export const updatePlatformBusinessAccount = async (req, res, next) => {
   }
 };
 
+export const verifyPlatformBusinessAccount = async (req, res, next) => {
+  try {
+    const result = await PlatformBusinessService.verifyAndActivateAccount(
+      req.params.id,
+      req.body,
+      req.user._id,
+      req.ip,
+      req.headers['user-agent']
+    );
+    if (!result) return next(new AppError('Account not found', 404));
+    res.status(200).json({
+      status: 'success',
+      message: 'Business account verified, provisioned and activated successfully',
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // OS Product Endpoints
 export const getPlatformOSProducts = async (req, res, next) => {
   try {

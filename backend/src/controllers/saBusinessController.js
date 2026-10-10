@@ -98,6 +98,80 @@ export const updateBusinessAccount = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+export const verifyBusinessAccount = async (req, res, next) => {
+  try {
+    const { osProductId, osPlanId, billingCycle = 'monthly', customPrice, discount = 0, setupFee = 0, internalNotes } = req.body;
+    
+    const org = await Organization.findById(req.params.id);
+    if (!org) return next(new AppError('Business Account not found', 404));
+
+    let plan = null;
+    if (osPlanId) {
+      plan = await OSPlan.findById(osPlanId);
+    }
+
+    const basePrice = plan ? (billingCycle === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice) : 0;
+    const finalPrice = customPrice !== undefined && customPrice !== '' ? Number(customPrice) : basePrice;
+    const discountAmount = Number(discount) || 0;
+    const recurringAmount = Math.max(0, finalPrice - discountAmount);
+    const implementationCost = Number(setupFee) || (plan?.setupFee || 0);
+
+    org.status = 'active';
+    org.approvalDate = new Date();
+    if (internalNotes) org.internalNotes = internalNotes;
+    if (plan) org.subscription = plan.name;
+    await org.save();
+
+    await User.updateMany({ organizationId: org._id }, { status: 'active' });
+
+    let subscription = null;
+    if (plan) {
+      const nextBilling = new Date();
+      if (billingCycle === 'yearly') {
+        nextBilling.setFullYear(nextBilling.getFullYear() + 1);
+      } else {
+        nextBilling.setMonth(nextBilling.getMonth() + 1);
+      }
+
+      subscription = await Subscription.findOneAndUpdate(
+        { organizationId: org._id },
+        {
+          organizationId: org._id,
+          osProductId: osProductId || plan.osProductId,
+          osPlanId: plan._id,
+          billingCycle,
+          basePrice,
+          customPrice: finalPrice,
+          discount: discountAmount,
+          finalAmount: recurringAmount,
+          status: 'ACTIVE',
+          startDate: new Date(),
+          nextBillingDate: nextBilling,
+          createdBy: req.user._id,
+          updatedBy: req.user._id
+        },
+        { upsert: true, new: true }
+      );
+    }
+
+    await AuditLog.create({
+      action: 'BUSINESS_ACCOUNT_VERIFIED_AND_ACTIVATED',
+      adminId: req.user._id,
+      entityType: 'Organization',
+      entityId: org._id,
+      newValue: { status: 'active', planName: plan?.name, recurringAmount, implementationCost, internalNotes },
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Business account verified and activated successfully',
+      data: { account: org, subscription }
+    });
+  } catch (error) { next(error); }
+};
+
 export const getBusinessPartners = async (req, res, next) => {
   try {
     const partners = await BusinessPartner.find().populate('organizationId').sort('-createdAt');
