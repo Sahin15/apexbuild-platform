@@ -17,7 +17,10 @@ import {
   getPlatformSubscriptions,
   createPlatformSubscription,
   updatePlatformSubscriptionStatus,
+  updatePlatformSubscription,
   getPlatformInvoices,
+  getPlatformInvoiceDetails,
+  updatePlatformInvoiceStatus,
   getPlatformImplementationFees,
   getPlatformRevenueAnalytics,
   createPlatformInvoice,
@@ -119,9 +122,12 @@ router.delete('/os-plans/:id', deletePlatformOSPlan);
 router.get('/subscriptions', getPlatformSubscriptions);
 router.post('/subscriptions', createPlatformSubscription);
 router.patch('/subscriptions/:id/status', updatePlatformSubscriptionStatus);
+router.patch('/subscriptions/:id', updatePlatformSubscription);
 
 // Finance (Invoices & Payments) endpoints
 router.get('/invoices', getPlatformInvoices);
+router.get('/invoices/:id', getPlatformInvoiceDetails);
+router.patch('/invoices/:id/status', updatePlatformInvoiceStatus);
 router.get('/implementation-fees', getPlatformImplementationFees);
 router.get('/revenue-analytics', getPlatformRevenueAnalytics);
 router.post('/invoices', createPlatformInvoice);

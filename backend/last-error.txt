@@ -1,2 +1,2 @@
-Error: Your business registration is currently under review in the ApexBuild Superadmin Verification Queue. You will be notified once verified and activated.
-    at login (file:///C:/Users/Sahin%20Mondal/OneDrive/Desktop/apexbuild-platform/backend/src/controllers/authController.js:109:19)
+Error: Incorrect email or password
+    at login (file:///C:/Users/Sahin%20Mondal/OneDrive/Desktop/apexbuild-platform/backend/src/controllers/authController.js:104:19)

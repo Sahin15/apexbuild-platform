@@ -21,18 +21,25 @@ class PlatformSubscriptionService {
   }
   async getPaginatedSubscriptions(query) {
     const subscriptions = await Subscription.find()
-      .populate('organizationId', 'name businessType email')
-      .populate('osProductId', 'name')
-      .populate('osPlanId', 'name')
+      .populate('organizationId', 'name businessType email phone city state')
+      .populate('osProductId', 'name slug')
+      .populate('osPlanId', 'name monthlyPrice yearlyPrice setupFee description featureEntitlements')
       .sort('-createdAt')
       .lean();
     return { subscriptions };
   }
 
   async createSubscription(data, adminId, ip, userAgent) {
-    // Add logic here to find plan and set basePrice if missing, or just accept data
+    let finalAmount = data.finalAmount;
+    if (finalAmount === undefined) {
+      const base = Number(data.customPrice || data.basePrice) || 0;
+      const discount = Number(data.discount) || 0;
+      finalAmount = Math.max(0, base - discount);
+    }
+
     const subscription = await Subscription.create({
       ...data,
+      finalAmount,
       createdBy: adminId
     });
     
@@ -47,6 +54,38 @@ class PlatformSubscriptionService {
     }));
 
     return subscription;
+  }
+
+  async updateSubscription(id, data, adminId, ip, userAgent) {
+    const sub = await Subscription.findById(id);
+    if (!sub) return null;
+
+    if (data.basePrice !== undefined) sub.basePrice = Number(data.basePrice);
+    if (data.customPrice !== undefined) sub.customPrice = Number(data.customPrice);
+    if (data.discount !== undefined) sub.discount = Number(data.discount);
+    if (data.billingCycle) sub.billingCycle = data.billingCycle;
+    if (data.osPlanId) sub.osPlanId = data.osPlanId;
+    if (data.osProductId) sub.osProductId = data.osProductId;
+    if (data.status) sub.status = data.status;
+    if (data.nextBillingDate) sub.nextBillingDate = new Date(data.nextBillingDate);
+
+    const price = sub.customPrice !== undefined && sub.customPrice !== null ? sub.customPrice : sub.basePrice;
+    sub.finalAmount = Math.max(0, (price || 0) - (sub.discount || 0));
+    sub.updatedBy = adminId;
+
+    await sub.save();
+
+    await import('../models/AuditLog.js').then(m => m.default.create({
+      action: 'PLATFORM_SUBSCRIPTION_UPDATED',
+      adminId,
+      entityType: 'Subscription',
+      entityId: sub._id,
+      newValue: { status: sub.status, finalAmount: sub.finalAmount, billingCycle: sub.billingCycle },
+      ipAddress: ip,
+      userAgent
+    }));
+
+    return sub;
   }
 
   async updateSubscriptionStatus(id, status, adminId, ip, userAgent) {

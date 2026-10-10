@@ -10,7 +10,7 @@ export const getMySubscriptions = async (req, res, next) => {
   try {
     const subscriptions = await Subscription.find({ organizationId: req.user.organizationId })
       .populate('osProductId', 'name slug')
-      .populate('osPlanId', 'name features')
+      .populate('osPlanId', 'name monthlyPrice yearlyPrice setupFee description featureEntitlements usageLimits supportLevel')
       .sort('-createdAt');
       
     res.status(200).json({ status: 'success', data: { subscriptions } });
@@ -20,6 +20,8 @@ export const getMySubscriptions = async (req, res, next) => {
 export const getMyInvoices = async (req, res, next) => {
   try {
     const invoices = await Invoice.find({ organizationId: req.user.organizationId })
+      .populate('osProductId', 'name slug')
+      .populate('osPlanId', 'name monthlyPrice yearlyPrice')
       .sort('-issueDate');
       
     res.status(200).json({ status: 'success', data: { invoices } });
@@ -39,8 +41,8 @@ export const submitPayment = async (req, res, next) => {
       organizationId: req.user.organizationId,
       invoiceId,
       subscriptionId,
-      amount,
-      paymentMethod,
+      amount: Number(amount) || invoice.dueAmount,
+      paymentMethod: paymentMethod || 'UPI',
       transactionReference,
       status: 'SUBMITTED',
       paymentDate: new Date()
@@ -79,17 +81,25 @@ export const requestPlanUpgrade = async (req, res, next) => {
     if (!plan) return next(new AppError('Plan not found', 404));
     
     const amount = billingCycle === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;
+    const invoiceCount = await Invoice.countDocuments();
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${String(invoiceCount + 1001).padStart(5, '0')}`;
+    const tax = amount * 0.18;
+    const total = amount + tax;
     
     const invoice = await Invoice.create({
       organizationId: req.user.organizationId,
-      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+      osProductId: plan.osProductId,
+      osPlanId: plan._id,
+      invoiceNumber,
+      type: 'SUBSCRIPTION',
+      subscriptionFee: amount,
+      tax,
+      total,
+      dueAmount: total,
+      paidAmount: 0,
       issueDate: new Date(),
       dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      subtotal: amount,
-      taxAmount: amount * 0.18, // 18% GST approx
-      total: amount * 1.18,
-      dueAmount: amount * 1.18,
-      status: 'PENDING'
+      status: 'ISSUED'
     });
 
     res.status(200).json({ status: 'success', message: 'Upgrade requested. Invoice generated.', data: { invoice } });

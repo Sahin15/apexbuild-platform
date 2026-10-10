@@ -7,17 +7,27 @@ class PlatformFinanceService {
   // --- INVOICES ---
   async getInvoices() {
     return await Invoice.find()
-      .populate('organizationId', 'name businessType email')
-      .populate('osProductId', 'name')
+      .populate('organizationId', 'name businessType email phone city state')
+      .populate('osProductId', 'name slug')
+      .populate('osPlanId', 'name monthlyPrice yearlyPrice setupFee')
       .sort('-createdAt')
       .lean();
   }
 
   async getImplementationFees() {
     return await Invoice.find({ type: 'IMPLEMENTATION' })
-      .populate('organizationId', 'name businessType email')
-      .populate('osProductId', 'name')
+      .populate('organizationId', 'name businessType email phone city state')
+      .populate('osProductId', 'name slug')
       .sort('-createdAt')
+      .lean();
+  }
+
+  async getInvoiceDetails(id) {
+    return await Invoice.findById(id)
+      .populate('organizationId', 'name legalName businessType email phone address city state gstNumber')
+      .populate('osProductId', 'name slug')
+      .populate('osPlanId', 'name monthlyPrice yearlyPrice setupFee featureEntitlements')
+      .populate('subscriptionId')
       .lean();
   }
 
@@ -40,7 +50,7 @@ class PlatformFinanceService {
     const completedPayments = await Payment.find({ status: 'COMPLETED' });
     const totalCollected = completedPayments.reduce((sum, p) => sum + p.amount, 0);
 
-    const pendingInvoices = await Invoice.find({ status: { $in: ['ISSUED', 'PARTIALLY_PAID', 'OVERDUE'] } });
+    const pendingInvoices = await Invoice.find({ status: { $in: ['ISSUED', 'PENDING', 'PARTIALLY_PAID', 'OVERDUE'] } });
     const totalOutstanding = pendingInvoices.reduce((sum, i) => sum + i.dueAmount, 0);
 
     return {
@@ -52,14 +62,16 @@ class PlatformFinanceService {
   }
 
   async createInvoice(data, adminId, ip, userAgent) {
-    const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
+    const invoiceCount = await Invoice.countDocuments();
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${String(invoiceCount + 1001).padStart(5, '0')}`;
     
     // Automatically calculate tax and totals if missing
-    const subtotal = (data.implementationFee || 0) + (data.subscriptionFee || 0);
-    const tax = data.tax ?? (subtotal * 0.18); // Default 18% tax if not specified
-    const total = subtotal + tax - (data.discount || 0);
+    const subtotal = (Number(data.implementationFee) || 0) + (Number(data.subscriptionFee) || 0);
+    const tax = data.tax !== undefined && data.tax !== '' ? Number(data.tax) : (subtotal * 0.18); // Default 18% GST approx
+    const discount = Number(data.discount) || 0;
+    const total = Math.max(0, subtotal + tax - discount);
     
-    const dueDate = data.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Default 7 days
+    const dueDate = data.dueDate ? new Date(data.dueDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     const invoice = await Invoice.create({
       ...data,
@@ -68,7 +80,7 @@ class PlatformFinanceService {
       total,
       dueAmount: total,
       dueDate,
-      status: 'ISSUED'
+      status: data.status || 'ISSUED'
     });
 
     await AuditLog.create({
@@ -76,7 +88,7 @@ class PlatformFinanceService {
       adminId,
       entityType: 'Invoice',
       entityId: invoice._id,
-      newValue: { invoiceNumber, total },
+      newValue: { invoiceNumber, total, type: data.type },
       ipAddress: ip,
       userAgent
     });
@@ -85,15 +97,29 @@ class PlatformFinanceService {
   }
 
   async updateInvoiceStatus(id, status, adminId, ip, userAgent) {
-    const invoice = await Invoice.findByIdAndUpdate(id, { status }, { new: true });
+    const invoice = await Invoice.findById(id);
     if (!invoice) return null;
+
+    invoice.status = status;
+    if (status === 'PAID') {
+      invoice.paidAmount = invoice.total;
+      invoice.dueAmount = 0;
+      if (invoice.subscriptionId) {
+        await Subscription.findByIdAndUpdate(invoice.subscriptionId, { status: 'ACTIVE' });
+      }
+    } else if (status === 'CANCELLED') {
+      invoice.dueAmount = 0;
+    } else if (status === 'ISSUED' || status === 'PENDING') {
+      invoice.dueAmount = Math.max(0, invoice.total - invoice.paidAmount);
+    }
+    await invoice.save();
 
     await AuditLog.create({
       action: 'INVOICE_STATUS_UPDATED',
       adminId,
       entityType: 'Invoice',
       entityId: invoice._id,
-      newValue: { status },
+      newValue: { status, paidAmount: invoice.paidAmount, dueAmount: invoice.dueAmount },
       ipAddress: ip,
       userAgent
     });

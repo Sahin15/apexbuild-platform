@@ -247,11 +247,53 @@ export const updatePlatformSubscriptionStatus = async (req, res, next) => {
   }
 };
 
+export const updatePlatformSubscription = async (req, res, next) => {
+  try {
+    const subscription = await PlatformSubscriptionService.updateSubscription(
+      req.params.id,
+      req.body,
+      req.user._id,
+      req.ip,
+      req.headers['user-agent']
+    );
+    if (!subscription) return next(new AppError('Subscription not found', 404));
+    res.status(200).json({ status: 'success', data: subscription });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Finance Endpoints (Invoices & Payments)
 export const getPlatformInvoices = async (req, res, next) => {
   try {
     const data = await PlatformFinanceService.getInvoices();
     res.status(200).json({ status: 'success', data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPlatformInvoiceDetails = async (req, res, next) => {
+  try {
+    const invoice = await PlatformFinanceService.getInvoiceDetails(req.params.id);
+    if (!invoice) return next(new AppError('Invoice not found', 404));
+    res.status(200).json({ status: 'success', data: invoice });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updatePlatformInvoiceStatus = async (req, res, next) => {
+  try {
+    const invoice = await PlatformFinanceService.updateInvoiceStatus(
+      req.params.id,
+      req.body.status,
+      req.user._id,
+      req.ip,
+      req.headers['user-agent']
+    );
+    if (!invoice) return next(new AppError('Invoice not found', 404));
+    res.status(200).json({ status: 'success', data: invoice });
   } catch (error) {
     next(error);
   }
