@@ -354,7 +354,47 @@ export default function SupplierDashboard() {
             </Link>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile Card List for Small Screens */}
+          <div className="block sm:hidden divide-y divide-slate-100">
+            {recentOrders.map(order => (
+              <div key={order._id} className="p-4 hover:bg-slate-50 transition-colors space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-extrabold text-slate-900 text-sm">{order.orderNumber}</span>
+                    <span className="text-[11px] text-slate-400 font-medium ml-2">
+                      {new Date(order.orderDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                    </span>
+                  </div>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black ${
+                    order.status === 'PROCESSING' ? 'bg-blue-100 text-blue-700' :
+                    order.status === 'DELIVERED' ? 'bg-emerald-100 text-emerald-700' :
+                    order.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                    'bg-slate-100 text-slate-700'
+                  }`}>
+                    {order.status}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <div>
+                    <p className="font-bold text-slate-800">{order.customer?.name}</p>
+                    <p className="text-[11px] text-slate-400">{order.customer?.phone || 'Site Incharge'}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-black text-slate-900 text-sm">₹{order.grandTotal?.toLocaleString()}</p>
+                    {order.dueAmount > 0 ? (
+                      <p className="text-[11px] text-amber-600 font-bold">Due: ₹{order.dueAmount.toLocaleString()}</p>
+                    ) : (
+                      <p className="text-[11px] text-emerald-600 font-bold">Paid</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
               <thead className="bg-slate-50/80 text-slate-500 text-[11px] uppercase tracking-wider font-bold border-b border-slate-100">
                 <tr>

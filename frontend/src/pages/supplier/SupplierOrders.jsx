@@ -184,7 +184,71 @@ export default function SupplierOrders() {
           </div>
         </div>
         
-        <div className="overflow-x-auto">
+        {/* Mobile Card View */}
+        <div className="block sm:hidden divide-y divide-slate-100">
+          {loading ? (
+            <div className="p-8 text-center text-slate-500 font-medium text-sm">Loading orders...</div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="p-8 text-center text-slate-500 font-medium text-sm">No orders found.</div>
+          ) : (
+            filteredOrders.map(order => (
+              <div key={order._id} className="p-4 hover:bg-slate-50 transition-colors space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                      <ShoppingCart className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-extrabold text-slate-900 text-sm">{order.orderNumber}</span>
+                      <p className="text-[11px] text-slate-400 font-medium">
+                        {new Date(order.orderDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-black text-slate-900 text-base">₹{order.grandTotal.toLocaleString()}</p>
+                    <p className="text-[10px] text-slate-400 uppercase font-semibold">Total Value</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <div className="min-w-0 pr-2">
+                    <p className="font-semibold text-slate-800 text-xs truncate">{order.customer?.name}</p>
+                    <p className="text-[11px] text-slate-400 truncate">{order.customer?.phone || 'Commercial Site'}</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 shrink-0">
+                    <select 
+                      value={order.status}
+                      onChange={(e) => updateStatus(order._id, e.target.value)}
+                      className={`py-1 px-2 text-[11px] rounded-lg border font-bold touch-manipulation ${
+                        order.status === 'DELIVERED' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
+                        order.status === 'PROCESSING' ? 'text-amber-700 bg-amber-50 border-amber-200' : 
+                        'text-slate-700 bg-slate-50 border-slate-200'
+                      }`}
+                    >
+                      <option value="PENDING">PENDING</option>
+                      <option value="PROCESSING">PROCESSING</option>
+                      <option value="DELIVERED">DELIVERED</option>
+                      <option value="CANCELLED">CANCELLED</option>
+                    </select>
+
+                    <button 
+                      onClick={() => setSelectedOrder(order)} 
+                      className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-emerald-600 bg-white hover:bg-slate-50 touch-manipulation"
+                      aria-label="View Order"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
               <tr>
