@@ -765,10 +765,13 @@ export default function SiteReports({ isProjectView }) {
 
       {/* CREATE DPR MODAL */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-4xl h-[94dvh] sm:h-auto sm:max-h-[92vh] flex flex-col border border-slate-200 overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-slate-900">
+              <div className="w-12 h-1.5 bg-slate-600 rounded-full" />
+            </div>
             {/* Modal Header */}
-            <div className="p-5 border-b border-slate-200 bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-t-2xl flex items-center justify-between">
+            <div className="p-4 sm:p-5 border-b border-slate-200 bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-t-2xl sm:rounded-t-none flex items-center justify-between shrink-0">
               <div>
                 <div className="flex items-center gap-2">
                   <ClipboardList className="w-5 h-5 text-amber-400" />
@@ -1447,10 +1450,10 @@ export default function SiteReports({ isProjectView }) {
               </div>
 
               {/* Modal Footer */}
-              <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between rounded-b-2xl">
-                <div className="flex items-center gap-2">
+              <div className="p-3 sm:p-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0 sticky bottom-0">
+                <div className="flex items-center justify-between sm:justify-start gap-2">
                   <span className="text-xs font-bold text-slate-600">
-                    Total Workforce: <span className="text-indigo-700 font-extrabold">{formData.manpower.reduce((acc, m) => acc + (Number(m.totalCount) || 0), 0)}</span> workers
+                    Workforce: <span className="text-indigo-700 font-extrabold">{formData.manpower.reduce((acc, m) => acc + (Number(m.totalCount) || 0), 0)}</span>
                   </span>
                   <span className="text-slate-300">|</span>
                   <span className="text-xs text-slate-500">
@@ -1462,13 +1465,13 @@ export default function SiteReports({ isProjectView }) {
                   <button
                     type="button"
                     onClick={() => setIsCreateModalOpen(false)}
-                    className="btn btn-secondary text-xs px-4 py-2"
+                    className="flex-1 sm:flex-initial btn btn-secondary text-xs px-4 py-2.5"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-2 rounded-lg shadow flex items-center gap-1.5"
+                    className="flex-1 sm:flex-initial btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow flex items-center justify-center gap-1.5"
                   >
                     <CheckCircle2 className="w-4 h-4" /> Submit DPR Form 62
                   </button>
@@ -1481,10 +1484,13 @@ export default function SiteReports({ isProjectView }) {
 
       {/* QUICK VIEW DPR DETAIL MODAL */}
       {isViewModalOpen && selectedReport && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border border-slate-200">
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-3xl h-[94dvh] sm:h-auto sm:max-h-[90vh] flex flex-col border border-slate-200 overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-slate-900">
+              <div className="w-12 h-1.5 bg-slate-600 rounded-full" />
+            </div>
             {/* Header */}
-            <div className="p-5 border-b border-slate-200 bg-slate-900 text-white rounded-t-2xl flex items-center justify-between">
+            <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-900 text-white rounded-t-2xl sm:rounded-t-none flex items-center justify-between shrink-0">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded text-xs font-bold border border-indigo-500/30">
@@ -1652,11 +1658,11 @@ export default function SiteReports({ isProjectView }) {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between rounded-b-2xl">
+            <div className="p-3 sm:p-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0 sticky bottom-0">
               <button
                 type="button"
                 onClick={() => openForm62Modal(selectedReport)}
-                className="btn bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs px-3 py-2 rounded-lg flex items-center gap-1.5 shadow-sm"
+                className="btn bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs px-3 py-2.5 rounded-lg flex items-center justify-center gap-1.5 shadow-sm"
               >
                 <Printer className="w-4 h-4 text-indigo-600" /> Print Official CPWD Form 62
               </button>
@@ -1665,7 +1671,7 @@ export default function SiteReports({ isProjectView }) {
                 <button
                   type="button"
                   onClick={() => setIsViewModalOpen(false)}
-                  className="btn btn-secondary text-xs px-4 py-2"
+                  className="flex-1 sm:flex-initial btn btn-secondary text-xs px-4 py-2.5"
                 >
                   Close
                 </button>
@@ -1673,7 +1679,7 @@ export default function SiteReports({ isProjectView }) {
                   <button
                     type="button"
                     onClick={() => handleApprove(selectedReport._id)}
-                    className="btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 shadow"
+                    className="flex-1 sm:flex-initial btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg flex items-center justify-center gap-1.5 shadow"
                   >
                     <CheckCircle2 className="w-4 h-4" /> Approve & Sign DPR
                   </button>
@@ -1686,15 +1692,18 @@ export default function SiteReports({ isProjectView }) {
 
       {/* OFFICIAL CPWD FORM 62 PRINTABLE MODAL */}
       {isForm62ModalOpen && selectedReport && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[96vh] flex flex-col border border-slate-300">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-5xl h-[94dvh] sm:h-auto sm:max-h-[96vh] flex flex-col border border-slate-300 overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-slate-900">
+              <div className="w-12 h-1.5 bg-slate-600 rounded-full" />
+            </div>
             {/* Action Bar (Hidden in Print) */}
-            <div className="p-4 bg-slate-900 text-white rounded-t-2xl flex items-center justify-between print:hidden">
+            <div className="p-3 sm:p-4 bg-slate-900 text-white rounded-t-2xl sm:rounded-t-none flex flex-wrap items-center justify-between gap-2 shrink-0 print:hidden">
               <div className="flex items-center gap-2">
-                <Printer className="w-5 h-5 text-amber-400" />
+                <Printer className="w-5 h-5 text-amber-400 shrink-0" />
                 <div>
-                  <h3 className="font-bold text-base">CPWD Form 62 - Daily Progress Report & Site Diary</h3>
-                  <p className="text-xs text-slate-300">Official contractor daily record per CPWD Works Manual / FIDIC Red Book Sub-Clause 4.23</p>
+                  <h3 className="font-bold text-sm sm:text-base leading-tight">CPWD Form 62 - Daily Progress Report & Site Diary</h3>
+                  <p className="text-[11px] text-slate-300 hidden sm:block">Official contractor daily record per CPWD Works Manual / FIDIC Red Book Sub-Clause 4.23</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

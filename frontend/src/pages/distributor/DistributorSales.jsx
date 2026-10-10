@@ -206,7 +206,10 @@ export default function DistributorSales() {
       {showModal && (
         <div className="fixed inset-0 z-[100] flex flex-col justify-end md:justify-center md:items-center p-0 md:p-6">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="bg-white w-full md:max-w-xl h-[90vh] md:h-auto md:max-h-full rounded-t-3xl md:rounded-3xl shadow-2xl relative z-10 flex flex-col animate-in slide-in-from-bottom-full duration-300 overflow-hidden flex flex-col">
+          <div className="bg-white w-full md:max-w-xl h-[92dvh] md:h-auto md:max-h-full rounded-t-3xl md:rounded-3xl shadow-2xl relative z-10 flex flex-col animate-in slide-in-from-bottom-full duration-300 overflow-hidden">
+            <div className="pt-2 pb-1 flex justify-center md:hidden bg-slate-50">
+              <div className="w-12 h-1.5 bg-slate-300 rounded-full" />
+            </div>
             <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50 rounded-t-3xl md:rounded-t-none shrink-0">
               <h2 className="text-lg font-black text-slate-800">New Delivery</h2>
               <button onClick={() => setShowModal(false)} className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-500 shadow-sm active:scale-90 transition-transform">
@@ -274,8 +277,8 @@ export default function DistributorSales() {
               </form>
             </div>
             
-            <div className="p-4 border-t border-slate-100 bg-white shrink-0">
-              <button form="deliveryForm" type="submit" className="w-full py-4 bg-emerald-600 text-white rounded-2xl text-lg font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all flex justify-center items-center gap-2">
+            <div className="p-4 border-t border-slate-100 bg-white shrink-0 sticky bottom-0">
+              <button form="deliveryForm" type="submit" className="w-full py-4 bg-emerald-600 text-white rounded-2xl text-lg font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all flex justify-center items-center gap-2 touch-manipulation">
                 Save Delivery <Truck className="w-5 h-5" />
               </button>
             </div>

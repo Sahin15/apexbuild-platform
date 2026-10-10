@@ -186,17 +186,20 @@ export default function SupplierInventory() {
 
       {/* Ledger Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl w-full max-w-4xl overflow-hidden h-[94dvh] sm:h-auto sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom duration-200 sm:zoom-in-95">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-slate-50">
+              <div className="w-12 h-1.5 bg-slate-300 rounded-full" />
+            </div>
+            <div className="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
               <div>
                 <h2 className="text-xl font-bold text-slate-800">Stock Ledger</h2>
                 <p className="text-sm font-medium text-slate-500 mt-1">{selectedProduct.name} (SKU: {selectedProduct.sku})</p>
               </div>
               <button onClick={() => setSelectedProduct(null)} className="btn btn-secondary text-sm">Close</button>
             </div>
-            <div className="flex-1 overflow-y-auto p-0">
-              <table className="w-full text-left text-sm">
+            <div className="flex-1 overflow-y-auto p-0 overflow-x-auto">
+              <table className="w-full text-left text-sm min-w-[550px]">
                 <thead className="bg-white sticky top-0 border-b border-slate-200 text-slate-500 shadow-sm z-10">
                   <tr>
                     <th className="px-6 py-4 font-semibold">Date & Time</th>
@@ -245,6 +248,10 @@ export default function SupplierInventory() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            <div className="p-3 sm:p-4 border-t border-slate-100 flex justify-end bg-white shrink-0 sticky bottom-0">
+              <button onClick={() => setSelectedProduct(null)} className="w-full sm:w-auto btn btn-secondary py-2.5">Close</button>
             </div>
           </div>
         </div>

@@ -307,16 +307,19 @@ export default function SupplierOrders() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl w-full max-w-4xl overflow-hidden h-[94dvh] sm:h-auto sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom duration-200 sm:zoom-in-95">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-slate-50">
+              <div className="w-12 h-1.5 bg-slate-300 rounded-full" />
+            </div>
+            <div className="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
               <h2 className="text-lg font-bold text-slate-800">Create Sales Order</h2>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600"><Plus className="w-5 h-5 rotate-45" /></button>
+              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 p-1"><Plus className="w-5 h-5 rotate-45" /></button>
             </div>
             
-            <div className="p-6 overflow-y-auto flex-1">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
               <form id="orderForm" onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="label">Customer *</label>
                     <select required className="input" value={formData.customer} onChange={e => setFormData({...formData, customer: e.target.value})}>
@@ -330,8 +333,8 @@ export default function SupplierOrders() {
                   </div>
                 </div>
 
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-left text-sm">
+                <div className="border border-slate-200 rounded-lg overflow-x-auto">
+                  <table className="w-full text-left text-sm min-w-[620px]">
                     <thead className="bg-slate-50 border-b border-slate-200">
                       <tr>
                         <th className="p-3">Product</th>
@@ -391,7 +394,7 @@ export default function SupplierOrders() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                   <div className="space-y-4">
                     <div>
                       <label className="flex items-center gap-2 cursor-pointer p-3 bg-emerald-50 rounded-lg border border-emerald-100">
@@ -403,7 +406,7 @@ export default function SupplierOrders() {
                       </label>
                     </div>
                     {formData.deliverImmediately && (
-                      <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                         <div>
                           <label className="label">Vehicle *</label>
                           <select className="input" value={formData.vehicle} onChange={e => setFormData({...formData, vehicle: e.target.value})}>
@@ -443,27 +446,30 @@ export default function SupplierOrders() {
               </form>
             </div>
             
-            <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
-              <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary">Cancel</button>
-              <button type="submit" form="orderForm" className="btn btn-primary bg-emerald-600 hover:bg-emerald-700">Confirm Order</button>
+            <div className="p-3 sm:p-6 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50 shrink-0 sticky bottom-0">
+              <button type="button" onClick={() => setShowModal(false)} className="flex-1 sm:flex-initial btn btn-secondary py-2.5">Cancel</button>
+              <button type="submit" form="orderForm" className="flex-1 sm:flex-initial btn btn-primary bg-emerald-600 hover:bg-emerald-700 py-2.5">Confirm Order</button>
             </div>
           </div>
         </div>
       )}
 
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl w-full max-w-3xl overflow-hidden h-[94dvh] sm:h-auto sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom duration-200 sm:zoom-in-95">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-slate-50">
+              <div className="w-12 h-1.5 bg-slate-300 rounded-full" />
+            </div>
+            <div className="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
               <div>
                 <h2 className="text-lg font-bold text-slate-800">Order Details</h2>
                 <p className="text-sm text-slate-500">{selectedOrder.orderNumber}</p>
               </div>
-              <button onClick={() => setSelectedOrder(null)} className="text-slate-400 hover:text-slate-600"><Plus className="w-5 h-5 rotate-45" /></button>
+              <button onClick={() => setSelectedOrder(null)} className="text-slate-400 hover:text-slate-600 p-1"><Plus className="w-5 h-5 rotate-45" /></button>
             </div>
             
-            <div className="p-6 overflow-y-auto flex-1 space-y-6">
-              <div className="grid grid-cols-2 gap-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Customer</p>
                   <p className="font-semibold text-slate-800">{selectedOrder.customer?.name || 'Unknown'}</p>
@@ -478,8 +484,8 @@ export default function SupplierOrders() {
 
               <div>
                 <h3 className="font-bold text-slate-800 mb-3">Items</h3>
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-left text-sm">
+                <div className="border border-slate-200 rounded-lg overflow-x-auto">
+                  <table className="w-full text-left text-sm min-w-[420px]">
                     <thead className="bg-slate-50 border-b border-slate-200">
                       <tr>
                         <th className="p-3">Product</th>
@@ -508,7 +514,7 @@ export default function SupplierOrders() {
               </div>
 
               <div className="flex justify-end">
-                <div className="w-64 space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm">
+                <div className="w-full sm:w-64 space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Subtotal</span>
                     <span className="font-semibold">₹{selectedOrder.subTotal?.toLocaleString()}</span>
@@ -531,8 +537,8 @@ export default function SupplierOrders() {
               </div>
             </div>
             
-            <div className="p-4 border-t border-slate-100 flex justify-end bg-white">
-              <button onClick={() => setSelectedOrder(null)} className="btn btn-secondary">Close</button>
+            <div className="p-3 sm:p-4 border-t border-slate-100 flex justify-end bg-white shrink-0 sticky bottom-0">
+              <button onClick={() => setSelectedOrder(null)} className="w-full sm:w-auto btn btn-secondary py-2.5">Close</button>
             </div>
           </div>
         </div>

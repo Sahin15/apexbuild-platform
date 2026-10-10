@@ -228,19 +228,21 @@ export default function ReceiptModal({ sale, onClose }) {
   if (!sale) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto" onClick={onClose}>
-      <div className="bg-slate-100 rounded-2xl shadow-2xl w-full max-w-md my-auto flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
-        
-        <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white rounded-t-2xl shrink-0">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto" onClick={onClose}>
+      <div className="bg-slate-100 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full max-w-md my-auto flex flex-col h-[94dvh] sm:h-auto sm:max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95" onClick={e => e.stopPropagation()}>
+        <div className="pt-2 pb-1 flex justify-center sm:hidden bg-white">
+          <div className="w-12 h-1.5 bg-slate-300 rounded-full" />
+        </div>
+        <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white rounded-t-3xl sm:rounded-t-none shrink-0">
           <h2 className="text-xl font-bold text-slate-800">Delivery Receipt</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-red-500 transition-colors p-1 bg-slate-50 hover:bg-red-50 rounded-lg">
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1 flex justify-center">
+        <div className="p-3 sm:p-6 overflow-y-auto flex-1 flex justify-center">
           {/* RECEIPT CANVAS */}
-          <div ref={receiptRef} className="bg-white p-8 shadow-sm border border-slate-200 w-full max-w-[350px]" style={{ fontFamily: 'monospace' }}>
+          <div ref={receiptRef} className="bg-white p-4 sm:p-8 shadow-sm border border-slate-200 w-full max-w-[350px] rounded-lg" style={{ fontFamily: 'monospace' }}>
             <div className="text-center mb-6">
               <h1 className="text-2xl font-black text-slate-800 uppercase tracking-widest">ApexSupply</h1>
               <p className="text-xs text-slate-500 uppercase tracking-widest mt-1">Poultry Distributor</p>
@@ -319,11 +321,11 @@ export default function ReceiptModal({ sale, onClose }) {
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-200 bg-white rounded-b-2xl shrink-0 flex gap-3">
-          <button onClick={handleDownload} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors">
+        <div className="p-3 sm:p-4 border-t border-slate-200 bg-white rounded-b-2xl shrink-0 flex gap-3 sticky bottom-0">
+          <button onClick={handleDownload} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors touch-manipulation">
             <Download className="w-5 h-5" /> Save PDF
           </button>
-          <button onClick={handleWhatsAppShare} className="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-200 transition-colors">
+          <button onClick={handleWhatsAppShare} className="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-200 transition-colors touch-manipulation">
             <MessageCircle className="w-5 h-5" /> Send PDF
           </button>
         </div>

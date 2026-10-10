@@ -378,9 +378,12 @@ const DiagnosticsOrders = () => {
 
       {/* Create Order Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 md:p-0">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-4 border-b border-gray-100 shrink-0">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl w-full max-w-2xl overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95 flex flex-col h-[94dvh] sm:h-auto sm:max-h-[90vh]">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-gray-50">
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            </div>
+            <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50 shrink-0">
               <h2 className="text-lg font-bold text-gray-900">New Test Order</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="h-5 w-5" />
@@ -555,17 +558,17 @@ const DiagnosticsOrders = () => {
 
               </div>
               
-              <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0">
+              <div className="p-3 sm:p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-2 sm:gap-3 shrink-0 sticky bottom-0">
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100"
+                  className="flex-1 sm:flex-initial px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 touch-manipulation"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm"
+                  className="flex-1 sm:flex-initial px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm touch-manipulation"
                 >
                   Generate Order
                 </button>
@@ -576,16 +579,19 @@ const DiagnosticsOrders = () => {
       )}
       {/* Collect Payment Modal */}
       {paymentModalOpen && selectedOrderForPayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center p-4 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95 max-h-[92dvh] flex flex-col">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-gray-50">
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            </div>
+            <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50 shrink-0">
               <h2 className="text-lg font-bold text-gray-900">Collect Payment</h2>
               <button onClick={() => setPaymentModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={handleCollectPayment}>
-              <div className="p-5 space-y-4">
+            <form onSubmit={handleCollectPayment} className="flex flex-col flex-1 min-h-0">
+              <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
                 <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Order ID:</span>
@@ -617,17 +623,17 @@ const DiagnosticsOrders = () => {
                   />
                 </div>
               </div>
-              <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+              <div className="p-3 sm:p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-2 sm:gap-3 shrink-0 sticky bottom-0">
                 <button 
                   type="button" 
                   onClick={() => setPaymentModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100"
+                  className="flex-1 sm:flex-initial px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 touch-manipulation"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm"
+                  className="flex-1 sm:flex-initial px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm touch-manipulation"
                 >
                   Record Payment
                 </button>

@@ -899,19 +899,23 @@ export default function Labour({ isProjectView = false }) {
 
       {/* ENROLL / EDIT WORKER MODAL */}
       {isWorkerModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200">
-            <div className="p-5 border-b border-slate-200 bg-slate-900 text-white rounded-t-2xl flex items-center justify-between">
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[92dvh] flex flex-col border border-slate-200 overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-slate-900">
+              <div className="w-12 h-1.5 bg-slate-600 rounded-full" />
+            </div>
+            <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-900 text-white rounded-t-2xl sm:rounded-t-none flex items-center justify-between shrink-0">
               <h3 className="font-bold text-base">
                 {editingWorkerId ? 'Edit Worker Record' : 'Enroll Site Worker'}
               </h3>
-              <button onClick={() => setIsWorkerModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsWorkerModalOpen(false)} className="text-slate-400 hover:text-white p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveWorker} className="p-6 space-y-4 text-xs">
-              <div>
+            <form onSubmit={handleSaveWorker} className="flex flex-col flex-1 min-h-0 text-xs">
+              <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                <div>
                 <label className="block font-bold text-slate-700 mb-1">Full Name *</label>
                 <input
                   type="text"
@@ -1016,18 +1020,19 @@ export default function Labour({ isProjectView = false }) {
                   />
                 </div>
               </div>
+            </div>
 
-              <div className="pt-4 border-t border-slate-200 flex justify-end gap-2">
+            <div className="p-3 sm:p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2 shrink-0 sticky bottom-0">
                 <button
                   type="button"
                   onClick={() => setIsWorkerModalOpen(false)}
-                  className="btn btn-secondary text-xs px-4 py-2"
+                  className="flex-1 sm:flex-initial btn btn-secondary text-xs px-4 py-2.5"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg"
+                  className="flex-1 sm:flex-initial btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow-sm"
                 >
                   Save Worker
                 </button>
@@ -1039,22 +1044,25 @@ export default function Labour({ isProjectView = false }) {
 
       {/* MARK ATTENDANCE & OT MODAL */}
       {isAttendanceModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col border border-slate-200">
-            <div className="p-5 border-b border-slate-200 bg-slate-900 text-white rounded-t-2xl flex items-center justify-between">
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-2xl h-[92dvh] sm:h-auto sm:max-h-[90vh] flex flex-col border border-slate-200 overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-slate-900">
+              <div className="w-12 h-1.5 bg-slate-600 rounded-full" />
+            </div>
+            <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-900 text-white rounded-t-2xl sm:rounded-t-none flex items-center justify-between shrink-0">
               <div>
                 <h3 className="font-bold text-base flex items-center gap-2">
                   <ClipboardCheck className="w-5 h-5 text-amber-400" /> Mark Daily Muster Attendance & OT
                 </h3>
                 <p className="text-xs text-slate-300">Daily labor muster roll recording with overtime hours</p>
               </div>
-              <button onClick={() => setIsAttendanceModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsAttendanceModalOpen(false)} className="text-slate-400 hover:text-white p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSaveDailyAttendance} className="flex flex-col flex-1 min-h-0 text-xs">
-              <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div className="p-3 sm:p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
                 <div className="flex items-center gap-2">
                   <label className="font-bold text-slate-700">Roster Date:</label>
                   <input
@@ -1069,72 +1077,74 @@ export default function Labour({ isProjectView = false }) {
                 </span>
               </div>
 
-              <div className="p-4 overflow-y-auto flex-1 space-y-2">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
-                    <tr>
-                      <th className="p-2">Worker</th>
-                      <th className="p-2">Trade</th>
-                      <th className="p-2 text-center">Status</th>
-                      <th className="p-2 text-center w-24">OT (Hrs)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {dailyAttendanceRecords.map((rec, idx) => (
-                      <tr key={rec.workerId} className="hover:bg-slate-50">
-                        <td className="p-2 font-bold text-slate-800">{rec.workerName}</td>
-                        <td className="p-2 text-slate-500">{rec.category}</td>
-                        <td className="p-2 text-center">
-                          <select
-                            value={rec.status}
-                            onChange={(e) => {
-                              const updated = [...dailyAttendanceRecords];
-                              updated[idx].status = e.target.value;
-                              updated[idx].hoursWorked = e.target.value === 'Half-Day' ? 4 : e.target.value === 'Present' ? 8 : 0;
-                              setDailyAttendanceRecords(updated);
-                            }}
-                            className={`p-1 rounded text-xs font-bold ${
-                              rec.status === 'Present' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
-                              rec.status === 'Half-Day' ? 'bg-amber-100 text-amber-800 border-amber-300' :
-                              'bg-red-100 text-red-800 border-red-300'
-                            }`}
-                          >
-                            <option>Present</option>
-                            <option>Half-Day</option>
-                            <option>Absent</option>
-                          </select>
-                        </td>
-                        <td className="p-2 text-center">
-                          <input
-                            type="number"
-                            min={0}
-                            max={12}
-                            value={rec.overtimeHours}
-                            onChange={(e) => {
-                              const updated = [...dailyAttendanceRecords];
-                              updated[idx].overtimeHours = Number(e.target.value);
-                              setDailyAttendanceRecords(updated);
-                            }}
-                            className="w-16 p-1 text-center border border-slate-300 rounded font-bold text-xs"
-                          />
-                        </td>
+              <div className="p-3 sm:p-4 overflow-y-auto flex-1 space-y-2">
+                <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                  <table className="w-full text-left min-w-[380px]">
+                    <thead className="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
+                      <tr>
+                        <th className="p-2">Worker</th>
+                        <th className="p-2">Trade</th>
+                        <th className="p-2 text-center">Status</th>
+                        <th className="p-2 text-center w-24">OT (Hrs)</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {dailyAttendanceRecords.map((rec, idx) => (
+                        <tr key={rec.workerId} className="hover:bg-slate-50">
+                          <td className="p-2 font-bold text-slate-800">{rec.workerName}</td>
+                          <td className="p-2 text-slate-500">{rec.category}</td>
+                          <td className="p-2 text-center">
+                            <select
+                              value={rec.status}
+                              onChange={(e) => {
+                                const updated = [...dailyAttendanceRecords];
+                                updated[idx].status = e.target.value;
+                                updated[idx].hoursWorked = e.target.value === 'Half-Day' ? 4 : e.target.value === 'Present' ? 8 : 0;
+                                setDailyAttendanceRecords(updated);
+                              }}
+                              className={`p-1 rounded text-xs font-bold ${
+                                rec.status === 'Present' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+                                rec.status === 'Half-Day' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                                'bg-red-100 text-red-800 border-red-300'
+                              }`}
+                            >
+                              <option>Present</option>
+                              <option>Half-Day</option>
+                              <option>Absent</option>
+                            </select>
+                          </td>
+                          <td className="p-2 text-center">
+                            <input
+                              type="number"
+                              min={0}
+                              max={12}
+                              value={rec.overtimeHours}
+                              onChange={(e) => {
+                                const updated = [...dailyAttendanceRecords];
+                                updated[idx].overtimeHours = Number(e.target.value);
+                                setDailyAttendanceRecords(updated);
+                              }}
+                              className="w-16 p-1 text-center border border-slate-300 rounded font-bold text-xs"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
-              <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-2 rounded-b-2xl">
+              <div className="p-3 sm:p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2 shrink-0 sticky bottom-0">
                 <button
                   type="button"
                   onClick={() => setIsAttendanceModalOpen(false)}
-                  className="btn btn-secondary text-xs px-4 py-2"
+                  className="flex-1 sm:flex-initial btn btn-secondary text-xs px-4 py-2.5"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-5 py-2 rounded-lg"
+                  className="flex-1 sm:flex-initial btn bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-5 py-2.5 rounded-lg shadow-sm"
                 >
                   Save Attendance
                 </button>
@@ -1146,66 +1156,72 @@ export default function Labour({ isProjectView = false }) {
 
       {/* GIVE ADVANCE MODAL */}
       {isAdvanceModalOpen && activeWorkerForAdvance && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200">
-            <div className="p-5 border-b border-slate-200 bg-slate-900 text-white rounded-t-2xl flex items-center justify-between">
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm max-h-[92dvh] flex flex-col border border-slate-200 overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-slate-900">
+              <div className="w-12 h-1.5 bg-slate-600 rounded-full" />
+            </div>
+            <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-900 text-white rounded-t-2xl sm:rounded-t-none flex items-center justify-between shrink-0">
               <div>
                 <h3 className="font-bold text-base">Record Cash Advance</h3>
                 <p className="text-xs text-slate-300">{activeWorkerForAdvance.name} ({activeWorkerForAdvance.workerCode})</p>
               </div>
-              <button onClick={() => setIsAdvanceModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsAdvanceModalOpen(false)} className="text-slate-400 hover:text-white p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveAdvance} className="p-6 space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Advance Amount (₹) *</label>
-                <input
-                  type="number"
-                  required
-                  min={50}
-                  value={advanceForm.amount}
-                  onChange={(e) => setAdvanceForm({ ...advanceForm, amount: e.target.value })}
-                  placeholder="e.g. 1000"
-                  className="w-full p-2 border border-slate-300 rounded-lg text-sm font-bold"
-                />
+            <form onSubmit={handleSaveAdvance} className="flex flex-col flex-1 min-h-0 text-xs">
+              <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Advance Amount (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    min={50}
+                    value={advanceForm.amount}
+                    onChange={(e) => setAdvanceForm({ ...advanceForm, amount: e.target.value })}
+                    placeholder="e.g. 1000"
+                    className="w-full p-2 border border-slate-300 rounded-lg text-sm font-bold text-emerald-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Payment Mode</label>
+                  <select
+                    value={advanceForm.paymentMode}
+                    onChange={(e) => setAdvanceForm({ ...advanceForm, paymentMode: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-lg text-xs"
+                  >
+                    <option value="CASH">Cash in Hand</option>
+                    <option value="UPI">UPI Transfer</option>
+                    <option value="BANK_TRANSFER">Bank Account / NEFT</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Purpose / Notes</label>
+                  <input
+                    type="text"
+                    value={advanceForm.notes}
+                    onChange={(e) => setAdvanceForm({ ...advanceForm, notes: e.target.value })}
+                    placeholder="Festival advance, medical emergency..."
+                    className="w-full p-2 border border-slate-300 rounded-lg text-xs"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Payment Mode</label>
-                <select
-                  value={advanceForm.paymentMode}
-                  onChange={(e) => setAdvanceForm({ ...advanceForm, paymentMode: e.target.value })}
-                  className="w-full p-2 border border-slate-300 rounded-lg text-xs"
-                >
-                  <option value="CASH">Cash in Hand</option>
-                  <option value="UPI">UPI Transfer</option>
-                  <option value="BANK_TRANSFER">Bank Account / NEFT</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Purpose / Notes</label>
-                <input
-                  type="text"
-                  value={advanceForm.notes}
-                  onChange={(e) => setAdvanceForm({ ...advanceForm, notes: e.target.value })}
-                  className="w-full p-2 border border-slate-300 rounded-lg text-xs"
-                />
-              </div>
-
-              <div className="pt-4 border-t border-slate-200 flex justify-end gap-2">
+              <div className="p-3 sm:p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2 shrink-0 sticky bottom-0">
                 <button
                   type="button"
                   onClick={() => setIsAdvanceModalOpen(false)}
-                  className="btn btn-secondary text-xs px-4 py-2"
+                  className="flex-1 sm:flex-initial btn btn-secondary text-xs px-4 py-2.5"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-lg"
+                  className="flex-1 sm:flex-initial btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm"
                 >
                   Disburse Advance
                 </button>
@@ -1217,80 +1233,85 @@ export default function Labour({ isProjectView = false }) {
 
       {/* COMPUTE WAGE SHEET MODAL */}
       {isGenerateWageModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200">
-            <div className="p-5 border-b border-slate-200 bg-slate-900 text-white rounded-t-2xl flex items-center justify-between">
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[92dvh] flex flex-col border border-slate-200 overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-slate-900">
+              <div className="w-12 h-1.5 bg-slate-600 rounded-full" />
+            </div>
+            <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-900 text-white rounded-t-2xl sm:rounded-t-none flex items-center justify-between shrink-0">
               <div>
                 <h3 className="font-bold text-base flex items-center gap-2">
                   <FileText className="w-5 h-5 text-amber-400" /> Compute Weekly Muster Wage Sheet
                 </h3>
                 <p className="text-xs text-slate-300">CPWD Form 21 Nominal Muster Roll Aggregator</p>
               </div>
-              <button onClick={() => setIsGenerateWageModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsGenerateWageModalOpen(false)} className="text-slate-400 hover:text-white p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleGenerateWageSheet} className="p-6 space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Cycle Start Date *</label>
-                  <input
-                    type="date"
-                    required
-                    value={wageGenForm.startDate}
-                    onChange={(e) => setWageGenForm({ ...wageGenForm, startDate: e.target.value })}
-                    className="w-full p-2 border border-slate-300 rounded-lg text-xs"
-                  />
+            <form onSubmit={handleGenerateWageSheet} className="flex flex-col flex-1 min-h-0 text-xs">
+              <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Cycle Start Date *</label>
+                    <input
+                      type="date"
+                      required
+                      value={wageGenForm.startDate}
+                      onChange={(e) => setWageGenForm({ ...wageGenForm, startDate: e.target.value })}
+                      className="w-full p-2 border border-slate-300 rounded-lg text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Cycle End Date *</label>
+                    <input
+                      type="date"
+                      required
+                      value={wageGenForm.endDate}
+                      onChange={(e) => setWageGenForm({ ...wageGenForm, endDate: e.target.value })}
+                      className="w-full p-2 border border-slate-300 rounded-lg text-xs"
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <label className="block font-bold text-slate-700 mb-1">Labour Gang Filter</label>
+                    <select
+                      value={wageGenForm.thekedaar}
+                      onChange={(e) => setWageGenForm({ ...wageGenForm, thekedaar: e.target.value })}
+                      className="w-full p-2 border border-slate-300 rounded-lg text-xs"
+                    >
+                      <option value="All Gangs">All Site Gangs (Consolidated)</option>
+                      {thekedaarList.filter(t => t !== 'ALL').map(tk => (
+                        <option key={tk} value={tk}>{tk}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Cycle End Date *</label>
-                  <input
-                    type="date"
-                    required
-                    value={wageGenForm.endDate}
-                    onChange={(e) => setWageGenForm({ ...wageGenForm, endDate: e.target.value })}
-                    className="w-full p-2 border border-slate-300 rounded-lg text-xs"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block font-bold text-slate-700 mb-1">Labour Gang Filter</label>
-                  <select
-                    value={wageGenForm.thekedaar}
-                    onChange={(e) => setWageGenForm({ ...wageGenForm, thekedaar: e.target.value })}
-                    className="w-full p-2 border border-slate-300 rounded-lg text-xs"
-                  >
-                    <option value="All Gangs">All Site Gangs (Consolidated)</option>
-                    {thekedaarList.filter(t => t !== 'ALL').map(tk => (
-                      <option key={tk} value={tk}>{tk}</option>
-                    ))}
-                  </select>
+                <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 text-slate-700 space-y-1">
+                  <span className="font-bold block text-amber-900">Statutory & Advance Automation:</span>
+                  <p className="text-[11px]">
+                    • Base wages calculated from attendance records in date range.
+                    <br />• Overtime calculated at 1.5x hourly rate.
+                    <br />• 1% Labour Welfare Cess deducted per statutory requirements.
+                    <br />• Advances automatically deducted (capped at 25% of gross).
+                  </p>
                 </div>
               </div>
 
-              <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 text-slate-700 space-y-1">
-                <span className="font-bold block text-amber-900">Statutory & Advance Automation:</span>
-                <p className="text-[11px]">
-                  • Base wages calculated from attendance records in date range.
-                  <br />• Overtime calculated at 1.5x hourly rate.
-                  <br />• 1% Labour Welfare Cess deducted per statutory requirements.
-                  <br />• Advances automatically deducted (capped at 25% of gross).
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-slate-200 flex justify-end gap-2">
+              <div className="p-3 sm:p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2 shrink-0 sticky bottom-0">
                 <button
                   type="button"
                   onClick={() => setIsGenerateWageModalOpen(false)}
-                  className="btn btn-secondary text-xs px-4 py-2"
+                  className="flex-1 sm:flex-initial btn btn-secondary text-xs px-4 py-2.5"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-2 rounded-lg flex items-center gap-1 shadow"
+                  className="flex-1 sm:flex-initial btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg flex items-center justify-center gap-1 shadow-sm"
                 >
                   <FileCheck className="w-4 h-4" /> Generate Form 21 Sheet
                 </button>
@@ -1302,23 +1323,26 @@ export default function Labour({ isProjectView = false }) {
 
       {/* OFFICIAL PRINTABLE CPWD FORM 21 MODAL */}
       {isForm21ModalOpen && selectedWageSheet && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[96vh] flex flex-col border border-slate-300">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-5xl h-[94dvh] sm:h-auto sm:max-h-[96vh] flex flex-col border border-slate-300 overflow-hidden animate-in slide-in-from-bottom duration-200 sm:zoom-in-95">
+            <div className="pt-2 pb-1 flex justify-center sm:hidden bg-slate-900">
+              <div className="w-12 h-1.5 bg-slate-600 rounded-full" />
+            </div>
             {/* Top Bar (Hidden in Print) */}
-            <div className="p-4 bg-slate-900 text-white rounded-t-2xl flex items-center justify-between print:hidden">
+            <div className="p-3 sm:p-4 bg-slate-900 text-white rounded-t-2xl sm:rounded-t-none flex flex-wrap items-center justify-between gap-2 shrink-0 print:hidden">
               <div className="flex items-center gap-2">
-                <Printer className="w-5 h-5 text-amber-400" />
+                <Printer className="w-5 h-5 text-amber-400 shrink-0" />
                 <div>
-                  <h3 className="font-bold text-base">CPWD Form 21 - Nominal Muster Roll (NMR) & Wage Sheet</h3>
-                  <p className="text-xs text-slate-300">Official Labor Attendance & Wage Settlement Sheet per CPWD Works Manual</p>
+                  <h3 className="font-bold text-sm sm:text-base leading-tight">CPWD Form 21 - Nominal Muster Roll (NMR)</h3>
+                  <p className="text-[11px] text-slate-300 hidden sm:block">Official Labor Attendance & Wage Settlement Sheet per CPWD Works Manual</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => window.print()}
-                  className="btn bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 shadow"
+                  className="btn bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 shadow"
                 >
-                  <Printer className="w-4 h-4" /> Print Form 21 / PDF
+                  <Printer className="w-4 h-4" /> Print / PDF
                 </button>
                 <button
                   onClick={() => setIsForm21ModalOpen(false)}

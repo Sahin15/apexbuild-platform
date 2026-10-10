@@ -48,18 +48,21 @@ const PaymentReceiptModal = ({ isOpen, onClose, receipt, order, organization, in
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-fade-in">
-      <div className="bg-white rounded-2xl w-full max-w-5xl h-[94vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-fade-in">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-5xl h-[94dvh] sm:h-auto sm:max-h-[94vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 animate-in slide-in-from-bottom duration-200 sm:zoom-in-95">
+        <div className="pt-2 pb-1 flex justify-center sm:hidden bg-slate-50">
+          <div className="w-12 h-1.5 bg-slate-300 rounded-full" />
+        </div>
         
         {/* Top Control Bar */}
-        <div className="px-5 py-3 border-b border-slate-200 flex flex-wrap justify-between items-center bg-slate-50 gap-3">
+        <div className="px-4 sm:px-5 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 gap-2 shrink-0">
           {/* Format Switcher */}
           <div className="flex items-center gap-2">
             <div className="flex bg-slate-200/80 p-1 rounded-xl text-xs font-semibold text-slate-700">
               <button
                 type="button"
                 onClick={() => setFormat('80mm')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg transition-all ${
                   format === '80mm' 
                     ? 'bg-white text-blue-900 shadow-xs font-bold' 
                     : 'hover:text-slate-900'
@@ -71,7 +74,7 @@ const PaymentReceiptModal = ({ isOpen, onClose, receipt, order, organization, in
               <button
                 type="button"
                 onClick={() => setFormat('A4')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg transition-all ${
                   format === 'A4' 
                     ? 'bg-white text-blue-900 shadow-xs font-bold' 
                     : 'hover:text-slate-900'
@@ -82,13 +85,13 @@ const PaymentReceiptModal = ({ isOpen, onClose, receipt, order, organization, in
               </button>
             </div>
 
-            <span className="text-xs text-slate-400 font-mono hidden sm:inline">
+            <span className="text-xs text-slate-400 font-mono hidden md:inline">
               | {receiptNo}
             </span>
           </div>
 
-          {/* Zoom & Action Buttons */}
-          <div className="flex items-center gap-2">
+          {/* Desktop Zoom & Action Buttons */}
+          <div className="hidden sm:flex items-center gap-2">
             {/* Zoom Controls */}
             <div className="hidden md:flex items-center bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-600 gap-1.5 shadow-2xs">
               <button 
@@ -111,7 +114,7 @@ const PaymentReceiptModal = ({ isOpen, onClose, receipt, order, organization, in
             {/* Print Button */}
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-black text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-black text-white rounded-lg text-xs font-semibold shadow-xs transition-colors touch-manipulation"
             >
               <Printer className="w-3.5 h-3.5 text-blue-400" />
               <span>Print {format === '80mm' ? 'POS Slip' : 'Invoice'}</span>
@@ -120,7 +123,7 @@ const PaymentReceiptModal = ({ isOpen, onClose, receipt, order, organization, in
             {/* PDF Button */}
             <button
               onClick={handleDownloadPDF}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors touch-manipulation"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Download PDF</span>
@@ -134,10 +137,18 @@ const PaymentReceiptModal = ({ isOpen, onClose, receipt, order, organization, in
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Mobile Close Button */}
+          <button
+            onClick={onClose}
+            className="sm:hidden p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Scrollable Preview Area */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-200/60 flex justify-center items-start min-h-0">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-6 bg-slate-200/60 flex justify-center items-start min-h-0">
           <div 
             style={{ 
               transform: `scale(${zoom / 100})`, 
@@ -161,8 +172,26 @@ const PaymentReceiptModal = ({ isOpen, onClose, receipt, order, organization, in
           </div>
         </div>
 
-        {/* Bottom Quick Help Bar */}
-        <div className="px-5 py-2.5 bg-white border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+        {/* Mobile Sticky Action Bar */}
+        <div className="flex sm:hidden p-3 border-t border-slate-200 bg-white gap-2 shrink-0 sticky bottom-0 z-20">
+          <button
+            onClick={handlePrint}
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-transform touch-manipulation"
+          >
+            <Printer className="w-4 h-4 text-blue-400" />
+            <span>Print {format === '80mm' ? 'POS Slip' : 'Invoice'}</span>
+          </button>
+          <button
+            onClick={handleDownloadPDF}
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-transform touch-manipulation"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download PDF</span>
+          </button>
+        </div>
+
+        {/* Bottom Quick Help Bar (Desktop) */}
+        <div className="hidden sm:flex px-5 py-2.5 bg-white border-t border-slate-200 justify-between items-center text-xs text-slate-500">
           <span className="flex items-center gap-1.5 text-slate-600 font-medium">
             <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
             Active Mode: {format === '80mm' ? 'Thermal 80mm ESC/POS Roll' : 'Standard A4 Laser / DeskJet'}
