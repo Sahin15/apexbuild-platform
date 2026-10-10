@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 import { 
   Briefcase, IndianRupee, TrendingDown, AlertCircle, ArrowRight,
   Calendar, Clock, TrendingUp, Wallet,
@@ -40,6 +41,7 @@ const StatCard = ({ title, value, icon: Icon, trend, colorClass, gradient }) => 
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [dateRange, setDateRange] = useState('This Month');
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
@@ -182,7 +184,9 @@ export default function Dashboard() {
               <Calendar className="w-4 h-4 text-primary-500" /> {today}
             </span>
           </div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Good Morning, Sahin.</h1>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+            Good Morning, {user?.name ? user.name.split(' ')[0] : 'Partner'}.
+          </h1>
           <p className="text-slate-500 mt-2 text-lg font-medium">Here's your comprehensive command center for today.</p>
         </div>
         
