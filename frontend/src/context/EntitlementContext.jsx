@@ -20,7 +20,11 @@ export const EntitlementProvider = ({ children }) => {
       setLoading(true);
       const res = await api.get('/auth/entitlements');
       if (res.data?.data) {
-        setEntitlements(res.data.data);
+        const payload = res.data.data;
+        const feats = payload.features || payload.entitlements || {};
+        payload.features = feats;
+        payload.entitlements = feats;
+        setEntitlements(payload);
       }
     } catch (error) {
       console.error('Failed to load tenant entitlements:', error);
@@ -50,10 +54,11 @@ export const EntitlementProvider = ({ children }) => {
     if (user?.platformRole === 'SUPER_ADMIN') {
       return true;
     }
-    if (!entitlements || !entitlements.features) {
+    const feats = entitlements?.features || entitlements?.entitlements;
+    if (!feats) {
       return false;
     }
-    return Boolean(entitlements.features[featureKey]);
+    return Boolean(feats[featureKey]);
   }, [user, entitlements]);
 
   /**

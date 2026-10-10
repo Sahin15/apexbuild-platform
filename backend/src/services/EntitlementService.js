@@ -283,6 +283,7 @@ class EntitlementService {
       billingCycle: sub?.billingCycle || 'monthly',
       status: sub?.status || 'ACTIVE',
       entitlements: resolvedEntitlements,
+      features: resolvedEntitlements,
       limits: usageLimits
     };
   }
@@ -349,6 +350,7 @@ class EntitlementService {
       planName: 'Platform Superadmin',
       status: 'ACTIVE',
       entitlements: allTrue,
+      features: allTrue,
       limits: { maxProjects: -1, storageGB: 10000, maxUsers: -1 }
     };
   }
@@ -362,6 +364,7 @@ class EntitlementService {
       planName: 'Starter Free Plan',
       status: 'ACTIVE',
       entitlements: {},
+      features: {},
       limits: { maxProjects: 3, storageGB: 5, maxUsers: 5 }
     };
   }
