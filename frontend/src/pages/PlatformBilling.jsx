@@ -3,7 +3,7 @@ import api from '../services/api';
 import toast from 'react-hot-toast';
 import { 
   CreditCard, AlertTriangle, FileText, CheckCircle, Upload, 
-  Clock, ShieldCheck, DollarSign, Sparkles, Building2, CheckCircle2, 
+  Clock, ShieldCheck, Sparkles, Building2, CheckCircle2, 
   ArrowRight, RefreshCw, Eye, Printer, Landmark
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -190,27 +190,27 @@ export default function PlatformBilling() {
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2 mb-4 text-xs">
                     <div className="flex justify-between items-center text-slate-500">
                       <span>Standard Base Rate:</span>
-                      <span className="line-through">${sub.basePrice?.toFixed(2)}</span>
+                      <span className="line-through">₹{sub.basePrice?.toFixed(2)}</span>
                     </div>
 
                     {sub.customPrice && sub.customPrice !== sub.basePrice && (
                       <div className="flex justify-between items-center text-indigo-700 font-bold">
                         <span>Agreed Custom Price:</span>
-                        <span>${sub.customPrice?.toFixed(2)}</span>
+                        <span>₹{sub.customPrice?.toFixed(2)}</span>
                       </div>
                     )}
 
                     {sub.discount > 0 && (
                       <div className="flex justify-between items-center text-emerald-600 font-bold">
                         <span>Superadmin Special Discount:</span>
-                        <span>-${sub.discount?.toFixed(2)}</span>
+                        <span>-₹{sub.discount?.toFixed(2)}</span>
                       </div>
                     )}
 
                     <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
                       <span className="font-bold text-slate-700">Net Recurring Rate:</span>
                       <span className="text-base font-black text-slate-900">
-                        ${sub.finalAmount?.toFixed(2)}
+                        ₹{sub.finalAmount?.toFixed(2)}
                         <span className="text-xs font-normal text-slate-500">/{sub.billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
                       </span>
                     </div>
@@ -264,11 +264,11 @@ export default function PlatformBilling() {
 
                   <div className="space-y-1 mb-6">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black text-slate-900">${plan.monthlyPrice}</span>
+                      <span className="text-2xl font-black text-slate-900">₹{plan.monthlyPrice}</span>
                       <span className="text-xs text-slate-500">/mo</span>
                     </div>
                     <div className="text-xs font-semibold text-emerald-600">
-                      or ${plan.yearlyPrice}/yr (Save ~20%)
+                      or ₹{plan.yearlyPrice}/yr (Save ~20%)
                     </div>
                   </div>
                 </div>
@@ -337,9 +337,9 @@ export default function PlatformBilling() {
                     {new Date(inv.dueDate).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-extrabold text-slate-900">${inv.total?.toFixed(2)}</div>
+                    <div className="font-extrabold text-slate-900">₹{inv.total?.toFixed(2)}</div>
                     {inv.dueAmount > 0 && inv.dueAmount < inv.total && (
-                      <div className="text-xs text-amber-600 font-medium">Due: ${inv.dueAmount.toFixed(2)}</div>
+                      <div className="text-xs text-amber-600 font-medium">Due: ₹{inv.dueAmount.toFixed(2)}</div>
                     )}
                   </td>
                   <td className="px-6 py-4">
@@ -418,30 +418,30 @@ export default function PlatformBilling() {
                 {viewInvoice.subscriptionFee > 0 && (
                   <div className="flex justify-between">
                     <span>OS Platform Subscription Fee</span>
-                    <span className="font-bold">${viewInvoice.subscriptionFee?.toFixed(2)}</span>
+                    <span className="font-bold">₹{viewInvoice.subscriptionFee?.toFixed(2)}</span>
                   </div>
                 )}
                 {viewInvoice.implementationFee > 0 && (
                   <div className="flex justify-between">
                     <span>One-Time Onboarding & Implementation</span>
-                    <span className="font-bold">${viewInvoice.implementationFee?.toFixed(2)}</span>
+                    <span className="font-bold">₹{viewInvoice.implementationFee?.toFixed(2)}</span>
                   </div>
                 )}
                 {viewInvoice.discount > 0 && (
                   <div className="flex justify-between text-emerald-600">
                     <span>Contract Discount</span>
-                    <span>-${viewInvoice.discount?.toFixed(2)}</span>
+                    <span>-₹{viewInvoice.discount?.toFixed(2)}</span>
                   </div>
                 )}
                 {viewInvoice.tax > 0 && (
                   <div className="flex justify-between text-slate-500">
                     <span>GST (18%)</span>
-                    <span>${viewInvoice.tax?.toFixed(2)}</span>
+                    <span>₹{viewInvoice.tax?.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="pt-2 border-t-2 border-slate-900 flex justify-between font-bold text-sm text-slate-900">
                   <span>Total Amount:</span>
-                  <span className="font-mono text-indigo-600">${viewInvoice.total?.toFixed(2)}</span>
+                  <span className="font-mono text-indigo-600">₹{viewInvoice.total?.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -477,13 +477,13 @@ export default function PlatformBilling() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Amount Due:</span>
-                  <strong className="text-slate-900 text-sm">${selectedInvoice.dueAmount || selectedInvoice.total}</strong>
+                  <strong className="text-slate-900 text-sm">₹{selectedInvoice.dueAmount || selectedInvoice.total}</strong>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                  Amount Paid ($) <span className="text-rose-500">*</span>
+                  Amount Paid (₹) <span className="text-rose-500">*</span>
                 </label>
                 <input 
                   type="number" 

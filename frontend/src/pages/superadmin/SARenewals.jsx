@@ -101,7 +101,7 @@ export default function SARenewals() {
                       <div className="text-xs font-medium text-slate-500 mt-1">{sub.osProductId?.name}</div>
                     </td>
                     <td className="px-6 py-5">
-                      <div className="font-black text-slate-900">${(sub.finalAmount || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                      <div className="font-black text-slate-900">₹{(sub.finalAmount || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                     </td>
                     <td className="px-6 py-5">
                       <div className="font-bold text-slate-800 flex items-center gap-2">

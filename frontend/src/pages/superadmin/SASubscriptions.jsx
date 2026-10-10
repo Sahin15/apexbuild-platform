@@ -3,7 +3,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { 
   Plus, CheckCircle2, ShieldAlert, AlertTriangle, RefreshCw, 
-  Clock, Search, MoreVertical, Ban, PauseCircle, Edit, DollarSign,
+  Clock, Search, MoreVertical, Ban, PauseCircle, Edit,
   TrendingUp, Building2, Calendar, Tag, ShieldCheck
 } from 'lucide-react';
 

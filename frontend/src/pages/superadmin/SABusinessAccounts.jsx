@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { 
   Search, Filter, LayoutGrid, List, 
   MoreVertical, Building2, ChevronLeft, ChevronRight, Eye, RefreshCw,
-  ShieldCheck, CheckCircle2, Clock, XCircle, AlertCircle, Sparkles, DollarSign,
+  ShieldCheck, CheckCircle2, Clock, XCircle, AlertCircle, Sparkles,
   ArrowRight, Tag, HelpCircle, Lock, Zap, Database, Server, Check, Key
 } from 'lucide-react';
 
@@ -1111,7 +1111,7 @@ export default function SABusinessAccounts() {
                         .filter(p => (p.osProductId?._id || p.osProductId) === verifyForm.osProductId)
                         .map(p => (
                           <option key={p._id} value={p._id}>
-                            {p.name} (${p.monthlyPrice}/mo, ${p.yearlyPrice}/yr)
+                            {p.name} (₹{p.monthlyPrice}/mo, ₹{p.yearlyPrice}/yr)
                           </option>
                         ))}
                     </select>
@@ -1147,7 +1147,7 @@ export default function SABusinessAccounts() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      Agreed Price ($/mo)
+                      Agreed Price (₹/mo)
                     </label>
                     <input
                       type="number"
@@ -1157,12 +1157,12 @@ export default function SABusinessAccounts() {
                       onChange={e => setVerifyForm({ ...verifyForm, customPrice: e.target.value })}
                       className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-amber-500 outline-none"
                     />
-                    <span className="text-[10px] text-slate-400 mt-1 block">Default: ${basePriceNum}</span>
+                    <span className="text-[10px] text-slate-400 mt-1 block">Default: ₹{basePriceNum}</span>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      Special Discount ($)
+                      Special Discount (₹)
                     </label>
                     <input
                       type="number"
@@ -1177,7 +1177,7 @@ export default function SABusinessAccounts() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      Setup / Implementation ($)
+                      Setup / Implementation (₹)
                     </label>
                     <input
                       type="number"
@@ -1195,33 +1195,33 @@ export default function SABusinessAccounts() {
                 <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-white space-y-2">
                   <div className="flex justify-between items-center text-xs text-slate-300">
                     <span>Base Tier Price:</span>
-                    <span>${basePriceNum.toFixed(2)}</span>
+                    <span>₹{basePriceNum.toFixed(2)}</span>
                   </div>
                   {customPriceNum !== basePriceNum && (
                     <div className="flex justify-between items-center text-xs text-indigo-300">
                       <span>Custom Negotiated Rate:</span>
-                      <span>${customPriceNum.toFixed(2)}</span>
+                      <span>₹{customPriceNum.toFixed(2)}</span>
                     </div>
                   )}
                   {discountNum > 0 && (
                     <div className="flex justify-between items-center text-xs text-emerald-400">
                       <span>Applied Discount:</span>
-                      <span>-${discountNum.toFixed(2)}</span>
+                      <span>-₹{discountNum.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center text-xs text-amber-300">
                     <span>One-Time Setup Fee:</span>
-                    <span>+${setupFeeNum.toFixed(2)}</span>
+                    <span>+₹{setupFeeNum.toFixed(2)}</span>
                   </div>
                   <div className="pt-2 border-t border-slate-700/80 flex justify-between items-center">
                     <span className="text-xs font-bold text-slate-200">Net Recurring Subscription:</span>
                     <span className="text-base font-extrabold text-emerald-400">
-                      ${recurringTotal.toFixed(2)} / {verifyForm.billingCycle === 'yearly' ? 'year' : 'month'}
+                      ₹{recurringTotal.toFixed(2)} / {verifyForm.billingCycle === 'yearly' ? 'year' : 'month'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[11px] text-slate-400">
                     <span>Initial Invoice Total (Setup + Recurring):</span>
-                    <span className="font-bold text-white">${initialInvoiceTotal.toFixed(2)}</span>
+                    <span className="font-bold text-white">₹{initialInvoiceTotal.toFixed(2)}</span>
                   </div>
                 </div>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Users, ClipboardList, Activity, TestTube2, AlertCircle, 
-  Plus, CheckCircle2, DollarSign, TrendingUp, Clock, 
+  Plus, CheckCircle2, IndianRupee, TrendingUp, Clock, 
   ChevronRight, FileText, ActivitySquare, ShieldCheck
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -256,7 +256,7 @@ export default function DiagnosticsDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-slate-300 tracking-wide uppercase">Today's Revenue</h3>
                 <div className="p-1.5 bg-white/10 rounded-lg backdrop-blur-sm">
-                  <DollarSign className="h-4 w-4 text-emerald-400" />
+                  <IndianRupee className="h-4 w-4 text-emerald-400" />
                 </div>
               </div>
               <h2 className="text-4xl font-extrabold text-white tracking-tight">

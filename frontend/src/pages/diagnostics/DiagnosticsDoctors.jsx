@@ -7,7 +7,7 @@ import {
   X, 
   Phone, 
   Building, 
-  DollarSign, 
+  IndianRupee, 
   Users, 
   Receipt, 
   TrendingUp, 
@@ -356,7 +356,7 @@ const DiagnosticsDoctors = () => {
                       disabled={!doc.pendingBalance || doc.pendingBalance <= 0}
                       className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-2xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
                     >
-                      <DollarSign className="w-3.5 h-3.5" />
+                      <IndianRupee className="w-3.5 h-3.5" />
                       <span>Disburse Payout</span>
                     </button>
                   </div>

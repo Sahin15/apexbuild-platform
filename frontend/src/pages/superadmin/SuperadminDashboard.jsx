@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
-  Building2, Users, DollarSign, Activity, AlertTriangle, 
+  Building2, Users, IndianRupee, Activity, AlertTriangle, 
   CheckCircle2, Clock, Monitor, RefreshCw, XCircle, CreditCard, ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -118,7 +118,7 @@ export default function SuperadminDashboard() {
 
       {/* Revenue KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard title="Total Revenue (ARR)" value={`₹${kpi.totalRevenue.toLocaleString()}`} subtitle="Annual run rate" icon={DollarSign} colorClass="bg-indigo-50 text-indigo-600" borderClass="border-slate-200" />
+        <KpiCard title="Total Revenue (ARR)" value={`₹${kpi.totalRevenue.toLocaleString()}`} subtitle="Annual run rate" icon={IndianRupee} colorClass="bg-indigo-50 text-indigo-600" borderClass="border-slate-200" />
         <KpiCard title="Monthly Recurring" value={`₹${kpi.mrr.toLocaleString()}`} subtitle="Active subscriptions" icon={Activity} colorClass="bg-indigo-50 text-indigo-600" borderClass="border-slate-200" />
         <KpiCard title="Active Subscriptions" value={kpi.activeSubscriptions} subtitle="Across all OS products" icon={Monitor} colorClass="bg-slate-100 text-slate-600" borderClass="border-slate-200" />
         <KpiCard title="Outstanding Payments" value={`₹${kpi.outstandingPayments.toLocaleString()}`} subtitle="Invoiced but not paid" icon={AlertTriangle} colorClass="bg-slate-100 text-slate-600" borderClass="border-slate-200" />

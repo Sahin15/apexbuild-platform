@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { Activity, RefreshCw, TrendingUp, DollarSign, Wallet, ArrowUpRight, CheckCircle } from 'lucide-react';
+import { Activity, RefreshCw, TrendingUp, IndianRupee, Wallet, ArrowUpRight, CheckCircle } from 'lucide-react';
 
 export default function SARevenue() {
   const [analytics, setAnalytics] = useState({
@@ -65,7 +65,7 @@ export default function SARevenue() {
               <div className="h-10 bg-slate-100 rounded animate-pulse w-3/4"></div>
             ) : (
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black text-slate-900">${(analytics.mrr || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
+                <span className="text-4xl font-black text-slate-900">₹{(analytics.mrr || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
                 <span className="text-emerald-500 font-bold text-sm flex items-center"><ArrowUpRight className="w-4 h-4"/> 12%</span>
               </div>
             )}
@@ -79,7 +79,7 @@ export default function SARevenue() {
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2.5 bg-teal-50 text-teal-600 rounded-xl">
-                <DollarSign className="w-5 h-5" />
+                <IndianRupee className="w-5 h-5" />
               </div>
               <h3 className="font-bold text-slate-600 text-sm uppercase tracking-wider">Annual Run Rate</h3>
             </div>
@@ -87,7 +87,7 @@ export default function SARevenue() {
               <div className="h-10 bg-slate-100 rounded animate-pulse w-3/4"></div>
             ) : (
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black text-slate-900">${(analytics.arr || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
+                <span className="text-4xl font-black text-slate-900">₹{(analytics.arr || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
                 <span className="text-teal-500 font-bold text-sm flex items-center"><ArrowUpRight className="w-4 h-4"/> 18%</span>
               </div>
             )}
@@ -109,7 +109,7 @@ export default function SARevenue() {
               <div className="h-10 bg-slate-100 rounded animate-pulse w-3/4"></div>
             ) : (
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black text-slate-900">${(analytics.totalCollected || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
+                <span className="text-4xl font-black text-slate-900">₹{(analytics.totalCollected || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
               </div>
             )}
             <p className="text-xs text-slate-500 font-medium mt-2 border-t border-slate-100 pt-3">Total historical captured payments</p>
@@ -130,7 +130,7 @@ export default function SARevenue() {
               <div className="h-10 bg-slate-100 rounded animate-pulse w-3/4"></div>
             ) : (
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black text-slate-900">${(analytics.totalOutstanding || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
+                <span className="text-4xl font-black text-slate-900">₹{(analytics.totalOutstanding || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>
               </div>
             )}
             <p className="text-xs text-amber-600 font-bold mt-2 border-t border-slate-100 pt-3">Action required: Follow up on invoices</p>

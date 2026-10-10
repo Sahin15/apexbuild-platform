@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, DollarSign, CreditCard, QrCode, Banknote, Building2, CheckCircle2, AlertCircle, Percent } from 'lucide-react';
+import { X, IndianRupee, CreditCard, QrCode, Banknote, Building2, CheckCircle2, AlertCircle, Percent } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -8,7 +8,7 @@ const PAYMENT_MODES = [
   { id: 'UPI', label: 'UPI / QR', icon: QrCode, color: 'text-purple-700 bg-purple-50 border-purple-300' },
   { id: 'Card', label: 'Card / POS', icon: CreditCard, color: 'text-blue-700 bg-blue-50 border-blue-300' },
   { id: 'Bank Transfer', label: 'Bank / NEFT', icon: Building2, color: 'text-amber-700 bg-amber-50 border-amber-300' },
-  { id: 'Cheque', label: 'Cheque', icon: DollarSign, color: 'text-slate-700 bg-slate-50 border-slate-300' }
+  { id: 'Cheque', label: 'Cheque', icon: IndianRupee, color: 'text-slate-700 bg-slate-50 border-slate-300' }
 ];
 
 const CollectPaymentModal = ({ isOpen, onClose, order, onSuccess }) => {
@@ -83,7 +83,7 @@ const CollectPaymentModal = ({ isOpen, onClose, order, onSuccess }) => {
         <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-gradient-to-r from-emerald-600 to-teal-700 text-white">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-white/20 rounded-xl">
-              <DollarSign className="w-5 h-5 text-white" />
+              <IndianRupee className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-base font-bold leading-tight">Collect Payment / Settle Due</h2>

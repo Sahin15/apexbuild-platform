@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, Users, ClipboardList, TestTube2, Menu, Bell, 
-  Search, Plus, Activity, DollarSign, Package, Settings, LogOut, X, ChevronRight, FileText,
+  Search, Plus, Activity, IndianRupee, Package, Settings, LogOut, X, ChevronRight, FileText,
   ChevronUp, User as UserIcon, HelpCircle, CreditCard, ShieldCheck, Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -77,7 +77,7 @@ const DiagnosticsLayout = () => {
     { name: 'Tests & Panels', path: '/diagnostics/tests', icon: Activity },
     { name: 'Doctors', path: '/diagnostics/doctors', icon: Users, feature: 'doctorCommissions', tier: 'ENT' },
     { name: 'Reports', path: '/diagnostics/reports', icon: FileText },
-    { name: 'Payments', path: '/diagnostics/payments', icon: DollarSign },
+    { name: 'Payments', path: '/diagnostics/payments', icon: IndianRupee },
     { name: 'Inventory', path: '/diagnostics/inventory', icon: Package },
     { name: 'Settings', path: '/diagnostics/settings', icon: Settings },
     { name: 'Subscription', path: '/diagnostics/subscription', icon: CreditCard },

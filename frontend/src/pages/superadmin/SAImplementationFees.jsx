@@ -3,7 +3,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { 
   Landmark, CheckCircle, RefreshCw, AlertTriangle, Send, Plus, 
-  DollarSign, Clock, Building2, CheckCircle2
+  Clock, Building2, CheckCircle2
 } from 'lucide-react';
 
 export default function SAImplementationFees() {
@@ -131,19 +131,19 @@ export default function SAImplementationFees() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Setup Fees Billed</div>
-          <div className="text-2xl font-black text-slate-900">${totalBilled.toFixed(2)}</div>
+          <div className="text-2xl font-black text-slate-900">₹{totalBilled.toFixed(2)}</div>
           <div className="text-xs text-slate-500 mt-1">{fees.length} Total Setup Invoices</div>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Collected Revenue</div>
-          <div className="text-2xl font-black text-emerald-600">${totalCollected.toFixed(2)}</div>
+          <div className="text-2xl font-black text-emerald-600">₹{totalCollected.toFixed(2)}</div>
           <div className="text-xs text-emerald-700/80 mt-1">Paid in full by tenants</div>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           <div className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-1">Pending Setup Collection</div>
-          <div className="text-2xl font-black text-amber-600">${totalOutstanding.toFixed(2)}</div>
+          <div className="text-2xl font-black text-amber-600">₹{totalOutstanding.toFixed(2)}</div>
           <div className="text-xs text-amber-700/80 mt-1">Awaiting tenant payment</div>
         </div>
       </div>
@@ -201,7 +201,7 @@ export default function SAImplementationFees() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-extrabold text-slate-900">
-                        ${(fee.implementationFee || fee.total || 0).toFixed(2)}
+                        ₹{(fee.implementationFee || fee.total || 0).toFixed(2)}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -273,7 +273,7 @@ export default function SAImplementationFees() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                  Setup Fee Amount ($) <span className="text-rose-500">*</span>
+                  Setup Fee Amount (₹) <span className="text-rose-500">*</span>
                 </label>
                 <input
                   required

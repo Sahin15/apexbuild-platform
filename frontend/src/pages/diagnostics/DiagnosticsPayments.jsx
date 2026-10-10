@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Search, Filter, DollarSign, CheckCircle2, AlertCircle, 
+  Search, Filter, IndianRupee, CheckCircle2, AlertCircle, 
   Receipt, FileText, Printer, Download, Plus, Lock, 
   Clock, ArrowUpRight, QrCode, CreditCard, Banknote, 
   Calendar, RefreshCw, ChevronRight, UserCheck, ShieldCheck 
@@ -210,7 +210,7 @@ const DiagnosticsPayments = () => {
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Today's Collections</span>
             <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-              <DollarSign className="w-4 h-4" />
+              <IndianRupee className="w-4 h-4" />
             </div>
           </div>
           <h3 className="text-2xl font-black text-slate-900 mt-2 font-mono">
@@ -581,7 +581,7 @@ const DiagnosticsPayments = () => {
                             onClick={() => handleOpenCollect(order)}
                             className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer inline-flex items-center gap-1.5"
                           >
-                            <DollarSign className="w-3.5 h-3.5" />
+                            <IndianRupee className="w-3.5 h-3.5" />
                             <span>Settle Due Now</span>
                           </button>
                         </td>

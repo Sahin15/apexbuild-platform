@@ -3,7 +3,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { 
   Receipt, FileText, Plus, RefreshCw, CheckCircle2, AlertTriangle, 
-  Clock, XCircle, Search, Filter, Eye, Printer, Download, DollarSign, Building2
+  Clock, XCircle, Search, Filter, Eye, Printer, Download, Building2
 } from 'lucide-react';
 
 export default function SAInvoices() {
@@ -269,21 +269,21 @@ export default function SAInvoices() {
                     </td>
                     <td className="px-6 py-4 text-xs text-slate-600">
                       {inv.implementationFee > 0 && (
-                        <div>Setup: ${inv.implementationFee.toFixed(2)}</div>
+                        <div>Setup: ₹{inv.implementationFee.toFixed(2)}</div>
                       )}
                       {inv.subscriptionFee > 0 && (
-                        <div>Sub: ${inv.subscriptionFee.toFixed(2)}</div>
+                        <div>Sub: ₹{inv.subscriptionFee.toFixed(2)}</div>
                       )}
                       {inv.discount > 0 && (
-                        <div className="text-emerald-600">Disc: -${inv.discount.toFixed(2)}</div>
+                        <div className="text-emerald-600">Disc: -₹{inv.discount.toFixed(2)}</div>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-extrabold text-slate-900 text-sm">
-                        ${inv.total?.toFixed(2)}
+                        ₹{inv.total?.toFixed(2)}
                       </div>
                       {inv.dueAmount > 0 && inv.dueAmount < inv.total && (
-                        <div className="text-xs text-amber-600 font-medium">Due: ${inv.dueAmount.toFixed(2)}</div>
+                        <div className="text-xs text-amber-600 font-medium">Due: ₹{inv.dueAmount.toFixed(2)}</div>
                       )}
                     </td>
                     <td className="px-6 py-4 text-slate-600 font-medium">
@@ -404,7 +404,7 @@ export default function SAInvoices() {
                         <div className="font-semibold text-slate-900">OS Cloud Subscription Rate</div>
                         <div className="text-xs text-slate-500">Monthly recurring platform fee</div>
                       </td>
-                      <td className="py-3 text-right font-medium">${viewInvoice.subscriptionFee?.toFixed(2)}</td>
+                      <td className="py-3 text-right font-medium">₹{viewInvoice.subscriptionFee?.toFixed(2)}</td>
                     </tr>
                   )}
                   {viewInvoice.implementationFee > 0 && (
@@ -413,37 +413,37 @@ export default function SAInvoices() {
                         <div className="font-semibold text-slate-900">One-Time Onboarding & Implementation Fee</div>
                         <div className="text-xs text-slate-500">Setup, tenant workspace provisioning & data architecture</div>
                       </td>
-                      <td className="py-3 text-right font-medium">${viewInvoice.implementationFee?.toFixed(2)}</td>
+                      <td className="py-3 text-right font-medium">₹{viewInvoice.implementationFee?.toFixed(2)}</td>
                     </tr>
                   )}
                   {viewInvoice.discount > 0 && (
                     <tr>
                       <td className="py-3 text-emerald-600 font-medium">Negotiated Contract Discount</td>
-                      <td className="py-3 text-right text-emerald-600 font-medium">-${viewInvoice.discount?.toFixed(2)}</td>
+                      <td className="py-3 text-right text-emerald-600 font-medium">-₹{viewInvoice.discount?.toFixed(2)}</td>
                     </tr>
                   )}
                   {viewInvoice.tax > 0 && (
                     <tr>
                       <td className="py-3 text-slate-500">Goods and Services Tax (GST 18%)</td>
-                      <td className="py-3 text-right text-slate-600 font-medium">${viewInvoice.tax?.toFixed(2)}</td>
+                      <td className="py-3 text-right text-slate-600 font-medium">₹{viewInvoice.tax?.toFixed(2)}</td>
                     </tr>
                   )}
                 </tbody>
                 <tfoot className="border-t-2 border-slate-900 font-bold">
                   <tr>
                     <td className="py-3 text-base text-slate-900">Total Due:</td>
-                    <td className="py-3 text-right text-base text-indigo-600 font-mono">${viewInvoice.total?.toFixed(2)}</td>
+                    <td className="py-3 text-right text-base text-indigo-600 font-mono">₹{viewInvoice.total?.toFixed(2)}</td>
                   </tr>
                   {viewInvoice.paidAmount > 0 && (
                     <tr>
                       <td className="py-1 text-xs text-emerald-600">Amount Paid:</td>
-                      <td className="py-1 text-right text-xs text-emerald-600 font-mono">-${viewInvoice.paidAmount?.toFixed(2)}</td>
+                      <td className="py-1 text-right text-xs text-emerald-600 font-mono">-₹{viewInvoice.paidAmount?.toFixed(2)}</td>
                     </tr>
                   )}
                   {viewInvoice.dueAmount > 0 && (
                     <tr>
                       <td className="py-1 text-xs text-rose-600">Balance Remaining:</td>
-                      <td className="py-1 text-right text-xs text-rose-600 font-mono">${viewInvoice.dueAmount?.toFixed(2)}</td>
+                      <td className="py-1 text-right text-xs text-rose-600 font-mono">₹{viewInvoice.dueAmount?.toFixed(2)}</td>
                     </tr>
                   )}
                 </tfoot>
@@ -545,7 +545,7 @@ export default function SAInvoices() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Subscription Fee ($)</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Subscription Fee (₹)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -557,7 +557,7 @@ export default function SAInvoices() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Implementation Fee ($)</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Implementation Fee (₹)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -571,7 +571,7 @@ export default function SAInvoices() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Special Discount ($)</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Special Discount (₹)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -583,11 +583,11 @@ export default function SAInvoices() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tax Amount ($ / 18% GST)</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tax Amount (₹ / 18% GST)</label>
                   <input
                     type="number"
                     step="0.01"
-                    placeholder={`Auto: $${(modalSubtotal * 0.18).toFixed(2)}`}
+                    placeholder={`Auto: ₹${(modalSubtotal * 0.18).toFixed(2)}`}
                     value={formData.tax}
                     onChange={e => setFormData({ ...formData, tax: e.target.value })}
                     className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -609,7 +609,7 @@ export default function SAInvoices() {
               {/* Total Summary */}
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center">
                 <span className="font-bold text-slate-700 text-sm">Calculated Total:</span>
-                <span className="font-extrabold text-indigo-600 text-lg">${modalTotal.toFixed(2)}</span>
+                <span className="font-extrabold text-indigo-600 text-lg">₹{modalTotal.toFixed(2)}</span>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">

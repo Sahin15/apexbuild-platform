@@ -122,7 +122,7 @@ async function runPhase1Test() {
       customPrice: 79,
       discount: 10,
       setupFee: 150,
-      internalNotes: 'Verified company registration and assigned custom $79/mo growth tier with $150 setup fee.'
+      internalNotes: 'Verified company registration and assigned custom ₹79/mo growth tier with ₹150 setup fee.'
     },
     saToken
   );

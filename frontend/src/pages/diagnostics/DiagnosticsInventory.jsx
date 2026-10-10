@@ -19,7 +19,7 @@ import {
   Layers, 
   X, 
   Sliders, 
-  DollarSign,
+  IndianRupee,
   Droplet,
   TestTube
 } from 'lucide-react';
@@ -234,7 +234,7 @@ const DiagnosticsInventory = () => {
 
         <div className="bg-white rounded-xl border border-gray-100 shadow-xs p-4 flex items-center gap-3">
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-            <DollarSign className="w-5 h-5" />
+            <IndianRupee className="w-5 h-5" />
           </div>
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Valuation</span>

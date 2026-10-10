@@ -18,7 +18,6 @@ import {
   HardHat, 
   Layers, 
   FileText, 
-  DollarSign, 
   CreditCard, 
   X, 
   Trash2, 
