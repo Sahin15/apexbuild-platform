@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, Plus, Filter, ClipboardList, X, FileText, User, Activity, Eye, Receipt } from 'lucide-react';
+import { Search, Plus, Filter, ClipboardList, X, FileText, User, Activity, Eye, Receipt, Share2 } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import DiagnosticsReportModal from '../../components/diagnostics/DiagnosticsReportModal';
 import PaymentReceiptModal from '../../components/diagnostics/PaymentReceiptModal';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
+import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
 import haptics from '../../utils/haptics';
 import { enqueueSyncOperation } from '../../services/syncQueue';
+import { shareDiagnosticsOrder } from '../../utils/share';
 
 const DiagnosticsOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -244,8 +246,13 @@ const DiagnosticsOrders = () => {
 
   const { subtotal, totalAmount } = calculateTotals();
 
+  const handlePullRefresh = async () => {
+    await Promise.all([fetchOrders(), fetchSupportData()]);
+  };
+
   return (
-    <div className="space-y-6">
+    <PullToRefreshContainer onRefresh={handlePullRefresh}>
+      <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
@@ -321,6 +328,17 @@ const DiagnosticsOrders = () => {
                         {order.paymentStatus}
                       </button>
                       <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            shareDiagnosticsOrder(order, order.patient);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded border border-indigo-200 transition-colors shadow-2xs touch-manipulation active:scale-95"
+                          title="Share Lab Receipt"
+                        >
+                          <Share2 className="w-3 h-3 text-indigo-600" />
+                          <span>Share</span>
+                        </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -409,6 +427,18 @@ const DiagnosticsOrders = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              shareDiagnosticsOrder(order, order.patient);
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors shadow-2xs"
+                            title="Share Lab Receipt"
+                          >
+                            <Share2 className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>Share</span>
+                          </button>
+
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -745,7 +775,8 @@ const DiagnosticsOrders = () => {
           order={receiptModalOrder}
         />
       )}
-    </div>
+      </div>
+    </PullToRefreshContainer>
   );
 };
 

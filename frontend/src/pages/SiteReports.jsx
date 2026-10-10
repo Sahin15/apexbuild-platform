@@ -33,14 +33,17 @@ import {
   TrendingUp,
   Download,
   Camera,
-  Barcode
+  Barcode,
+  Share2
 } from 'lucide-react';
 import useOfflineDraft from '../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../components/common/OfflineDraftIndicator';
 import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
+import PullToRefreshContainer from '../components/common/PullToRefreshContainer';
 import haptics from '../utils/haptics';
 import { notifyDprSubmitted } from '../utils/notifications';
 import { enqueueSyncOperation } from '../services/syncQueue';
+import { shareCivilDPR } from '../utils/share';
 
 export default function SiteReports({ isProjectView }) {
   const { id: routeProjectId } = useParams();
@@ -377,8 +380,13 @@ export default function SiteReports({ isProjectView }) {
 
   const activeProjectObj = projects.find(p => p._id === projectId);
 
+  const handlePullRefresh = async () => {
+    await Promise.all([fetchReports(), fetchSummary()]);
+  };
+
   return (
-    <div className="space-y-6">
+    <PullToRefreshContainer onRefresh={handlePullRefresh}>
+      <div className="space-y-6">
       {/* Top Banner & Title */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-6 rounded-2xl shadow-xl text-white">
         <div className="flex-1 min-w-0 pr-2">
@@ -614,16 +622,26 @@ export default function SiteReports({ isProjectView }) {
 
                       <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
                         <button
+                          onClick={() => {
+                            const pObj = projects.find(p => p._id === report.projectId) || { name: report.project?.name };
+                            shareCivilDPR(report, pObj);
+                          }}
+                          title="Share DPR Summary"
+                          className="p-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg touch-manipulation active:scale-95 transition-transform"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
                           onClick={() => openForm62Modal(report)}
                           title="Print CPWD Form 62 Diary"
-                          className="p-1.5 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg touch-manipulation"
+                          className="p-1.5 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg touch-manipulation active:scale-95 transition-transform"
                         >
                           <Printer className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => openViewModal(report)}
                           title="View Details"
-                          className="p-1.5 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg touch-manipulation"
+                          className="p-1.5 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg touch-manipulation active:scale-95 transition-transform"
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
@@ -775,6 +793,17 @@ export default function SiteReports({ isProjectView }) {
                         {/* Action Buttons */}
                         <td className="px-5 py-4 text-right">
                           <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => {
+                                const pObj = projects.find(p => p._id === report.projectId) || { name: report.project?.name };
+                                shareCivilDPR(report, pObj);
+                              }}
+                              title="Share DPR Summary"
+                              className="p-1.5 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors border border-indigo-200"
+                            >
+                              <Share2 className="w-4 h-4" />
+                            </button>
+
                             <button
                               onClick={() => openForm62Modal(report)}
                               title="Print CPWD Form 62 Diary"
@@ -2047,6 +2076,7 @@ export default function SiteReports({ isProjectView }) {
         title="Scan Delivery Challan / QR"
         subtitle="Align the delivery gate challan QR code or vehicle tag"
       />
-    </div>
+      </div>
+    </PullToRefreshContainer>
   );
 }

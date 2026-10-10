@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, ShoppingCart, Truck, ExternalLink } from 'lucide-react';
+import { Search, Plus, ShoppingCart, Truck, ExternalLink, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
+import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
 import haptics from '../../utils/haptics';
 import { notifyOrderCreated } from '../../utils/notifications';
 import { enqueueSyncOperation } from '../../services/syncQueue';
+import { shareSupplierOrder } from '../../utils/share';
 
 export default function SupplierOrders() {
   const [orders, setOrders] = useState([]);
@@ -215,7 +217,8 @@ export default function SupplierOrders() {
   );
 
   return (
-    <div className="space-y-6">
+    <PullToRefreshContainer onRefresh={fetchData}>
+      <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Sales Orders</h1>
@@ -290,8 +293,16 @@ export default function SupplierOrders() {
                     </select>
 
                     <button 
+                      onClick={() => shareSupplierOrder(order, order.customer)} 
+                      className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-indigo-600 bg-white hover:bg-indigo-50 touch-manipulation active:scale-95 transition-transform"
+                      title="Share Order Dispatch Summary"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button 
                       onClick={() => setSelectedOrder(order)} 
-                      className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-emerald-600 bg-white hover:bg-slate-50 touch-manipulation"
+                      className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-emerald-600 bg-white hover:bg-slate-50 touch-manipulation active:scale-95 transition-transform"
                       aria-label="View Order"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -350,9 +361,18 @@ export default function SupplierOrders() {
                       </select>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => setSelectedOrder(order)} className="text-slate-400 hover:text-emerald-600 font-medium text-xs bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:border-emerald-200 hover:bg-emerald-50 transition-colors flex items-center gap-1.5 ml-auto">
-                        <ExternalLink className="w-3.5 h-3.5" /> View
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5 ml-auto">
+                        <button 
+                          onClick={() => shareSupplierOrder(order, order.customer)} 
+                          className="text-slate-500 hover:text-indigo-600 font-medium text-xs bg-white border border-slate-200 p-1.5 rounded-lg shadow-sm hover:border-indigo-200 hover:bg-indigo-50 transition-colors"
+                          title="Share Order Summary"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => setSelectedOrder(order)} className="text-slate-400 hover:text-emerald-600 font-medium text-xs bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:border-emerald-200 hover:bg-emerald-50 transition-colors flex items-center gap-1.5">
+                          <ExternalLink className="w-3.5 h-3.5" /> View
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -614,6 +634,7 @@ export default function SupplierOrders() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PullToRefreshContainer>
   );
 }

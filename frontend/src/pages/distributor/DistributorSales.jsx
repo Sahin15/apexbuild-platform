@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, FileText, MessageCircle, Truck, X, User, IndianRupee, Camera, Barcode } from 'lucide-react';
+import { Plus, Search, FileText, MessageCircle, Truck, X, User, IndianRupee, Camera, Barcode, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import ReceiptModal from '../../components/distributor/ReceiptModal';
@@ -7,9 +7,11 @@ import CustomSelect from '../../components/common/CustomSelect';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 import BarcodeScannerModal from '../../components/common/BarcodeScannerModal';
+import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
 import haptics from '../../utils/haptics';
 import { notifyDeliveryRecorded, notifyLowStock } from '../../utils/notifications';
 import { enqueueSyncOperation } from '../../services/syncQueue';
+import { shareDistributorDelivery } from '../../utils/share';
 
 export default function DistributorSales() {
   const [sales, setSales] = useState([]);
@@ -151,7 +153,8 @@ export default function DistributorSales() {
   if (loading) return <div className="flex justify-center p-12 h-full items-center"><div className="animate-spin w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full"></div></div>;
 
   return (
-    <div className="space-y-4 px-4 py-4 w-full max-w-md md:max-w-7xl mx-auto">
+    <PullToRefreshContainer onRefresh={fetchData}>
+      <div className="space-y-4 px-4 py-4 w-full max-w-md md:max-w-7xl mx-auto">
       {/* Header Info */}
       <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex items-center gap-3">
@@ -243,8 +246,15 @@ export default function DistributorSales() {
 
               <div className="px-2 py-2 flex justify-end gap-2 bg-white">
                 <button 
+                  onClick={() => shareDistributorDelivery(sale, sale.customer)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all"
+                  title="Share Delivery Slip"
+                >
+                  <Share2 className="w-4 h-4 text-slate-600" /> Share
+                </button>
+                <button 
                   onClick={() => handleWhatsApp(sale)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 active:scale-95 transition-all"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 active:scale-95 transition-all"
                 >
                   <MessageCircle className="w-4 h-4" /> WhatsApp
                 </button>
@@ -377,6 +387,7 @@ export default function DistributorSales() {
         title="Scan Delivery Receipt"
         subtitle="Align the receipt barcode or delivery slip under the camera"
       />
-    </div>
+      </div>
+    </PullToRefreshContainer>
   );
 }
