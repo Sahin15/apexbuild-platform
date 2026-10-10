@@ -106,7 +106,7 @@ export default function DistributorCustomers() {
       {/* Header Info */}
       <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+          <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-700">
             <Users className="w-5 h-5" />
           </div>
           <div>
@@ -116,7 +116,7 @@ export default function DistributorCustomers() {
         </div>
         <button 
           onClick={() => setShowModal(true)} 
-          className="bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-full shadow-lg transition-transform active:scale-95"
+          className="bg-amber-600 hover:bg-amber-700 text-white p-3 rounded-full shadow-lg transition-transform active:scale-95 touch-manipulation"
         >
           <Plus className="w-5 h-5" />
         </button>
@@ -250,7 +250,7 @@ export default function DistributorCustomers() {
             </div>
             
             <div className="p-4 border-t border-slate-100 bg-white shrink-0">
-              <button form="customerForm" type="submit" className="w-full py-4 bg-emerald-600 text-white rounded-2xl text-lg font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all">
+              <button form="customerForm" type="submit" className="w-full py-4 bg-amber-600 text-white rounded-2xl text-lg font-black shadow-lg shadow-amber-200 hover:bg-amber-700 active:scale-95 transition-all touch-manipulation">
                 {editingId ? 'Save Changes' : 'Add Shop'}
               </button>
             </div>

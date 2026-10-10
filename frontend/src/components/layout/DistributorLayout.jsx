@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { WifiOff } from 'lucide-react';
 import { 
   LayoutDashboard, ShoppingCart, Package, Users, Truck, 
   Receipt, CreditCard, Wallet, Building2, LineChart, 
@@ -13,6 +12,8 @@ import { useBrandTheme } from '../../context/ThemeContext';
 import Header from './Header';
 import SidebarUserProfile from './SidebarUserProfile';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
+import PWAInstallBanner from '../common/PWAInstallBanner';
+import OfflineStatusBanner from '../common/OfflineStatusBanner';
 
 const navItems = [
   { name: 'Dashboard', href: '/distributor/dashboard', icon: LayoutDashboard, roles: ['OWNER', 'ADMIN', 'MANAGER', 'ACCOUNTANT', 'STAFF'] },
@@ -59,7 +60,6 @@ export default function DistributorLayout() {
   const location = useLocation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isFabOpen, setIsFabOpen] = useState(false);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [menuOpen, setMenuOpen] = useState(false);
   const [topMenuOpen, setTopMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -77,19 +77,6 @@ export default function DistributorLayout() {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
   }, []);
 
   const handleLogoutClick = () => {
@@ -121,12 +108,12 @@ export default function DistributorLayout() {
 
   return (
     <div className="flex h-[100dvh] bg-slate-50 overflow-hidden w-full relative">
-      {/* Offline Banner */}
-      {isOffline && (
-        <div className="absolute top-0 left-0 right-0 z-[200] bg-red-500 text-white text-xs font-bold py-1.5 px-4 flex items-center justify-center gap-2 shadow-md">
-          <WifiOff className="w-3.5 h-3.5" /> You are currently offline. Changes may not be saved.
-        </div>
-      )}
+      {/* Universal Offline Status Indicator */}
+      <OfflineStatusBanner />
+
+      {/* Universal PWA Mobile Install Banner */}
+      <PWAInstallBanner />
+
       {/* Desktop Sidebar (hidden on mobile) */}
       <aside className="hidden md:flex flex-col w-64 bg-slate-900 border-r border-slate-800 text-slate-300 transition-all duration-300 flex-shrink-0 z-30">
         <div className="h-16 flex items-center gap-3 px-6 bg-slate-950 border-b border-slate-800 shrink-0">
@@ -188,30 +175,30 @@ export default function DistributorLayout() {
         {/* Unified Top Navbar */}
         <Header setSidebarOpen={setIsDrawerOpen} />
 
-        {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 relative pb-20 md:pb-8 md:p-8">
+        {/* Dynamic Page Content with Safe Area Bottom Padding */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 relative pb-28 md:pb-8 md:p-8 overscroll-contain">
           <Outlet />
         </main>
 
         {/* Global FAB (Mobile Only) */}
-        <div className="md:hidden absolute bottom-20 right-4 z-30 flex flex-col items-end">
+        <div className="md:hidden fixed bottom-20 right-4 z-30 flex flex-col items-end">
           {isFabOpen && (
             <div className="flex flex-col gap-3 mb-4 items-end animate-in slide-in-from-bottom-4 duration-200">
               <button onClick={() => { setIsFabOpen(false); navigate('/distributor/purchases'); }} className="flex items-center gap-3 group">
-                <span className="bg-white px-3 py-1 rounded-lg text-sm font-bold shadow-md text-slate-700">Add Purchase</span>
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg text-emerald-600">
+                <span className="bg-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg text-slate-800 border border-slate-100">Add Purchase</span>
+                <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg text-amber-600 border border-amber-100">
                   <ShoppingCart className="w-5 h-5" />
                 </div>
               </button>
               <button onClick={() => { setIsFabOpen(false); navigate('/distributor/deliveries'); }} className="flex items-center gap-3 group">
-                <span className="bg-white px-3 py-1 rounded-lg text-sm font-bold shadow-md text-slate-700">Add Delivery</span>
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg text-indigo-600">
+                <span className="bg-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg text-slate-800 border border-slate-100">Add Delivery</span>
+                <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg text-amber-600 border border-amber-100">
                   <Truck className="w-5 h-5" />
                 </div>
               </button>
               <button onClick={() => { setIsFabOpen(false); navigate('/distributor/payments'); }} className="flex items-center gap-3 group">
-                <span className="bg-white px-3 py-1 rounded-lg text-sm font-bold shadow-md text-slate-700">Add Payment</span>
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg text-amber-600">
+                <span className="bg-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg text-slate-800 border border-slate-100">Add Payment</span>
+                <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg text-amber-600 border border-amber-100">
                   <CreditCard className="w-5 h-5" />
                 </div>
               </button>
@@ -220,33 +207,35 @@ export default function DistributorLayout() {
           
           <button 
             onClick={() => setIsFabOpen(!isFabOpen)}
-            className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg text-white transition-transform duration-200 ${isFabOpen ? 'bg-slate-800 rotate-45' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+            style={{ backgroundColor: primaryColor || '#d97706' }}
+            aria-label="Quick Actions"
+            className={`w-13 h-13 rounded-full flex items-center justify-center shadow-xl text-white transition-transform duration-200 touch-manipulation active:scale-95 ${isFabOpen ? 'rotate-45 brightness-90' : 'hover:brightness-110'}`}
           >
-            <Plus className="w-7 h-7" />
+            <Plus className="w-6 h-6" />
           </button>
         </div>
 
         {isFabOpen && (
           <div 
-            className="md:hidden absolute inset-0 bg-slate-900/20 backdrop-blur-sm z-20" 
+            className="md:hidden fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-20" 
             onClick={() => setIsFabOpen(false)}
           />
         )}
 
         {/* Bottom Navigation Bar (Mobile Only) */}
-        <nav className="md:hidden bg-white border-t border-slate-200 flex items-center justify-around h-16 z-40 flex-shrink-0 pb-safe absolute bottom-0 left-0 w-full">
+        <nav className="md:hidden bg-white/95 backdrop-blur-md border-t border-slate-200/80 flex items-center justify-around h-16 z-40 flex-shrink-0 pb-safe fixed bottom-0 left-0 w-full shadow-lg">
           {bottomNavItems.filter(item => item.roles.includes(user?.role || 'VIEWER')).map((item) => {
             const isActive = location.pathname.includes(item.href);
             return (
               <NavLink
                 key={item.name}
                 to={item.href}
-                style={isActive ? { color: primaryColor } : {}}
-                className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-                  isActive ? 'font-bold' : 'text-slate-500 hover:text-slate-900'
+                style={isActive ? { color: primaryColor || '#d97706' } : {}}
+                className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors touch-manipulation ${
+                  isActive ? 'font-bold' : 'text-slate-400 hover:text-slate-800'
                 }`}
               >
-                <item.icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} style={isActive ? { color: primaryColor } : {}} />
+                <item.icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} style={isActive ? { color: primaryColor || '#d97706' } : {}} />
                 <span className={`text-[10px] ${isActive ? 'font-bold' : 'font-medium'}`}>
                   {item.name}
                 </span>
@@ -256,9 +245,9 @@ export default function DistributorLayout() {
           
           <button
             onClick={() => setIsDrawerOpen(true)}
-            className="flex flex-col items-center justify-center w-full h-full space-y-1 text-slate-500 hover:text-slate-900"
+            className="flex flex-col items-center justify-center w-full h-full space-y-1 text-slate-400 hover:text-slate-800 touch-manipulation"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-5 h-5" />
             <span className="text-[10px] font-medium">Menu</span>
           </button>
         </nav>
@@ -267,24 +256,24 @@ export default function DistributorLayout() {
         {isDrawerOpen && (
           <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
             <div 
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
               onClick={() => setIsDrawerOpen(false)}
             />
-            <div className="bg-white w-full max-h-[85vh] rounded-t-3xl shadow-2xl relative z-10 flex flex-col animate-in slide-in-from-bottom-full duration-300">
+            <div className="bg-white w-full max-h-[85vh] rounded-t-3xl shadow-2xl relative z-10 flex flex-col animate-in slide-in-from-bottom-full duration-300 pb-safe">
               <div className="flex items-center justify-between p-5 border-b border-slate-100">
                 <div className="flex flex-col">
-                  <span className="text-xl font-black text-slate-800">Menu</span>
-                  <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">{user?.organizationId?.name}</span>
+                  <span className="text-lg font-black text-slate-900">Distributor Navigation</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-600">{user?.organizationId?.name || 'Poultry Operations'}</span>
                 </div>
                 <button 
                   onClick={() => setIsDrawerOpen(false)}
-                  className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200"
+                  className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 touch-manipulation"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
               
-              <div className="overflow-y-auto p-4 flex-1">
+              <div className="overflow-y-auto p-4 flex-1 overscroll-contain">
                 <div className="grid grid-cols-1 gap-2">
                   {secondaryNavItems.filter(item => item.roles.includes(user?.role || 'VIEWER')).map((item) => {
                     const isActive = location.pathname.includes(item.href);
@@ -293,30 +282,36 @@ export default function DistributorLayout() {
                         key={item.name}
                         to={item.href}
                         onClick={() => setIsDrawerOpen(false)}
-                        className={`flex items-center justify-between p-4 rounded-2xl transition-all ${
+                        className={`flex items-center justify-between p-3.5 rounded-2xl transition-all touch-manipulation ${
                           isActive 
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
+                            ? 'bg-amber-50 text-amber-800 border border-amber-200 shadow-xs' 
                             : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-100'
                         }`}
                       >
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isActive ? 'bg-emerald-100' : 'bg-slate-100 text-slate-500'}`}>
+                        <div className="flex items-center gap-3.5">
+                          <div 
+                            className="w-9 h-9 rounded-xl flex items-center justify-center"
+                            style={{ 
+                              backgroundColor: isActive ? `${primaryColor}20` : '#f1f5f9',
+                              color: isActive ? (primaryColor || '#d97706') : '#64748b'
+                            }}
+                          >
                             <item.icon className="w-5 h-5" />
                           </div>
-                          <span className="font-bold text-base">{item.name}</span>
+                          <span className="font-semibold text-sm">{item.name}</span>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-slate-300" />
+                        <ChevronRight className="w-4 h-4 text-slate-300" />
                       </NavLink>
                     );
                   })}
                 </div>
 
-                <div className="mt-8 mb-8">
+                <div className="mt-6 mb-4">
                   <button 
                     onClick={handleLogoutClick}
-                    className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition-colors border border-red-100"
+                    className="w-full flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-rose-50 text-rose-600 font-bold hover:bg-rose-100 transition-colors border border-rose-100 text-sm touch-manipulation"
                   >
-                    <LogOut className="w-5 h-5" />
+                    <LogOut className="w-4 h-4" />
                     Sign Out
                   </button>
                 </div>

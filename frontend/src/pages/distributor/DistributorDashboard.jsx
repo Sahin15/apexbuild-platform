@@ -355,7 +355,42 @@ export default function DistributorDashboard() {
             </Link>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile Card List for Small Screens */}
+          <div className="block sm:hidden divide-y divide-slate-100">
+            {recentSales.map(sale => (
+              <div key={sale._id} className="p-4 hover:bg-slate-50 transition-colors space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-extrabold text-slate-900 text-sm">{sale.saleNumber}</span>
+                    <span className="text-[11px] text-slate-400 font-medium ml-2">
+                      {new Date(sale.saleDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                    </span>
+                  </div>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black ${
+                    sale.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
+                    sale.paymentStatus === 'PARTIAL' ? 'bg-amber-100 text-amber-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {sale.paymentStatus}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <div>
+                    <p className="font-bold text-slate-800">{sale.customer?.shopName || 'Retail Customer'}</p>
+                    <p className="text-[11px] text-slate-400">{sale.customer?.route || 'City Central'}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-black text-slate-900 text-sm">₹{sale.netAmount?.toLocaleString()}</p>
+                    <p className="text-[11px] text-slate-500 font-medium">{sale.weight} KG @ ₹{sale.sellingRate}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
               <thead className="bg-slate-50/80 text-slate-500 text-[11px] uppercase tracking-wider font-bold border-b border-slate-100">
                 <tr>

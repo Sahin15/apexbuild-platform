@@ -108,7 +108,7 @@ export default function DistributorDriver() {
       {!activeTrip ? (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
+            <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-700">
               <Play className="w-6 h-6 ml-1" />
             </div>
             <div>
@@ -126,38 +126,38 @@ export default function DistributorDriver() {
                 options={vehicles.map(v => ({ value: v._id, label: v.registrationNumber, subtext: v.vehicleType }))}
                 placeholder="-- Choose Truck --"
                 required={true}
-                className="p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold"
+                className="p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold"
               />
             </div>
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Starting Odometer (KM)</label>
-              <input type="number" value={formData.startOdometer} onChange={(e) => setFormData({...formData, startOdometer: e.target.value})} required placeholder="e.g. 45200" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold" />
+              <input type="number" inputMode="numeric" value={formData.startOdometer} onChange={(e) => setFormData({...formData, startOdometer: e.target.value})} required placeholder="e.g. 45200" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold" />
             </div>
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Planned Route</label>
-              <input type="text" value={formData.locations} onChange={(e) => setFormData({...formData, locations: e.target.value})} required placeholder="e.g. Sector V / Newtown" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold" />
+              <input type="text" value={formData.locations} onChange={(e) => setFormData({...formData, locations: e.target.value})} required placeholder="e.g. Sector V / Newtown" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold" />
             </div>
-            <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl text-lg flex items-center justify-center gap-2">
+            <button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-white font-black py-4 rounded-xl text-lg flex items-center justify-center gap-2 shadow-lg shadow-amber-200 transition-all active:scale-95 touch-manipulation">
               <Play className="w-5 h-5 fill-current" /> START TRIP
             </button>
           </form>
         </div>
       ) : (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-emerald-500 ring-4 ring-emerald-50">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-amber-500 ring-4 ring-amber-50">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600 animate-pulse">
+            <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 animate-pulse">
               <Truck className="w-6 h-6" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-800">Trip in Progress</h2>
-              <p className="text-sm text-emerald-600 font-bold">Driving active...</p>
+              <p className="text-sm text-amber-700 font-bold">Driving active...</p>
             </div>
           </div>
 
           <form onSubmit={handleEndTrip} className="space-y-4">
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Ending Odometer (KM)</label>
-              <input type="number" value={endData.endOdometer} onChange={(e) => setEndData({...endData, endOdometer: e.target.value})} required placeholder="Enter final reading" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold" />
+              <input type="number" inputMode="numeric" value={endData.endOdometer} onChange={(e) => setEndData({...endData, endOdometer: e.target.value})} required placeholder="Enter final reading" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold" />
             </div>
             
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
