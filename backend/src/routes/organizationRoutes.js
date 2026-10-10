@@ -1,5 +1,5 @@
 import express from 'express';
-import { getOrganization, updateOrganization } from '../controllers/organizationController.js';
+import { getOrganization, updateOrganization, requestUpgrade } from '../controllers/organizationController.js';
 import { protect, requireOrganization, authorize } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -11,5 +11,7 @@ router.route('/')
   .get(getOrganization)
   .put(authorize('OWNER', 'ADMIN'), updateOrganization)
   .patch(authorize('OWNER', 'ADMIN'), updateOrganization);
+
+router.post('/request-upgrade', authorize('OWNER', 'ADMIN'), requestUpgrade);
 
 export default router;

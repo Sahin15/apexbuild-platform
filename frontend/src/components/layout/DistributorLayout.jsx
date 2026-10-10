@@ -130,7 +130,9 @@ export default function DistributorLayout() {
             DT
           </div>
           <div className="flex flex-col">
-            <span className="text-white text-base font-bold tracking-tight leading-none">ApexBuild</span>
+            <span className="text-white text-base font-bold tracking-tight leading-none truncate max-w-[140px]">
+              {user?.organizationId?.settings?.branding?.customAppName || 'ApexBuild'}
+            </span>
             <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mt-0.5">Distributor OS</span>
           </div>
         </div>

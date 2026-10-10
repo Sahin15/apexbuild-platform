@@ -99,9 +99,9 @@ export default function Header({ setSidebarOpen }) {
             </div>
             <span 
               className="text-xs font-bold text-slate-800 truncate max-w-[160px]" 
-              title={user?.organizationId?.name || (isSuperAdmin ? 'ApexBuild Platform HQ' : 'ApexBuild')}
+              title={user?.organizationId?.settings?.branding?.customAppName || user?.organizationId?.name || (isSuperAdmin ? 'ApexBuild Platform HQ' : 'ApexBuild')}
             >
-              {user?.organizationId?.name || (isSuperAdmin ? 'ApexBuild Platform HQ' : 'ApexBuild')}
+              {user?.organizationId?.settings?.branding?.customAppName || user?.organizationId?.name || (isSuperAdmin ? 'ApexBuild Platform HQ' : 'ApexBuild')}
             </span>
           </div>
 
