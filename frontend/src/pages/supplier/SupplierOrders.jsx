@@ -5,6 +5,7 @@ import api from '../../services/api';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 import haptics from '../../utils/haptics';
+import { notifyOrderCreated } from '../../utils/notifications';
 
 export default function SupplierOrders() {
   const [orders, setOrders] = useState([]);
@@ -159,9 +160,15 @@ export default function SupplierOrders() {
     };
 
     try {
-      await api.post('/supplier/orders', payload);
+      const res = await api.post('/supplier/orders', payload);
       haptics.success();
       toast.success('Sales order created successfully');
+      const custObj = customers.find(c => c._id === formData.customer);
+      notifyOrderCreated({
+        orderNo: res.data.data?.order?.orderNumber || 'ORD',
+        customerName: custObj?.name || 'Customer',
+        totalAmount: grandTotal
+      });
       clearDraft();
       setShowModal(false);
       fetchData();

@@ -39,6 +39,7 @@ import useOfflineDraft from '../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../components/common/OfflineDraftIndicator';
 import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
 import haptics from '../utils/haptics';
+import { notifyDprSubmitted } from '../utils/notifications';
 
 export default function SiteReports({ isProjectView }) {
   const { id: routeProjectId } = useParams();
@@ -291,6 +292,7 @@ export default function SiteReports({ isProjectView }) {
       await api.post('/site-reports', payload);
       haptics.success();
       toast.success('Daily Progress Report submitted successfully!');
+      notifyDprSubmitted({ dprNo: formData.dprNo, projectName: activeProjectObj?.name || 'Selected Site' });
       clearDraft();
       setIsCreateModalOpen(false);
       fetchReports();

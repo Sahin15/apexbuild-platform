@@ -8,6 +8,7 @@ import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 import BarcodeScannerModal from '../../components/common/BarcodeScannerModal';
 import haptics from '../../utils/haptics';
+import { notifyDeliveryRecorded, notifyLowStock } from '../../utils/notifications';
 
 export default function DistributorSales() {
   const [sales, setSales] = useState([]);
@@ -79,9 +80,19 @@ export default function DistributorSales() {
     }
 
     try {
-      await api.post('/distributor/sales', formData);
+      const res = await api.post('/distributor/sales', formData);
       haptics.success();
       toast.success('Delivery recorded successfully');
+      const custObj = customers.find(c => c._id === formData.customerId);
+      notifyDeliveryRecorded({
+        saleNumber: res.data.data?.sale?.saleNumber || 'SALE',
+        shopName: custObj?.shopName || 'Customer Shop',
+        weight: formData.weight
+      });
+      const remainingStock = currentStock - Number(formData.weight);
+      if (remainingStock <= 50) {
+        notifyLowStock({ productName: 'Live Broiler Birds', currentStock: remainingStock, minStock: 50, unit: 'KG' });
+      }
       clearDraft();
       setShowModal(false);
       setFormData({ customerId: '', weight: '', sellingRate: '', discount: '', otherCharges: '', paidAmount: '', paymentMethod: 'CASH' });

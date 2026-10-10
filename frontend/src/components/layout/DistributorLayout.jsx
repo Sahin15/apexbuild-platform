@@ -14,6 +14,7 @@ import SidebarUserProfile from './SidebarUserProfile';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 import PWAInstallBanner from '../common/PWAInstallBanner';
 import OfflineStatusBanner from '../common/OfflineStatusBanner';
+import NotificationPermissionBanner from '../common/NotificationPermissionBanner';
 
 const navItems = [
   { name: 'Dashboard', href: '/distributor/dashboard', icon: LayoutDashboard, roles: ['OWNER', 'ADMIN', 'MANAGER', 'ACCOUNTANT', 'STAFF'] },
@@ -113,6 +114,9 @@ export default function DistributorLayout() {
 
       {/* Universal PWA Mobile Install Banner */}
       <PWAInstallBanner />
+
+      {/* Mobile Push Notification Permission Prompt */}
+      <NotificationPermissionBanner />
 
       {/* Desktop Sidebar (hidden on mobile) */}
       <aside className="hidden md:flex flex-col w-64 bg-slate-900 border-r border-slate-800 text-slate-300 transition-all duration-300 flex-shrink-0 z-30">

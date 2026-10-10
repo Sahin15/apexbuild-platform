@@ -13,6 +13,7 @@ import SidebarUserProfile from './SidebarUserProfile';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 import PWAInstallBanner from '../common/PWAInstallBanner';
 import OfflineStatusBanner from '../common/OfflineStatusBanner';
+import NotificationPermissionBanner from '../common/NotificationPermissionBanner';
 
 const DiagnosticsLayout = () => {
   const { user, logout } = useAuth();
@@ -112,6 +113,9 @@ const DiagnosticsLayout = () => {
 
       {/* Universal PWA Mobile Install Banner */}
       <PWAInstallBanner />
+
+      {/* Mobile Push Notification Permission Prompt */}
+      <NotificationPermissionBanner />
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-cyan-950 border-r border-cyan-900 fixed inset-y-0 z-20">

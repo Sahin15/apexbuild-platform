@@ -12,6 +12,7 @@ import { useBrandTheme } from '../../context/ThemeContext';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 import PWAInstallBanner from '../common/PWAInstallBanner';
 import OfflineStatusBanner from '../common/OfflineStatusBanner';
+import NotificationPermissionBanner from '../common/NotificationPermissionBanner';
 
 const bottomNavItems = [
   { name: 'Dashboard', href: '/supplier/dashboard', icon: LayoutDashboard, roles: ['OWNER', 'ADMIN', 'MANAGER', 'SALES', 'ACCOUNTANT', 'STAFF'] },
@@ -59,6 +60,9 @@ export default function SupplierLayout() {
 
       {/* Universal PWA Mobile Install Banner */}
       <PWAInstallBanner />
+
+      {/* Mobile Push Notification Permission Prompt */}
+      <NotificationPermissionBanner />
 
       {/* Desktop / Tablet Sidebar */}
       <SupplierSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />

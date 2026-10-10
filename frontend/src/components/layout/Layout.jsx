@@ -12,6 +12,7 @@ import { useBrandTheme } from '../../context/ThemeContext';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 import PWAInstallBanner from '../common/PWAInstallBanner';
 import OfflineStatusBanner from '../common/OfflineStatusBanner';
+import NotificationPermissionBanner from '../common/NotificationPermissionBanner';
 
 const bottomNavItems = [
   { name: 'Projects', href: '/projects', icon: Briefcase, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER', 'SUPERVISOR', 'VIEWER'] },
@@ -61,6 +62,9 @@ export default function Layout() {
 
       {/* Universal PWA Mobile Install Banner */}
       <PWAInstallBanner />
+
+      {/* Mobile Push Notification Permission Prompt */}
+      <NotificationPermissionBanner />
 
       {/* Desktop / Tablet Sidebar */}
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
