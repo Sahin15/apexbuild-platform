@@ -7,6 +7,7 @@ import {
   ShieldAlert, UserCheck, Edit, Shield, CheckCircle2, 
   AlertTriangle, Monitor, FileText, CreditCard
 } from 'lucide-react';
+import SATenantEntitlements from './SATenantEntitlements';
 
 export default function SABusinessAccountDetails() {
   const { id } = useParams();
@@ -281,7 +282,7 @@ export default function SABusinessAccountDetails() {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="flex border-b border-slate-100 px-6 gap-6 bg-slate-50">
-              {['Overview', 'Subscriptions', 'Users & Access'].map(tab => (
+              {['Overview', 'Subscriptions', 'Plan Entitlements', 'Users & Access'].map(tab => (
                 <button 
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -372,6 +373,14 @@ export default function SABusinessAccountDetails() {
                     </div>
                   )}
                 </div>
+              )}
+
+              {activeTab === 'Plan Entitlements' && (
+                <SATenantEntitlements 
+                  account={account} 
+                  subscription={account.subscriptions?.find(s => s.status === 'ACTIVE') || account.subscriptions?.[0]} 
+                  onRefresh={fetchDetails} 
+                />
               )}
 
               {activeTab === 'Users & Access' && (

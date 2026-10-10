@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { EntitlementProvider } from './context/EntitlementContext';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
@@ -144,9 +145,10 @@ const DiagnosticsIndex = () => {
 function App() {
   return (
     <AuthProvider>
-      <Toaster position="top-right" />
-      <MasqueradeBar />
-      <Router>
+      <EntitlementProvider>
+        <Toaster position="top-right" />
+        <MasqueradeBar />
+        <Router>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
@@ -305,8 +307,9 @@ function App() {
           </Route>
 
           <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
+        </Routes>
+      </Router>
+      </EntitlementProvider>
     </AuthProvider>
   );
 }

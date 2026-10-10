@@ -16,6 +16,8 @@ const subscriptionSchema = new mongoose.Schema({
   dueDate: { type: Date },
   gracePeriodDays: { type: Number, default: 7 },
   status: { type: String, enum: ['PENDING_APPROVAL', 'PENDING_PAYMENT', 'ACTIVE', 'PAYMENT_DUE', 'GRACE_PERIOD', 'RESTRICTED', 'SUSPENDED', 'CANCELLED', 'EXPIRED'], default: 'PENDING_APPROVAL' },
+  customEntitlements: { type: Object, default: {} },
+  customUsageLimits: { type: Object, default: {} },
   cancellationDate: { type: Date },
   suspensionDate: { type: Date },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

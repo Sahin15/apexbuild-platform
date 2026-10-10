@@ -8,11 +8,13 @@ import {
   deleteDocument 
 } from '../controllers/documentController.js';
 import { protect, requireOrganization, authorize } from '../middlewares/authMiddleware.js';
+import { requireFeature } from '../middlewares/entitlementMiddleware.js';
 
 const router = express.Router({ mergeParams: true }); // Important for nested route
 
 router.use(protect);
 router.use(requireOrganization);
+router.use(requireFeature('drawingVault'));
 
 router.get('/summary', getVaultSummary);
 

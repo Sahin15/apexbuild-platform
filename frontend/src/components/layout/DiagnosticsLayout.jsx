@@ -3,13 +3,15 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, Users, ClipboardList, TestTube2, Menu, Bell, 
   Search, Plus, Activity, DollarSign, Package, Settings, LogOut, X, ChevronRight, FileText,
-  ChevronUp, User as UserIcon, HelpCircle, CreditCard, ShieldCheck
+  ChevronUp, User as UserIcon, HelpCircle, CreditCard, ShieldCheck, Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useEntitlements } from '../../context/EntitlementContext';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 
 const DiagnosticsLayout = () => {
   const { user, logout } = useAuth();
+  const { hasEntitlement, planName, tier } = useEntitlements();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -62,14 +64,14 @@ const DiagnosticsLayout = () => {
     { name: 'Dashboard', path: '/diagnostics/dashboard', icon: Home },
     { name: 'Patients', path: '/diagnostics/patients', icon: Users },
     { name: 'Orders', path: '/diagnostics/orders', icon: ClipboardList },
-    { name: 'Samples', path: '/diagnostics/samples', icon: TestTube2 },
+    { name: 'Samples', path: '/diagnostics/samples', icon: TestTube2, feature: 'sampleTracking', tier: 'PRO' },
     { name: 'Result Entry', path: '/diagnostics/results', icon: ClipboardList },
   ];
 
   const moreMenuLinks = [
-    { name: 'Quality Control (QC)', path: '/diagnostics/qc', icon: ShieldCheck },
+    { name: 'Quality Control (QC)', path: '/diagnostics/qc', icon: ShieldCheck, feature: 'qualityControl', tier: 'ENT' },
     { name: 'Tests & Panels', path: '/diagnostics/tests', icon: Activity },
-    { name: 'Doctors', path: '/diagnostics/doctors', icon: Users },
+    { name: 'Doctors', path: '/diagnostics/doctors', icon: Users, feature: 'doctorCommissions', tier: 'ENT' },
     { name: 'Reports', path: '/diagnostics/reports', icon: FileText },
     { name: 'Payments', path: '/diagnostics/payments', icon: DollarSign },
     { name: 'Inventory', path: '/diagnostics/inventory', icon: Package },
@@ -112,26 +114,9 @@ const DiagnosticsLayout = () => {
 
         <div className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-cyan-800">
           <nav className="px-4 space-y-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(item.path)
-                    ? 'bg-cyan-600 text-white shadow-sm'
-                    : 'text-cyan-100 hover:bg-cyan-800 hover:text-white'
-                }`}
-              >
-                <item.icon className={`h-5 w-5 mr-3 ${isActive(item.path) ? 'text-white' : 'text-cyan-300'}`} />
-                {item.name}
-              </Link>
-            ))}
-
-            <div className="pt-4 mt-4 border-t border-cyan-900">
-              <p className="px-3 text-xs font-bold text-cyan-600 uppercase tracking-wider mb-2">
-                Management
-              </p>
-              {moreMenuLinks.map((item) => (
+            {navItems.map((item) => {
+              const isLocked = item.feature && !hasEntitlement(item.feature);
+              return (
                 <Link
                   key={item.name}
                   to={item.path}
@@ -141,10 +126,45 @@ const DiagnosticsLayout = () => {
                       : 'text-cyan-100 hover:bg-cyan-800 hover:text-white'
                   }`}
                 >
-                  <item.icon className={`h-5 w-5 mr-3 ${isActive(item.path) ? 'text-white' : 'text-cyan-300'}`} />
-                  {item.name}
+                  <item.icon className={`h-5 w-5 mr-3 shrink-0 ${isActive(item.path) ? 'text-white' : 'text-cyan-300'}`} />
+                  <span className="flex-1 truncate">{item.name}</span>
+                  {isLocked && (
+                    <span className="ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <Lock className="w-2.5 h-2.5" />
+                      {item.tier || 'PRO'}
+                    </span>
+                  )}
                 </Link>
-              ))}
+              );
+            })}
+
+            <div className="pt-4 mt-4 border-t border-cyan-900">
+              <p className="px-3 text-xs font-bold text-cyan-600 uppercase tracking-wider mb-2">
+                Management
+              </p>
+              {moreMenuLinks.map((item) => {
+                const isLocked = item.feature && !hasEntitlement(item.feature);
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      isActive(item.path)
+                        ? 'bg-cyan-600 text-white shadow-sm'
+                        : 'text-cyan-100 hover:bg-cyan-800 hover:text-white'
+                    }`}
+                  >
+                    <item.icon className={`h-5 w-5 mr-3 shrink-0 ${isActive(item.path) ? 'text-white' : 'text-cyan-300'}`} />
+                    <span className="flex-1 truncate">{item.name}</span>
+                    {isLocked && (
+                      <span className="ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        <Lock className="w-2.5 h-2.5" />
+                        {item.tier || 'PRO'}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
           </nav>
         </div>

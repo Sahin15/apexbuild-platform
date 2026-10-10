@@ -20,6 +20,8 @@ import {
   createPlatformSubscription,
   updatePlatformSubscriptionStatus,
   updatePlatformSubscription,
+  updatePlatformSubscriptionEntitlements,
+  getPlatformFeatureRegistry,
   getPlatformInvoices,
   getPlatformInvoiceDetails,
   updatePlatformInvoiceStatus,
@@ -129,6 +131,8 @@ router.get('/subscriptions', getPlatformSubscriptions);
 router.post('/subscriptions', createPlatformSubscription);
 router.patch('/subscriptions/:id/status', updatePlatformSubscriptionStatus);
 router.patch('/subscriptions/:id', updatePlatformSubscription);
+router.patch('/subscriptions/:id/entitlements', updatePlatformSubscriptionEntitlements);
+router.get('/features/registry', getPlatformFeatureRegistry);
 
 // Finance (Invoices & Payments) endpoints
 router.get('/invoices', getPlatformInvoices);

@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Organization from '../models/Organization.js';
 import AuditLog from '../models/AuditLog.js';
 import AppError from '../utils/AppError.js';
+import EntitlementService from '../services/EntitlementService.js';
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -169,6 +170,16 @@ export const impersonateTenant = async (req, res, next) => {
 
     // 4. Issue token as the target user
     createSendToken(targetUser, 200, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMyEntitlements = async (req, res, next) => {
+  try {
+    const orgId = req.user?.organizationId?._id || req.user?.organizationId;
+    const data = await EntitlementService.getTenantEntitlements(orgId);
+    res.status(200).json({ status: 'success', data });
   } catch (error) {
     next(error);
   }

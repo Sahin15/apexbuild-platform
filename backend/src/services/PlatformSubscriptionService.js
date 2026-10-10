@@ -104,6 +104,38 @@ class PlatformSubscriptionService {
 
     return subscription;
   }
+
+  async updateSubscriptionEntitlements(id, entitlementsData, adminId, ip, userAgent) {
+    const sub = await Subscription.findById(id);
+    if (!sub) return null;
+
+    if (entitlementsData.customEntitlements) {
+      sub.customEntitlements = { ...(sub.customEntitlements || {}), ...entitlementsData.customEntitlements };
+      sub.markModified('customEntitlements');
+    }
+
+    if (entitlementsData.customUsageLimits) {
+      sub.customUsageLimits = { ...(sub.customUsageLimits || {}), ...entitlementsData.customUsageLimits };
+      sub.markModified('customUsageLimits');
+    }
+
+    await sub.save();
+
+    await import('../models/AuditLog.js').then(m => m.default.create({
+      action: 'PLATFORM_SUBSCRIPTION_ENTITLEMENTS_UPDATED',
+      adminId,
+      entityType: 'Subscription',
+      entityId: sub._id,
+      newValue: { 
+        customEntitlements: sub.customEntitlements, 
+        customUsageLimits: sub.customUsageLimits 
+      },
+      ipAddress: ip,
+      userAgent
+    }));
+
+    return sub;
+  }
 }
 
 export default new PlatformSubscriptionService();

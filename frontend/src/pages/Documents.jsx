@@ -8,6 +8,7 @@ import {
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { useConfirm } from '../contexts/ConfirmContext';
+import FeatureGate from '../components/common/FeatureGate';
 
 export default function Documents({ isProjectView = false }) {
   const confirm = useConfirm();
@@ -87,7 +88,9 @@ export default function Documents({ isProjectView = false }) {
       setDocuments(docsRes.data?.data?.documents || []);
       setSummary(sumRes.data?.data || null);
     } catch (error) {
-      toast.error('Failed to load drawing & document vault');
+      if (error.response?.data?.code !== 'FEATURE_NOT_ENTITLED') {
+        toast.error('Failed to load drawing & document vault');
+      }
     } finally {
       setLoading(false);
     }
@@ -285,7 +288,8 @@ export default function Documents({ isProjectView = false }) {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
+    <FeatureGate feature="drawingVault" requiredTier="ENTERPRISE">
+      <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
         <div>
@@ -1338,6 +1342,7 @@ export default function Documents({ isProjectView = false }) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </FeatureGate>
   );
 }

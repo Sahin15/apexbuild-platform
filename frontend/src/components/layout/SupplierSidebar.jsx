@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useEntitlements } from '../../context/EntitlementContext';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { 
   LayoutDashboard, 
@@ -22,17 +23,18 @@ import {
   LogOut,
   User as UserIcon,
   Crown,
-  ChevronUp
+  ChevronUp,
+  Lock
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/supplier/dashboard', icon: LayoutDashboard, roles: ['OWNER', 'ADMIN', 'MANAGER', 'SALES', 'ACCOUNTANT', 'STAFF'] },
-  { name: 'Customers', href: '/supplier/customers', icon: Users, roles: ['OWNER', 'ADMIN', 'MANAGER', 'SALES', 'ACCOUNTANT', 'STAFF'] },
+  { name: 'Customers', href: '/supplier/customers', icon: Users, roles: ['OWNER', 'ADMIN', 'MANAGER', 'SALES', 'ACCOUNTANT', 'STAFF'], feature: 'directCustomerLedger', tier: 'PRO' },
   { name: 'Products', href: '/supplier/products', icon: Package, roles: ['OWNER', 'ADMIN', 'MANAGER', 'SALES', 'ACCOUNTANT', 'STAFF'] },
-  { name: 'Inventory', href: '/supplier/inventory', icon: Layers, roles: ['OWNER', 'ADMIN', 'MANAGER', 'SALES', 'ACCOUNTANT', 'STAFF'] },
+  { name: 'Inventory', href: '/supplier/inventory', icon: Layers, roles: ['OWNER', 'ADMIN', 'MANAGER', 'SALES', 'ACCOUNTANT', 'STAFF'], feature: 'inventoryLedger', tier: 'ENT' },
   { name: 'Quotations', href: '/supplier/quotations', icon: FileText, roles: ['OWNER', 'ADMIN', 'MANAGER', 'SALES'] },
   { name: 'Orders', href: '/supplier/orders', icon: ShoppingCart, roles: ['OWNER', 'ADMIN', 'MANAGER', 'SALES'] },
-  { name: 'Deliveries', href: '/supplier/deliveries', icon: Truck, roles: ['OWNER', 'ADMIN', 'MANAGER', 'SALES', 'STAFF'] },
+  { name: 'Deliveries', href: '/supplier/deliveries', icon: Truck, roles: ['OWNER', 'ADMIN', 'MANAGER', 'SALES', 'STAFF'], feature: 'vehicleFleet', tier: 'PRO' },
   { name: 'Invoices', href: '/supplier/invoices', icon: FileSpreadsheet, roles: ['OWNER', 'ADMIN', 'ACCOUNTANT', 'SALES'] },
   { name: 'Purchases', href: '/supplier/purchases', icon: ShoppingCart, roles: ['OWNER', 'ADMIN', 'MANAGER'] },
   { name: 'Suppliers', href: '/supplier/suppliers', icon: Users, roles: ['OWNER', 'ADMIN', 'MANAGER', 'ACCOUNTANT'] },
@@ -46,6 +48,7 @@ const navigation = [
 
 export default function SupplierSidebar({ sidebarOpen, setSidebarOpen }) {
   const { user, logout } = useAuth();
+  const { hasEntitlement, planName, tier } = useEntitlements();
   const confirm = useConfirm();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -101,21 +104,30 @@ export default function SupplierSidebar({ sidebarOpen, setSidebarOpen }) {
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-slate-700">
           <nav className="px-3 space-y-1">
-            {filteredNav.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={({ isActive }) => `
-                  flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
-                  ${isActive 
-                    ? 'bg-emerald-600 text-white shadow-sm' 
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'}
-                `}
-              >
-                <item.icon className="mr-3 flex-shrink-0 h-5 w-5" aria-hidden="true" />
-                {item.name}
-              </NavLink>
-            ))}
+            {filteredNav.map((item) => {
+              const isLocked = item.feature && !hasEntitlement(item.feature);
+              return (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  className={({ isActive }) => `
+                    flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
+                    ${isActive 
+                      ? 'bg-emerald-600 text-white shadow-sm' 
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'}
+                  `}
+                >
+                  <item.icon className="mr-3 flex-shrink-0 h-5 w-5" aria-hidden="true" />
+                  <span className="flex-1 truncate">{item.name}</span>
+                  {isLocked && (
+                    <span className="ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      <Lock className="w-2.5 h-2.5" />
+                      {item.tier || 'PRO'}
+                    </span>
+                  )}
+                </NavLink>
+              );
+            })}
           </nav>
         </div>
 
@@ -132,11 +144,13 @@ export default function SupplierSidebar({ sidebarOpen, setSidebarOpen }) {
                 <div className="flex items-center justify-between px-2 py-1.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
                   <div className="flex items-center gap-2">
                     <Crown className="w-4 h-4 text-emerald-400" />
-                    <span className="text-xs font-semibold text-emerald-400">Pro Plan</span>
+                    <span className="text-xs font-semibold text-emerald-400 truncate max-w-[110px]">{planName}</span>
                   </div>
-                  <button onClick={() => { setMenuOpen(false); navigate('/supplier/settings'); }} className="text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-500 px-2 py-1 rounded transition-colors">
-                    UPGRADE
-                  </button>
+                  {tier !== 'ENTERPRISE' && (
+                    <button onClick={() => { setMenuOpen(false); navigate('/supplier/settings'); }} className="text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-500 px-2 py-1 rounded transition-colors cursor-pointer">
+                      UPGRADE
+                    </button>
+                  )}
                 </div>
               </div>
 

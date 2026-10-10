@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import FeatureGate from '../components/common/FeatureGate';
 
 export default function ProjectCashFlow() {
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,9 @@ export default function ProjectCashFlow() {
         setData(res.data.data);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load cash flow & P&L snapshot');
+      if (error.response?.data?.code !== 'FEATURE_NOT_ENTITLED') {
+        toast.error(error.response?.data?.message || 'Failed to load cash flow & P&L snapshot');
+      }
     } finally {
       setLoading(false);
     }
@@ -71,8 +74,9 @@ export default function ProjectCashFlow() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner & Controls */}
+    <FeatureGate feature="civilPnL" requiredTier="ENTERPRISE">
+      <div className="space-y-6">
+        {/* Top Banner & Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-6 rounded-2xl shadow-xl text-white">
         <div className="flex-1 min-w-0 pr-2">
           <div className="flex items-center gap-2 mb-1">
@@ -461,5 +465,6 @@ export default function ProjectCashFlow() {
         </div>
       </div>
     </div>
+  </FeatureGate>
   );
 }

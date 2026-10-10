@@ -13,6 +13,7 @@ import PlatformNotificationService from '../services/PlatformNotificationService
 import PlatformPartnerService from '../services/PlatformPartnerService.js';
 import PlatformCMSService from '../services/PlatformCMSService.js';
 import PlatformTelemetryService from '../services/PlatformTelemetryService.js';
+import { FEATURE_REGISTRY } from '../services/EntitlementService.js';
 import AppError from '../utils/AppError.js';
 
 export const getPlatformDashboard = async (req, res, next) => {
@@ -277,6 +278,30 @@ export const updatePlatformSubscription = async (req, res, next) => {
     );
     if (!subscription) return next(new AppError('Subscription not found', 404));
     res.status(200).json({ status: 'success', data: subscription });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updatePlatformSubscriptionEntitlements = async (req, res, next) => {
+  try {
+    const subscription = await PlatformSubscriptionService.updateSubscriptionEntitlements(
+      req.params.id,
+      req.body,
+      req.user._id,
+      req.ip,
+      req.headers['user-agent']
+    );
+    if (!subscription) return next(new AppError('Subscription not found', 404));
+    res.status(200).json({ status: 'success', data: subscription });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPlatformFeatureRegistry = async (req, res, next) => {
+  try {
+    res.status(200).json({ status: 'success', data: FEATURE_REGISTRY });
   } catch (error) {
     next(error);
   }
