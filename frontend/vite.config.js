@@ -12,12 +12,13 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 5000000 // 5 MB
       },
       manifest: {
-        name: 'ApexSupply',
-        short_name: 'ApexSupply',
-        description: 'Poultry Distributor Operating System',
-        theme_color: '#0f172a', // Tailwind slate-900
-        background_color: '#f8fafc', // Tailwind slate-50
+        name: 'ApexBuild Business OS',
+        short_name: 'ApexBuild',
+        description: 'Multi-Tenant Business Operating System & Operations Suite',
+        theme_color: '#0f172a',
+        background_color: '#0f172a',
         display: 'standalone',
+        orientation: 'portrait-primary',
         scope: '/',
         start_url: '/',
         icons: [

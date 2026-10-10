@@ -48,6 +48,12 @@ export const ThemeProvider = ({ children }) => {
     root.style.setProperty('--theme-primary-soft', `${activePrimary}18`);
     root.style.setProperty('--theme-secondary-soft', `${activeSecondary}18`);
     root.style.setProperty('--theme-primary-border', `${activePrimary}35`);
+
+    // Dynamically sync PWA browser status bar theme color
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', activePrimary);
+    }
   }, [activePrimary, activeSecondary]);
 
   const setCustomTheme = (themeData) => {
