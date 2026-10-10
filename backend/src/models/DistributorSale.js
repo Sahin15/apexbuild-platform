@@ -14,6 +14,14 @@ const distributorSaleSchema = new mongoose.Schema({
   paidAmount: { type: Number, default: 0 },
   dueAmount: { type: Number, required: true },
   paymentStatus: { type: String, enum: ['PAID', 'PARTIAL', 'CREDIT', 'CANCELLED'], default: 'CREDIT' },
+  customerSignature: { type: String },
+  signedBy: { type: String },
+  proofPhoto: { type: String },
+  gpsLocation: {
+    latitude: { type: Number },
+    longitude: { type: Number },
+    accuracy: { type: Number }
+  },
   notes: { type: String }
 }, { timestamps: true });
 

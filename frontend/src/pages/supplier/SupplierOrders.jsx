@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, ShoppingCart, Truck, ExternalLink, Share2, PenTool, Camera, X } from 'lucide-react';
+import { Search, Plus, ShoppingCart, Truck, ExternalLink, Share2, PenTool, Camera, X, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
@@ -12,6 +12,7 @@ import { notifyOrderCreated } from '../../utils/notifications';
 import { enqueueSyncOperation } from '../../services/syncQueue';
 import { shareSupplierOrder } from '../../utils/share';
 import { formatBytes } from '../../utils/imageCompressor';
+import { getCurrentCoordinates, formatCoordinates, getGoogleMapsUrl } from '../../utils/geolocation';
 
 export default function SupplierOrders() {
   const [orders, setOrders] = useState([]);
@@ -26,6 +27,7 @@ export default function SupplierOrders() {
   
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
+  const [isFetchingGps, setIsFetchingGps] = useState(false);
   
   const [formData, setFormData] = useState({
     customer: '',
@@ -40,7 +42,8 @@ export default function SupplierOrders() {
     receiverSignature: null,
     signedBy: '',
     challanPhoto: null,
-    challanPhotoSize: null
+    challanPhotoSize: null,
+    gpsLocation: null
   });
 
   const { hasDraft, draftData, lastSaved, clearDraft } = useOfflineDraft('supplier_order', formData, showModal);
@@ -123,6 +126,27 @@ export default function SupplierOrders() {
     setFormData({ ...formData, items: newItems });
   };
 
+  const handleStampGps = async () => {
+    setIsFetchingGps(true);
+    try {
+      const pos = await getCurrentCoordinates({ enableHighAccuracy: true, timeout: 8000 });
+      setFormData(prev => ({
+        ...prev,
+        gpsLocation: {
+          latitude: pos.latitude,
+          longitude: pos.longitude,
+          accuracy: pos.accuracy
+        }
+      }));
+      haptics.success();
+      toast.success(`Delivery Gate GPS tagged: ${formatCoordinates(pos.latitude, pos.longitude)}`);
+    } catch (err) {
+      toast.error(err.message || 'Could not retrieve GPS location');
+    } finally {
+      setIsFetchingGps(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.items.length === 0) {
@@ -185,7 +209,7 @@ export default function SupplierOrders() {
       toast.success('Offline mode: Sales order saved to sync queue! Will upload automatically once online.');
       clearDraft();
       setShowModal(false);
-      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '', receiverSignature: null, signedBy: '', challanPhoto: null, challanPhotoSize: null });
+      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '', receiverSignature: null, signedBy: '', challanPhoto: null, challanPhotoSize: null, gpsLocation: null });
       return;
     }
 
@@ -202,7 +226,7 @@ export default function SupplierOrders() {
       clearDraft();
       setShowModal(false);
       fetchData();
-      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '', receiverSignature: null, signedBy: '', challanPhoto: null, challanPhotoSize: null });
+      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '', receiverSignature: null, signedBy: '', challanPhoto: null, challanPhotoSize: null, gpsLocation: null });
     } catch (error) {
       haptics.error();
       toast.error(error.response?.data?.message || 'Failed to create order');
@@ -609,6 +633,58 @@ export default function SupplierOrders() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Delivery Gate GPS Geotag */}
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        formData.gpsLocation ? 'bg-rose-50 border border-rose-100 text-rose-600' : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        <MapPin className="w-4 h-4" />
+                      </div>
+                      <div className="truncate">
+                        <p className="text-xs font-bold text-slate-800">Delivery Gate GPS</p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {formData.gpsLocation 
+                            ? `${formatCoordinates(formData.gpsLocation.latitude, formData.gpsLocation.longitude)} (±${formData.gpsLocation.accuracy}m)` 
+                            : 'Stamp gate drop-off coordinates'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {formData.gpsLocation && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, gpsLocation: null }))}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          title="Remove GPS tag"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleStampGps}
+                        disabled={isFetchingGps}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 ${
+                          formData.gpsLocation 
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200' 
+                            : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-2xs'
+                        }`}
+                      >
+                        {isFetchingGps ? (
+                          <span>Locating...</span>
+                        ) : formData.gpsLocation ? (
+                          <span>Re-tag</span>
+                        ) : (
+                          <>
+                            <MapPin className="w-3.5 h-3.5" />
+                            <span>Tag GPS</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </form>
             </div>
@@ -713,6 +789,23 @@ export default function SupplierOrders() {
                     <div className="border-t border-dashed border-slate-200 pt-3 text-center">
                       <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-1">Gate Pass / Stamped Challan</p>
                       <img src={selectedOrder.challanPhoto} alt="Delivery Challan Proof" className="max-h-28 mx-auto rounded-lg object-contain shadow-2xs border border-slate-200" />
+                    </div>
+                  )}
+
+                  {selectedOrder.gpsLocation && (
+                    <div className="border-t border-dashed border-slate-200 pt-3 text-center">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-1 flex items-center justify-center gap-1">
+                        <MapPin className="w-3.5 h-3.5 text-rose-500" /> Delivery Gate GPS Location
+                      </p>
+                      <a 
+                        href={getGoogleMapsUrl(selectedOrder.gpsLocation.latitude, selectedOrder.gpsLocation.longitude)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100"
+                      >
+                        <span>{formatCoordinates(selectedOrder.gpsLocation.latitude, selectedOrder.gpsLocation.longitude)}</span>
+                        <span className="text-[9px] text-slate-400">↗</span>
+                      </a>
                     </div>
                   )}
                 </div>

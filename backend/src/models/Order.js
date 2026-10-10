@@ -62,9 +62,16 @@ const orderSchema = new mongoose.Schema({
     address: { type: String },
     scheduledDate: { type: Date },
     phlebotomist: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    status: { type: String, enum: ['Scheduled', 'En Route', 'Reached', 'Collected', 'Cancelled'], default: 'Scheduled' }
+    status: { type: String, enum: ['Scheduled', 'En Route', 'Reached', 'Collected', 'Cancelled'], default: 'Scheduled' },
+    pickupGps: {
+      latitude: { type: Number },
+      longitude: { type: Number },
+      accuracy: { type: Number }
+    }
   },
-  
+  patientSignature: { type: String },
+  signedBy: { type: String },
+  prescriptionPhoto: { type: String },
   paymentMethod: { type: String, enum: ['Cash', 'UPI', 'Card', 'Bank Transfer', 'Cheque', 'Other'], default: 'Cash' },
   
   payments: [{

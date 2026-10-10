@@ -1,8 +1,9 @@
 import { useRef } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { X, Download, MessageCircle, Copy } from 'lucide-react';
+import { X, Download, MessageCircle, Copy, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatCoordinates, getGoogleMapsUrl } from '../../utils/geolocation';
 
 export default function ReceiptModal({ sale, onClose }) {
   const receiptRef = useRef(null);
@@ -326,6 +327,23 @@ export default function ReceiptModal({ sale, onClose }) {
               <div className="border-t border-dashed border-slate-300 pt-3 mb-4 text-center">
                 <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-1">Weighing Scale & Proof Photo</p>
                 <img src={sale.proofPhoto} alt="Weighing Scale Proof" className="max-h-28 mx-auto rounded-lg border border-slate-200 object-cover shadow-2xs" />
+              </div>
+            )}
+
+            {sale.gpsLocation && (
+              <div className="border-t border-dashed border-slate-300 pt-3 mb-4 text-center">
+                <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-1 flex items-center justify-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-rose-500" /> Delivery GPS Location
+                </p>
+                <a 
+                  href={getGoogleMapsUrl(sale.gpsLocation.latitude, sale.gpsLocation.longitude)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100"
+                >
+                  <span>{formatCoordinates(sale.gpsLocation.latitude, sale.gpsLocation.longitude)}</span>
+                  <span className="text-[9px] text-slate-400">↗</span>
+                </a>
               </div>
             )}
 

@@ -30,18 +30,22 @@ import {
   FileCheck,
   Camera,
   Barcode,
-  Share2
+  Share2,
+  MapPin
 } from 'lucide-react';
 import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
 import PullToRefreshContainer from '../components/common/PullToRefreshContainer';
 import haptics from '../utils/haptics';
 import { shareLabourMusterRoll } from '../utils/share';
+import { getCurrentCoordinates, formatCoordinates, isWithinGeofence } from '../utils/geolocation';
 
 export default function Labour({ isProjectView = false }) {
   const { id: routeProjectId } = useParams();
   const [projectId, setProjectId] = useState(routeProjectId || '');
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [attendanceGps, setAttendanceGps] = useState(null);
+  const [isFetchingGps, setIsFetchingGps] = useState(false);
 
   // Active Workspace Tab
   const [activeTab, setActiveTab] = useState('muster'); // 'muster', 'directory', 'wagesheets', 'advances'
@@ -212,6 +216,21 @@ export default function Labour({ isProjectView = false }) {
     }
   };
 
+  // Stamp GPS Geofence for Site Attendance
+  const handleStampGps = async () => {
+    setIsFetchingGps(true);
+    try {
+      const pos = await getCurrentCoordinates({ enableHighAccuracy: true, timeout: 8000 });
+      setAttendanceGps(pos);
+      haptics.success();
+      toast.success(`GPS Verified: ${formatCoordinates(pos.latitude, pos.longitude)} (±${pos.accuracy}m)`);
+    } catch (err) {
+      toast.error(err.message || 'Could not retrieve GPS coordinates');
+    } finally {
+      setIsFetchingGps(false);
+    }
+  };
+
   // Submit Daily Attendance & OT
   const handleSaveDailyAttendance = async (e) => {
     e.preventDefault();
@@ -220,11 +239,18 @@ export default function Labour({ isProjectView = false }) {
       await api.post('/labour/attendance', {
         date: selectedDate,
         projectId: targetProjId,
+        gpsLocation: attendanceGps ? {
+          latitude: attendanceGps.latitude,
+          longitude: attendanceGps.longitude,
+          accuracy: attendanceGps.accuracy,
+          verified: true
+        } : undefined,
         records: dailyAttendanceRecords
       });
       haptics.success();
       toast.success('Attendance & Overtime recorded successfully!');
       setIsAttendanceModalOpen(false);
+      setAttendanceGps(null);
       fetchData();
     } catch (error) {
       haptics.error();
@@ -1128,6 +1154,48 @@ export default function Labour({ isProjectView = false }) {
                 <span className="text-xs text-slate-500 font-semibold">
                   {dailyAttendanceRecords.length} Workers Active
                 </span>
+              </div>
+
+              {/* GPS Geofence Attendance Verification */}
+              <div className="px-3 sm:px-4 py-2.5 bg-white border-b border-slate-200 flex items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                    attendanceGps ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div className="truncate">
+                    <p className="text-xs font-bold text-slate-800">
+                      {attendanceGps ? 'On-Site GPS Stamped' : 'Site Geofence Stamp'}
+                    </p>
+                    <p className="text-[11px] text-slate-500 truncate">
+                      {attendanceGps 
+                        ? `${formatCoordinates(attendanceGps.latitude, attendanceGps.longitude)} (±${attendanceGps.accuracy}m)` 
+                        : 'Stamp supervisor GPS location to verify on-site attendance'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleStampGps}
+                  disabled={isFetchingGps}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 shrink-0 flex items-center gap-1.5 ${
+                    attendanceGps 
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-300' 
+                      : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200'
+                  }`}
+                >
+                  {isFetchingGps ? (
+                    <span>Acquiring GPS...</span>
+                  ) : attendanceGps ? (
+                    <span>Re-stamp GPS</span>
+                  ) : (
+                    <>
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>Stamp GPS</span>
+                    </>
+                  )}
+                </button>
               </div>
 
               <div className="p-3 sm:p-4 overflow-y-auto flex-1 space-y-2">

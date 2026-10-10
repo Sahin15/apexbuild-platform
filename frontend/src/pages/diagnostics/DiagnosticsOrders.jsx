@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, Plus, Filter, ClipboardList, X, FileText, User, Activity, Eye, Receipt, Share2, PenTool, Camera } from 'lucide-react';
+import { Search, Plus, Filter, ClipboardList, X, FileText, User, Activity, Eye, Receipt, Share2, PenTool, Camera, MapPin } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import DiagnosticsReportModal from '../../components/diagnostics/DiagnosticsReportModal';
@@ -13,6 +13,7 @@ import haptics from '../../utils/haptics';
 import { enqueueSyncOperation } from '../../services/syncQueue';
 import { shareDiagnosticsOrder } from '../../utils/share';
 import { formatBytes } from '../../utils/imageCompressor';
+import { getCurrentCoordinates, formatCoordinates, getGoogleMapsUrl } from '../../utils/geolocation';
 
 const DiagnosticsOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -31,6 +32,8 @@ const DiagnosticsOrders = () => {
   // Home Collection State
   const [isHomeCollection, setIsHomeCollection] = useState(false);
   const [collectionAddress, setCollectionAddress] = useState('');
+  const [homeCollectionGps, setHomeCollectionGps] = useState(null);
+  const [isFetchingGps, setIsFetchingGps] = useState(false);
 
   // Signature State
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
@@ -50,11 +53,12 @@ const DiagnosticsOrders = () => {
     paidAmount,
     isHomeCollection,
     collectionAddress,
+    homeCollectionGps,
     patientSignature,
     signedBy,
     prescriptionPhoto,
     prescriptionPhotoSize
-  }), [selectedPatient, selectedTests, discount, paidAmount, isHomeCollection, collectionAddress, patientSignature, signedBy, prescriptionPhoto, prescriptionPhotoSize]);
+  }), [selectedPatient, selectedTests, discount, paidAmount, isHomeCollection, collectionAddress, homeCollectionGps, patientSignature, signedBy, prescriptionPhoto, prescriptionPhotoSize]);
 
   const { hasDraft, draftData, lastSaved, clearDraft } = useOfflineDraft('diagnostics_order', orderFormData, isModalOpen);
 
@@ -66,11 +70,30 @@ const DiagnosticsOrders = () => {
       if (draftData.paidAmount !== undefined) setPaidAmount(draftData.paidAmount);
       if (draftData.isHomeCollection !== undefined) setIsHomeCollection(draftData.isHomeCollection);
       if (draftData.collectionAddress !== undefined) setCollectionAddress(draftData.collectionAddress);
+      if (draftData.homeCollectionGps !== undefined) setHomeCollectionGps(draftData.homeCollectionGps);
       if (draftData.patientSignature !== undefined) setPatientSignature(draftData.patientSignature);
       if (draftData.signedBy !== undefined) setSignedBy(draftData.signedBy);
       if (draftData.prescriptionPhoto !== undefined) setPrescriptionPhoto(draftData.prescriptionPhoto);
       if (draftData.prescriptionPhotoSize !== undefined) setPrescriptionPhotoSize(draftData.prescriptionPhotoSize);
       toast.success('Test order draft restored!');
+    }
+  };
+
+  const handleStampGps = async () => {
+    setIsFetchingGps(true);
+    try {
+      const pos = await getCurrentCoordinates({ enableHighAccuracy: true, timeout: 8000 });
+      setHomeCollectionGps({
+        latitude: pos.latitude,
+        longitude: pos.longitude,
+        accuracy: pos.accuracy
+      });
+      haptics.success();
+      toast.success(`Home Pickup GPS tagged: ${formatCoordinates(pos.latitude, pos.longitude)}`);
+    } catch (err) {
+      toast.error(err.message || 'Could not retrieve GPS location');
+    } finally {
+      setIsFetchingGps(false);
     }
   };
 
@@ -180,7 +203,10 @@ const DiagnosticsOrders = () => {
         totalAmount,
         paidAmount,
         isHomeCollection,
-        homeCollectionDetails: isHomeCollection ? { address: collectionAddress } : undefined,
+        homeCollectionDetails: isHomeCollection ? {
+          address: collectionAddress,
+          pickupGps: homeCollectionGps || undefined
+        } : undefined,
         patientSignature,
         signedBy,
         prescriptionPhoto,
@@ -208,6 +234,7 @@ const DiagnosticsOrders = () => {
         setPaidAmount(0);
         setIsHomeCollection(false);
         setCollectionAddress('');
+        setHomeCollectionGps(null);
         setPatientSignature(null);
         setSignedBy('');
         setPrescriptionPhoto(null);
@@ -229,6 +256,7 @@ const DiagnosticsOrders = () => {
       setPaidAmount(0);
       setIsHomeCollection(false);
       setCollectionAddress('');
+      setHomeCollectionGps(null);
       setPatientSignature(null);
       setSignedBy('');
       setPrescriptionPhoto(null);
@@ -344,6 +372,19 @@ const DiagnosticsOrders = () => {
                     <div>
                       <p>{order.tests?.length || 0} Test(s)</p>
                       <p className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleDateString()}</p>
+                      {order.homeCollectionDetails?.pickupGps?.latitude && (
+                        <a
+                          href={getGoogleMapsUrl(order.homeCollectionDetails.pickupGps.latitude, order.homeCollectionDetails.pickupGps.longitude)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-[11px] text-rose-600 hover:text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-100 font-medium mt-1.5 touch-manipulation"
+                          title="Open Pickup Location in Google Maps"
+                        >
+                          <MapPin className="w-3 h-3 shrink-0" />
+                          <span>Pickup GPS</span>
+                        </a>
+                      )}
                     </div>
                     <div className="text-right flex flex-col items-end gap-1.5">
                       <p className="font-bold text-gray-900">₹{order.totalAmount}</p>
@@ -421,6 +462,19 @@ const DiagnosticsOrders = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-bold text-gray-900">{order.orderId}</div>
                         <div className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</div>
+                        {order.homeCollectionDetails?.pickupGps?.latitude && (
+                          <a
+                            href={getGoogleMapsUrl(order.homeCollectionDetails.pickupGps.latitude, order.homeCollectionDetails.pickupGps.longitude)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1 text-[11px] text-rose-600 hover:text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-100 font-medium mt-1"
+                            title="Open Pickup Location in Google Maps"
+                          >
+                            <MapPin className="w-3 h-3 shrink-0" />
+                            <span>Pickup GPS</span>
+                          </a>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{order.patient?.firstName} {order.patient?.lastName}</div>
@@ -641,16 +695,62 @@ const DiagnosticsOrders = () => {
                     </label>
                   </div>
                   {isHomeCollection && (
-                    <div className="mt-3">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Collection Address</label>
-                      <textarea
-                        required
-                        rows="2"
-                        value={collectionAddress}
-                        onChange={(e) => setCollectionAddress(e.target.value)}
-                        placeholder="Enter full address and landmark..."
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      />
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Collection Address</label>
+                        <textarea
+                          required
+                          rows="2"
+                          value={collectionAddress}
+                          onChange={(e) => setCollectionAddress(e.target.value)}
+                          placeholder="Enter full address and landmark..."
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      </div>
+
+                      {/* Phlebotomist Sample Pickup GPS Tag */}
+                      <div className="bg-white p-3 rounded-lg border border-blue-200 flex items-center justify-between gap-3 shadow-2xs">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                            homeCollectionGps ? 'bg-rose-50 border border-rose-100 text-rose-600' : 'bg-slate-100 text-slate-500'
+                          }`}>
+                            <MapPin className="w-4 h-4" />
+                          </div>
+                          <div className="truncate">
+                            <p className="text-xs font-bold text-slate-800">Sample Pickup GPS Location</p>
+                            <p className="text-[11px] text-slate-500 truncate">
+                              {homeCollectionGps 
+                                ? `${formatCoordinates(homeCollectionGps.latitude, homeCollectionGps.longitude)} (±${homeCollectionGps.accuracy}m)` 
+                                : 'Tag phlebotomist doorstep collection location'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {homeCollectionGps && (
+                            <button
+                              type="button"
+                              onClick={() => setHomeCollectionGps(null)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                              title="Remove GPS tag"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={handleStampGps}
+                            disabled={isFetchingGps}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 ${
+                              homeCollectionGps 
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200' 
+                                : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-2xs'
+                            }`}
+                          >
+                            <MapPin className="w-3.5 h-3.5" />
+                            {isFetchingGps ? 'Locating...' : homeCollectionGps ? 'Retag GPS' : 'Tag GPS'}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

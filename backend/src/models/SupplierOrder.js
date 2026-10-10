@@ -27,6 +27,14 @@ const supplierOrderSchema = new mongoose.Schema({
   paidAmount: { type: Number, default: 0 },
   dueAmount: { type: Number, required: true },
   deliveryAddress: { type: String },
+  receiverSignature: { type: String },
+  signedBy: { type: String },
+  challanPhoto: { type: String },
+  gpsLocation: {
+    latitude: { type: Number },
+    longitude: { type: Number },
+    accuracy: { type: Number }
+  },
   notes: { type: String },
   attachments: [{ type: String }]
 }, { timestamps: true });

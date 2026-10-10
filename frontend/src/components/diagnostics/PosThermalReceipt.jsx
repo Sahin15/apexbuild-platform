@@ -123,6 +123,20 @@ const PosThermalReceipt = ({ receipt, order, organization }) => {
           <span className="text-gray-600">Cashier:</span>
           <span>{cashier}</span>
         </div>
+        {order?.homeCollectionDetails?.pickupGps?.latitude && (
+          <div className="flex justify-between text-[10px]">
+            <span className="text-gray-600">Pickup GPS:</span>
+            <span className="font-bold text-gray-800 font-mono">
+              {order.homeCollectionDetails.pickupGps.latitude.toFixed(4)}, {order.homeCollectionDetails.pickupGps.longitude.toFixed(4)}
+            </span>
+          </div>
+        )}
+        {order?.patientSignature && (
+          <div className="flex justify-between text-[10px]">
+            <span className="text-gray-600">Consent Sign:</span>
+            <span className="font-bold text-emerald-700">Digital Verified ({order.signedBy || 'Patient'})</span>
+          </div>
+        )}
       </div>
 
       <div className="my-2 border-t border-dashed border-gray-400"></div>

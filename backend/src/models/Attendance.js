@@ -9,6 +9,12 @@ const attendanceSchema = new mongoose.Schema({
   hoursWorked: { type: Number, default: 8 },
   overtimeHours: { type: Number, default: 0 },
   taskLocation: { type: String, default: '' },
+  gpsLocation: {
+    latitude: { type: Number },
+    longitude: { type: Number },
+    accuracy: { type: Number },
+    verified: { type: Boolean, default: false }
+  },
   markedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
