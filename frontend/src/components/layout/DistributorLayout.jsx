@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Header from './Header';
+import SidebarUserProfile from './SidebarUserProfile';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 
 const navItems = [
@@ -160,54 +161,8 @@ export default function DistributorLayout() {
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-800 relative" ref={menuRef}>
-          {menuOpen && (
-            <div className="absolute bottom-full left-4 mb-2 w-56 bg-slate-800 rounded-xl shadow-xl ring-1 ring-white/10 overflow-hidden transform transition-all">
-              <div className="p-3 border-b border-slate-700 bg-slate-800/50">
-                <p className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</p>
-                <p className="text-xs text-slate-400 truncate">{user?.email || 'user@apexbuild.com'}</p>
-              </div>
-              
-              <div className="py-1">
-                <button onClick={() => { setMenuOpen(false); navigate('/distributor/profile'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                  <UserIcon className="mr-2 h-4 w-4 text-slate-400 group-hover:text-amber-400" /> My Profile
-                </button>
-                <button onClick={() => { setMenuOpen(false); navigate('/distributor/settings'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                  <Settings className="mr-2 h-4 w-4 text-slate-400 group-hover:text-amber-400" /> Settings
-                </button>
-                <button onClick={() => { setMenuOpen(false); navigate('/distributor/subscription'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                  <CreditCard className="mr-2 h-4 w-4 text-slate-400 group-hover:text-amber-400" /> Plan & Billing
-                </button>
-                <button onClick={() => { setMenuOpen(false); navigate('/distributor/support'); }} className="group flex w-full items-center px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                  <HelpCircle className="mr-2 h-4 w-4 text-slate-400 group-hover:text-amber-400" /> Help & Support
-                </button>
-              </div>
-              <div className="py-1 border-t border-slate-700">
-                <button onClick={handleLogoutClick} className="group flex w-full items-center px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors">
-                  <LogOut className="mr-2 h-4 w-4 text-red-400/80 group-hover:text-red-400" /> Sign out
-                </button>
-              </div>
-            </div>
-          )}
-
-          <button 
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="w-full flex items-center justify-between px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors group cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-600"
-          >
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="flex-shrink-0 h-8 w-8 rounded-full bg-slate-600 flex items-center justify-center text-white font-medium shadow-sm">
-                {user?.name?.charAt(0) || 'U'}
-              </div>
-              <div className="text-left truncate">
-                <p className="text-sm font-semibold text-white truncate w-32 group-hover:text-amber-400 transition-colors">{user?.name || 'User'}</p>
-                <p className="text-[10px] font-medium text-slate-400 truncate tracking-wide uppercase">
-                  DISTRIBUTOR {user?.role ? user.role.replace('_', ' ') : ''}
-                </p>
-              </div>
-            </div>
-            <ChevronUp className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${menuOpen ? 'rotate-180 text-white' : 'group-hover:text-white'}`} />
-          </button>
-        </div>
+        {/* Unified Bottom User Profile */}
+        <SidebarUserProfile />
       </aside>
 
       {/* Main Content Area */}

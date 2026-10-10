@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import Header from './Header';
+import SidebarUserProfile from './SidebarUserProfile';
 
 const navigation = [
   { name: 'Dashboard', href: '/superadmin/dashboard', icon: LayoutDashboard },
@@ -188,6 +189,9 @@ export default function SuperAdminLayout() {
             }
           })}
         </div>
+
+        {/* Unified Bottom User Profile */}
+        <SidebarUserProfile />
       </div>
 
       {/* Main Content */}

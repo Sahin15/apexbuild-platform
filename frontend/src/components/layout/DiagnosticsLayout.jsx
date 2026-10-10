@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useEntitlements } from '../../context/EntitlementContext';
 import Header from './Header';
+import SidebarUserProfile from './SidebarUserProfile';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 
 const DiagnosticsLayout = () => {
@@ -170,54 +171,8 @@ const DiagnosticsLayout = () => {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-cyan-900 relative" ref={menuRef}>
-          {menuOpen && (
-            <div className="absolute bottom-full left-4 mb-2 w-56 bg-cyan-900 rounded-xl shadow-xl border border-cyan-800 overflow-hidden transform transition-all">
-              <div className="p-3 border-b border-cyan-800 bg-cyan-900/50">
-                <p className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</p>
-                <p className="text-xs text-cyan-300 truncate">{user?.email || 'admin@diagnostics.com'}</p>
-              </div>
-              
-              <div className="py-1">
-                <button onClick={() => { setMenuOpen(false); navigate('/diagnostics/profile'); }} className="group flex w-full items-center px-3 py-2 text-sm text-cyan-100 hover:bg-cyan-800 hover:text-white transition-colors">
-                  <UserIcon className="mr-2 h-4 w-4 text-cyan-400 group-hover:text-cyan-300" /> My Profile
-                </button>
-                <button onClick={() => { setMenuOpen(false); navigate('/diagnostics/settings'); }} className="group flex w-full items-center px-3 py-2 text-sm text-cyan-100 hover:bg-cyan-800 hover:text-white transition-colors">
-                  <Settings className="mr-2 h-4 w-4 text-cyan-400 group-hover:text-cyan-300" /> Settings
-                </button>
-                <button onClick={() => { setMenuOpen(false); navigate('/diagnostics/subscription'); }} className="group flex w-full items-center px-3 py-2 text-sm text-cyan-100 hover:bg-cyan-800 hover:text-white transition-colors">
-                  <CreditCard className="mr-2 h-4 w-4 text-cyan-400 group-hover:text-cyan-300" /> Plan & Billing
-                </button>
-                <button onClick={() => { setMenuOpen(false); navigate('/diagnostics/support'); }} className="group flex w-full items-center px-3 py-2 text-sm text-cyan-100 hover:bg-cyan-800 hover:text-white transition-colors">
-                  <HelpCircle className="mr-2 h-4 w-4 text-cyan-400 group-hover:text-cyan-300" /> Help & Support
-                </button>
-              </div>
-              <div className="py-1 border-t border-cyan-800">
-                <button onClick={handleLogoutClick} className="group flex w-full items-center px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors">
-                  <LogOut className="mr-2 h-4 w-4 text-red-400/80 group-hover:text-red-400" /> Sign out
-                </button>
-              </div>
-            </div>
-          )}
-
-          <button 
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="w-full flex items-center justify-between px-3 py-2 bg-cyan-900 hover:bg-cyan-800 rounded-lg transition-colors group cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-700"
-          >
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="flex-shrink-0 h-8 w-8 rounded-full bg-cyan-800 flex items-center justify-center text-white font-bold shadow-sm">
-                {user?.name?.charAt(0) || 'U'}
-              </div>
-              <div className="text-left truncate">
-                <p className="text-sm font-bold text-white truncate w-32 group-hover:text-cyan-300 transition-colors">{user?.name || 'User'}</p>
-                <p className="text-[10px] font-bold text-cyan-400 truncate tracking-wide uppercase">
-                  {user?.role || 'Admin'}
-                </p>
-              </div>
-            </div>
-            <ChevronUp className={`w-4 h-4 text-cyan-500 transition-transform duration-200 ${menuOpen ? 'rotate-180 text-white' : 'group-hover:text-white'}`} />
-          </button>
-        </div>
+        {/* Unified Bottom User Profile */}
+        <SidebarUserProfile />
       </aside>
 
       {/* Main Content Area */}
