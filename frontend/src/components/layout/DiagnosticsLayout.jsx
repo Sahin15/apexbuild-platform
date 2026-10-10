@@ -14,6 +14,7 @@ import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 import PWAInstallBanner from '../common/PWAInstallBanner';
 import OfflineStatusBanner from '../common/OfflineStatusBanner';
 import NotificationPermissionBanner from '../common/NotificationPermissionBanner';
+import PWAUpdatePrompt from '../common/PWAUpdatePrompt';
 
 const DiagnosticsLayout = () => {
   const { user, logout } = useAuth();
@@ -116,6 +117,9 @@ const DiagnosticsLayout = () => {
 
       {/* Mobile Push Notification Permission Prompt */}
       <NotificationPermissionBanner />
+
+      {/* PWA Service Worker App Update Prompt */}
+      <PWAUpdatePrompt />
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-cyan-950 border-r border-cyan-900 fixed inset-y-0 z-20">

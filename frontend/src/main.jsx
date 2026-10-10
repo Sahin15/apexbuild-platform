@@ -7,12 +7,17 @@ import { registerSW } from 'virtual:pwa-register'
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    if (confirm('New update available. Reload to apply?')) {
-      updateSW(true)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('apex-sw-update-available', {
+        detail: { reload: () => updateSW(true) }
+      }));
     }
   },
   onOfflineReady() {
-    console.log('App is ready to work offline.')
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('apex-sw-offline-ready'));
+    }
+    console.log('App is ready to work offline.');
   },
 })
 

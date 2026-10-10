@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Phone, Mail } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Phone, Mail, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
+import { shareSupplierCustomerStatement } from '../../utils/share';
 
 export default function SupplierCustomers() {
   const [customers, setCustomers] = useState([]);
@@ -47,7 +49,8 @@ export default function SupplierCustomers() {
   );
 
   return (
-    <div className="space-y-6">
+    <PullToRefreshContainer onRefresh={fetchCustomers}>
+      <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Customers</h1>
@@ -115,6 +118,13 @@ export default function SupplierCustomers() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
+                      <button 
+                        onClick={() => shareSupplierCustomerStatement(customer)}
+                        className="text-slate-400 hover:text-indigo-600 mr-3"
+                        title="Share Customer Statement"
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
                       <button className="text-slate-400 hover:text-emerald-600 mr-3"><Edit className="w-4 h-4" /></button>
                       <button className="text-slate-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
                     </td>
@@ -165,6 +175,7 @@ export default function SupplierCustomers() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PullToRefreshContainer>
   );
 }

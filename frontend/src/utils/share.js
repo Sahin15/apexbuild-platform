@@ -154,11 +154,106 @@ export function shareDiagnosticsOrder(order, patient) {
   });
 }
 
+/**
+ * Format Contractor Civil Labour & Muster Roll Summary
+ */
+export function shareLabourMusterRoll({ project, date, presentCount, absentCount, totalWorkers, totalEstWages }) {
+  const projName = project?.name || 'Site Project';
+  const text = [
+    `👷 *APEXBUILD - DAILY MUSTER ROLL*`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `🏢 Site: ${projName}`,
+    `📅 Date: ${date || new Date().toLocaleDateString('en-IN')}`,
+    `👥 Headcount: ${presentCount || 0} Present / ${totalWorkers || 0} Deployed`,
+    `❌ Absent: ${absentCount || 0}`,
+    `💰 Est. Day Wages: ₹${Number(totalEstWages || 0).toLocaleString('en-IN')}`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `Generated via ApexBuild OS`
+  ].join('\n');
+
+  return shareContent({
+    title: `Muster Roll - ${projName}`,
+    text
+  });
+}
+
+/**
+ * Format Diagnostics Lab Sample Tube Details
+ */
+export function shareSampleDetails(sample) {
+  const ptName = sample.patient ? `${sample.patient.firstName || ''} ${sample.patient.lastName || ''}`.trim() : 'Patient';
+  const text = [
+    `🧪 *APEXBUILD - DIAGNOSTIC SPECIMEN*`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `🏷️ Barcode: ${sample.barcode || 'N/A'}`,
+    `👤 Patient: ${ptName || 'Patient'}`,
+    `🩸 Specimen: ${sample.sampleType || 'Blood'}`,
+    `🧪 Tube Color: ${sample.tubeConfig?.colorName || sample.tubeColor || 'Standard Tube'}`,
+    `📊 Status: ${sample.status || 'Collected'}`,
+    `📅 Collected: ${new Date(sample.collectedAt || sample.createdAt || Date.now()).toLocaleDateString('en-IN')}`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `Generated via ApexBuild OS`
+  ].join('\n');
+
+  return shareContent({
+    title: `Sample ${sample.barcode || ''} - ${ptName}`,
+    text
+  });
+}
+
+/**
+ * Format Chicken Distributor Customer Balance / Ledger Slip
+ */
+export function shareCustomerLedger(customer) {
+  const text = [
+    `🍗 *APEXBUILD - CUSTOMER LEDGER*`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `🏪 Shop: ${customer.shopName || 'Retail Customer'}`,
+    `👤 Owner: ${customer.ownerName || customer.contactPerson || 'Proprietor'}`,
+    `📞 Phone: ${customer.phoneNumber || customer.phone || 'N/A'}`,
+    `⚠️ Current Balance Due: ₹${Number(customer.outstandingBalance ?? customer.dueAmount ?? customer.balanceDue ?? 0).toLocaleString('en-IN')}`,
+    `📅 As of: ${new Date().toLocaleDateString('en-IN')}`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `Generated via ApexBuild OS`
+  ].join('\n');
+
+  return shareContent({
+    title: `Ledger - ${customer.shopName}`,
+    text
+  });
+}
+
+/**
+ * Format Material Supplier Client Statement
+ */
+export function shareSupplierCustomerStatement(customer) {
+  const text = [
+    `🚛 *APEXBUILD - CLIENT STATEMENT*`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `🏢 Client: ${customer.name || 'Commercial Client'}`,
+    `📞 Phone: ${customer.phone || 'N/A'}`,
+    `⚠️ Outstanding Balance: ₹${Number(customer.outstandingBalance ?? customer.dueAmount ?? customer.balanceDue ?? 0).toLocaleString('en-IN')}`,
+    `💳 Credit Limit: ₹${Number(customer.creditLimit || 0).toLocaleString('en-IN')}`,
+    `📅 As of: ${new Date().toLocaleDateString('en-IN')}`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `Generated via ApexBuild OS`
+  ].join('\n');
+
+  return shareContent({
+    title: `Statement - ${customer.name}`,
+    text
+  });
+}
+
 export default {
   shareContent,
   openWhatsApp,
   shareDistributorDelivery,
   shareCivilDPR,
   shareSupplierOrder,
-  shareDiagnosticsOrder
+  shareDiagnosticsOrder,
+  shareLabourMusterRoll,
+  shareSampleDetails,
+  shareCustomerLedger,
+  shareSupplierCustomerStatement
 };

@@ -29,10 +29,13 @@ import {
   Building2,
   FileCheck,
   Camera,
-  Barcode
+  Barcode,
+  Share2
 } from 'lucide-react';
 import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
+import PullToRefreshContainer from '../components/common/PullToRefreshContainer';
 import haptics from '../utils/haptics';
+import { shareLabourMusterRoll } from '../utils/share';
 
 export default function Labour({ isProjectView = false }) {
   const { id: routeProjectId } = useParams();
@@ -289,7 +292,8 @@ export default function Labour({ isProjectView = false }) {
   const thekedaarList = ['ALL', ...new Set(workers.map(w => w.thekedaar).filter(Boolean))];
 
   return (
-    <div className="space-y-6">
+    <PullToRefreshContainer onRefresh={fetchData}>
+      <div className="space-y-6">
       {/* Top Banner */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-6 rounded-2xl shadow-xl text-white">
         <div className="flex-1 min-w-0 pr-2">
@@ -323,6 +327,24 @@ export default function Labour({ isProjectView = false }) {
           )}
 
           <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => {
+                const pObj = projects.find(p => p._id === projectId);
+                shareLabourMusterRoll({
+                  project: pObj,
+                  date: selectedDate,
+                  presentCount: summary?.totalPresentToday || (workers.length - 1),
+                  absentCount: workers.length - (summary?.totalPresentToday || (workers.length - 1)),
+                  totalWorkers: workers.length,
+                  totalEstWages: summary?.estimatedDayWage || 0
+                });
+              }}
+              title="Share Muster Summary"
+              className="btn bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-2 rounded-lg text-xs inline-flex items-center gap-1.5 shadow-sm whitespace-nowrap flex-shrink-0 transition-all border border-indigo-200"
+            >
+              <Share2 className="w-4 h-4 text-indigo-600 flex-shrink-0" /> <span className="hidden sm:inline">Share Muster</span>
+            </button>
+
             <button
               onClick={() => {
                 setEditingWorkerId(null);
@@ -1521,6 +1543,7 @@ export default function Labour({ isProjectView = false }) {
         title="Scan Worker Badge / ID"
         subtitle="Align the worker badge barcode or QR code"
       />
-    </div>
+      </div>
+    </PullToRefreshContainer>
   );
 }

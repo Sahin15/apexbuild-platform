@@ -13,6 +13,7 @@ import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 import PWAInstallBanner from '../common/PWAInstallBanner';
 import OfflineStatusBanner from '../common/OfflineStatusBanner';
 import NotificationPermissionBanner from '../common/NotificationPermissionBanner';
+import PWAUpdatePrompt from '../common/PWAUpdatePrompt';
 
 const bottomNavItems = [
   { name: 'Projects', href: '/projects', icon: Briefcase, roles: ['OWNER', 'ADMIN', 'PROJECT_MANAGER', 'SITE_ENGINEER', 'SUPERVISOR', 'VIEWER'] },
@@ -65,6 +66,9 @@ export default function Layout() {
 
       {/* Mobile Push Notification Permission Prompt */}
       <NotificationPermissionBanner />
+
+      {/* PWA Service Worker App Update Prompt */}
+      <PWAUpdatePrompt />
 
       {/* Desktop / Tablet Sidebar */}
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Edit2, MessageCircle, Eye, Phone, MapPin, X, Users, Store } from 'lucide-react';
+import { Plus, Search, Edit2, MessageCircle, Eye, Phone, MapPin, X, Users, Store, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
+import { shareCustomerLedger } from '../../utils/share';
 
 export default function DistributorCustomers() {
   const [customers, setCustomers] = useState([]);
@@ -102,7 +104,8 @@ export default function DistributorCustomers() {
   if (loading) return <div className="flex justify-center p-12 h-full items-center"><div className="animate-spin w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full"></div></div>;
 
   return (
-    <div className="space-y-4 px-4 py-4 w-full max-w-md md:max-w-7xl mx-auto pb-24">
+    <PullToRefreshContainer onRefresh={fetchCustomers}>
+      <div className="space-y-4 px-4 py-4 w-full max-w-md md:max-w-7xl mx-auto pb-24">
       {/* Header Info */}
       <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex items-center gap-3">
@@ -179,6 +182,13 @@ export default function DistributorCustomers() {
                     className="flex items-center justify-center w-10 h-10 rounded-xl text-emerald-600 bg-emerald-50 active:bg-emerald-100 transition-colors"
                   >
                     <MessageCircle className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => shareCustomerLedger(customer)}
+                    className="flex items-center justify-center w-10 h-10 rounded-xl text-indigo-600 bg-indigo-50 active:bg-indigo-100 transition-colors"
+                    title="Share Customer Ledger Statement"
+                  >
+                    <Share2 className="w-4 h-4" />
                   </button>
                 </div>
                 <button 
@@ -260,6 +270,7 @@ export default function DistributorCustomers() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PullToRefreshContainer>
   );
 }

@@ -13,6 +13,7 @@ import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 import PWAInstallBanner from '../common/PWAInstallBanner';
 import OfflineStatusBanner from '../common/OfflineStatusBanner';
 import NotificationPermissionBanner from '../common/NotificationPermissionBanner';
+import PWAUpdatePrompt from '../common/PWAUpdatePrompt';
 
 const bottomNavItems = [
   { name: 'Dashboard', href: '/supplier/dashboard', icon: LayoutDashboard, roles: ['OWNER', 'ADMIN', 'MANAGER', 'SALES', 'ACCOUNTANT', 'STAFF'] },
@@ -63,6 +64,9 @@ export default function SupplierLayout() {
 
       {/* Mobile Push Notification Permission Prompt */}
       <NotificationPermissionBanner />
+
+      {/* PWA Service Worker App Update Prompt */}
+      <PWAUpdatePrompt />
 
       {/* Desktop / Tablet Sidebar */}
       <SupplierSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />

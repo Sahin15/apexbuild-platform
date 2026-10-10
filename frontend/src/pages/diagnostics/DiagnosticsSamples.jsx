@@ -14,14 +14,17 @@ import {
   Sparkles,
   Layers,
   ChevronRight,
-  Camera
+  Camera,
+  Share2
 } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import BarcodePrintModal from '../../components/diagnostics/BarcodePrintModal';
 import { getTubeConfig } from '../../components/diagnostics/BarcodeSticker';
 import BarcodeScannerModal from '../../components/common/BarcodeScannerModal';
+import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
 import haptics from '../../utils/haptics';
+import { shareSampleDetails } from '../../utils/share';
 
 const DiagnosticsSamples = () => {
   const [samples, setSamples] = useState([]);
@@ -162,7 +165,8 @@ const DiagnosticsSamples = () => {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in pb-12">
+    <PullToRefreshContainer onRefresh={fetchSamples}>
+      <div className="space-y-6 animate-fade-in pb-12">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -389,6 +393,18 @@ const DiagnosticsSamples = () => {
                   </span>
 
                   <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        shareSampleDetails(sample);
+                      }}
+                      className="inline-flex items-center gap-1 p-1.5 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 rounded-md text-xs font-bold transition-colors active:scale-95"
+                      title="Share Specimen Details"
+                    >
+                      <Share2 className="w-3.5 h-3.5 text-indigo-600" />
+                    </button>
+
                     {sample.status === 'Pending' ? (
                       <button
                         type="button"
@@ -597,7 +613,8 @@ const DiagnosticsSamples = () => {
         title="Scan Specimen Tube"
         subtitle="Align the thermal barcode label inside the targeting reticle"
       />
-    </div>
+      </div>
+    </PullToRefreshContainer>
   );
 };
 
