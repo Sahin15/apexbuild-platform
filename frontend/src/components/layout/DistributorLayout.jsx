@@ -8,6 +8,7 @@ import {
   UsersRound, Truck as TruckIcon
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import Header from './Header';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 
 const navItems = [
@@ -124,12 +125,12 @@ export default function DistributorLayout() {
       {/* Desktop Sidebar (hidden on mobile) */}
       <aside className="hidden md:flex flex-col w-64 bg-slate-900 border-r border-slate-800 text-slate-300 transition-all duration-300 flex-shrink-0 z-30">
         <div className="h-16 flex items-center gap-3 px-6 bg-slate-950 border-b border-slate-800 shrink-0">
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center shadow-lg">
-            <span className="text-white font-black text-sm">AS</span>
+          <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-amber-600/30">
+            DT
           </div>
-          <div>
-            <h1 className="text-lg font-black text-white leading-tight">ApexSupply</h1>
-            <p className="text-[10px] text-emerald-400 font-bold tracking-wider uppercase">Distributor OS</p>
+          <div className="flex flex-col">
+            <span className="text-white text-base font-bold tracking-tight leading-none">ApexBuild</span>
+            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mt-0.5">Distributor OS</span>
           </div>
         </div>
 
@@ -208,64 +209,8 @@ export default function DistributorLayout() {
 
       {/* Main Content Area */}
       <div className="flex flex-col flex-1 relative w-full">
-        <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 md:px-8 z-20 flex-shrink-0 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="md:hidden w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shadow-sm">
-              <span className="text-white font-black text-sm">AS</span>
-            </div>
-            <h1 className="text-lg md:text-2xl font-bold text-slate-800">{getPageTitle()}</h1>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <button className="relative p-2 text-slate-400 hover:text-emerald-600 transition-colors bg-slate-50 hover:bg-emerald-50 rounded-full">
-              <span className="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-              <Bell className="h-5 w-5" />
-            </button>
-            
-            <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
-
-            <div className="relative" ref={topMenuRef}>
-              <button onClick={() => setTopMenuOpen(!topMenuOpen)} className="flex items-center gap-3 focus:outline-none group">
-                <div className="hidden md:block text-right">
-                  <p className="text-sm font-bold text-slate-800 leading-tight group-hover:text-emerald-600 transition-colors">{user?.name || 'User'}</p>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{user?.role || 'Role'}</p>
-                </div>
-                <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-black border-2 border-emerald-200 group-hover:border-emerald-400 transition-colors shadow-sm">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
-                </div>
-              </button>
-
-              {topMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform transition-all z-50">
-                  <div className="p-4 border-b border-slate-50 bg-slate-50 md:hidden">
-                    <p className="text-sm font-bold text-slate-800 truncate">{user?.name || 'User'}</p>
-                    <p className="text-xs font-medium text-slate-500 truncate mt-0.5">{user?.email || 'user@example.com'}</p>
-                    <span className="inline-block mt-2 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded uppercase">
-                      {user?.role}
-                    </span>
-                  </div>
-                  
-                  <div className="py-2">
-                    <button onClick={() => { setTopMenuOpen(false); navigate('/distributor/profile'); }} className="group flex w-full items-center px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
-                      <UserIcon className="mr-3 h-4 w-4 text-slate-400 group-hover:text-emerald-600" /> Edit Profile
-                    </button>
-                    <button onClick={() => { setTopMenuOpen(false); navigate('/distributor/settings'); }} className="group flex w-full items-center px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
-                      <Settings className="mr-3 h-4 w-4 text-slate-400 group-hover:text-emerald-600" /> Account Settings
-                    </button>
-                    <button onClick={() => { setTopMenuOpen(false); navigate('/distributor/support'); }} className="group flex w-full items-center px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
-                      <HelpCircle className="mr-3 h-4 w-4 text-slate-400 group-hover:text-emerald-600" /> Help & Support
-                    </button>
-                  </div>
-                  <div className="py-2 border-t border-slate-50">
-                    <button onClick={handleLogoutClick} className="group flex w-full items-center px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors">
-                      <LogOut className="mr-3 h-4 w-4 text-red-400 group-hover:text-red-600" /> Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
+        {/* Unified Top Navbar */}
+        <Header setSidebarOpen={setIsDrawerOpen} />
 
         {/* Dynamic Page Content */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 relative pb-20 md:pb-8 md:p-8">

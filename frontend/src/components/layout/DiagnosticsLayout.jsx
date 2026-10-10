@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useEntitlements } from '../../context/EntitlementContext';
+import Header from './Header';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 
 const DiagnosticsLayout = () => {
@@ -102,13 +103,13 @@ const DiagnosticsLayout = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-cyan-950 border-r border-cyan-900 fixed inset-y-0 z-20">
-        <div className="h-16 flex items-center gap-3 px-6 bg-cyan-900 border-b border-cyan-800 shrink-0">
-          <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
-            <span className="text-white font-black text-sm">DX</span>
+        <div className="h-16 flex items-center gap-3 px-6 bg-cyan-950 border-b border-cyan-900 shrink-0">
+          <div className="w-8 h-8 bg-cyan-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-cyan-600/30">
+            DX
           </div>
-          <div>
-            <h1 className="text-lg font-black text-white leading-tight">ApexHealth</h1>
-            <p className="text-[10px] text-cyan-400 font-bold tracking-wider uppercase">Diagnostics OS</p>
+          <div className="flex flex-col">
+            <span className="text-white text-base font-bold tracking-tight leading-none">ApexBuild</span>
+            <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider mt-0.5">Diagnostics OS</span>
           </div>
         </div>
 
@@ -218,74 +219,7 @@ const DiagnosticsLayout = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 md:ml-64 flex flex-col min-h-screen pb-16 md:pb-0">
-        {/* Mobile Header */}
-        <header className="md:hidden bg-white border-b border-gray-200 h-14 flex items-center justify-between px-4 sticky top-0 z-30 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-cyan-600 rounded-lg flex items-center justify-center shadow-sm">
-              <span className="text-white font-black text-xs">DX</span>
-            </div>
-            <span className="font-bold text-gray-800">{getPageTitle()}</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <button className="text-gray-500 hover:text-gray-700 relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-            </button>
-            <div className="h-4 w-px bg-gray-300"></div>
-            <button onClick={() => navigate('/diagnostics/profile')} className="h-7 w-7 rounded-full bg-cyan-100 flex items-center justify-center border border-cyan-200">
-              <span className="text-cyan-700 font-bold text-xs">{user?.name?.charAt(0) || 'U'}</span>
-            </button>
-          </div>
-        </header>
-
-        {/* Desktop Header */}
-        <header className="hidden md:flex bg-white border-b border-gray-200 h-16 items-center justify-between px-8 sticky top-0 z-10 shadow-sm">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-gray-800 truncate">{getPageTitle()}</h1>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <button className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-full transition-colors relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
-            </button>
-
-            <div className="h-6 w-px bg-gray-200"></div>
-
-            <div className="relative" ref={topMenuRef}>
-              <button onClick={() => setTopMenuOpen(!topMenuOpen)} className="flex items-center gap-3 focus:outline-none group">
-                <div className="text-right">
-                  <p className="text-sm font-bold text-gray-800 leading-tight group-hover:text-cyan-600 transition-colors">{user?.name || 'User'}</p>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{user?.role || 'Role'}</p>
-                </div>
-                <div className="h-10 w-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 font-black border-2 border-cyan-200 group-hover:border-cyan-400 transition-colors shadow-sm">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
-                </div>
-              </button>
-
-              {topMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transform transition-all z-50">
-                  <div className="py-2">
-                    <button onClick={() => { setTopMenuOpen(false); navigate('/diagnostics/profile'); }} className="group flex w-full items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-cyan-50 hover:text-cyan-600 transition-colors">
-                      <UserIcon className="mr-3 h-4 w-4 text-gray-400 group-hover:text-cyan-600" /> Edit Profile
-                    </button>
-                    <button onClick={() => { setTopMenuOpen(false); navigate('/diagnostics/settings'); }} className="group flex w-full items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-cyan-50 hover:text-cyan-600 transition-colors">
-                      <Settings className="mr-3 h-4 w-4 text-gray-400 group-hover:text-cyan-600" /> Account Settings
-                    </button>
-                    <button onClick={() => { setTopMenuOpen(false); navigate('/diagnostics/support'); }} className="group flex w-full items-center px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-cyan-50 hover:text-cyan-600 transition-colors">
-                      <HelpCircle className="mr-3 h-4 w-4 text-gray-400 group-hover:text-cyan-600" /> Help & Support
-                    </button>
-                  </div>
-                  <div className="py-2 border-t border-gray-50">
-                    <button onClick={handleLogoutClick} className="group flex w-full items-center px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors">
-                      <LogOut className="mr-3 h-4 w-4 text-red-400 group-hover:text-red-600" /> Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
+        <Header setSidebarOpen={setIsMoreMenuOpen} />
 
         {/* Content Outlet */}
         <div className="flex-1 overflow-x-hidden p-4 md:p-8">

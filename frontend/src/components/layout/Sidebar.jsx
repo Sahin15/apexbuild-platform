@@ -89,11 +89,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, navigation: custo
       `}>
         {/* Logo area */}
         <div className="flex items-center justify-between h-16 px-6 bg-navy-900 border-b border-navy-800">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary-500 rounded flex items-center justify-center text-white font-bold text-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-blue-600/30">
               A
             </div>
-            <span className="text-white text-xl font-semibold tracking-tight">{customTitle || 'ApexBuild'}</span>
+            <div className="flex flex-col">
+              <span className="text-white text-base font-bold tracking-tight leading-none">ApexBuild</span>
+              <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mt-0.5">{customSubtitle || 'Contractor OS'}</span>
+            </div>
           </div>
           <button 
             className="lg:hidden text-slate-400 hover:text-white"

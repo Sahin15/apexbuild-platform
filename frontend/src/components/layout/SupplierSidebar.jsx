@@ -84,13 +84,13 @@ export default function SupplierSidebar({ sidebarOpen, setSidebarOpen }) {
       `}>
         {/* Logo area */}
         <div className="flex items-center justify-between h-16 px-6 bg-slate-900 border-b border-slate-800">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <div className="w-8 h-8 shrink-0 bg-emerald-500 rounded flex items-center justify-center text-white font-bold text-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 shrink-0 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-emerald-600/30">
               S
             </div>
             <div className="flex flex-col">
-              <span className="text-white text-lg font-bold tracking-tight leading-none mb-0.5">ApexSupply</span>
-              <span className="text-emerald-400 text-[10px] font-bold tracking-wider leading-none">MATERIAL SUPPLIER</span>
+              <span className="text-white text-base font-bold tracking-tight leading-none">ApexBuild</span>
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mt-0.5">Supplier OS</span>
             </div>
           </div>
           <button 
