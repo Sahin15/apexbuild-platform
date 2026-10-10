@@ -46,7 +46,16 @@ export default function DistributorSales() {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { 
+    fetchData(); 
+    const handleReconnect = () => fetchData();
+    window.addEventListener('apex-network-reconnect', handleReconnect);
+    window.addEventListener('online', handleReconnect);
+    return () => {
+      window.removeEventListener('apex-network-reconnect', handleReconnect);
+      window.removeEventListener('online', handleReconnect);
+    };
+  }, []);
 
   // Auto-fill selling rate when customer changes
   useEffect(() => {

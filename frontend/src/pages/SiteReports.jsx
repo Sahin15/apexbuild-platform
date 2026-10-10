@@ -150,6 +150,16 @@ export default function SiteReports({ isProjectView }) {
   useEffect(() => {
     fetchReports();
     fetchSummary();
+    const handleReconnect = () => {
+      fetchReports();
+      fetchSummary();
+    };
+    window.addEventListener('apex-network-reconnect', handleReconnect);
+    window.addEventListener('online', handleReconnect);
+    return () => {
+      window.removeEventListener('apex-network-reconnect', handleReconnect);
+      window.removeEventListener('online', handleReconnect);
+    };
   }, [projectId, statusFilter]);
 
   // Form Dynamic Array Handlers

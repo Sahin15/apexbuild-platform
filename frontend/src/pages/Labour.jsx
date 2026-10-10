@@ -143,6 +143,13 @@ export default function Labour({ isProjectView = false }) {
 
   useEffect(() => {
     fetchData();
+    const handleReconnect = () => fetchData();
+    window.addEventListener('apex-network-reconnect', handleReconnect);
+    window.addEventListener('online', handleReconnect);
+    return () => {
+      window.removeEventListener('apex-network-reconnect', handleReconnect);
+      window.removeEventListener('online', handleReconnect);
+    };
   }, [projectId]);
 
   // Handle Save Worker
