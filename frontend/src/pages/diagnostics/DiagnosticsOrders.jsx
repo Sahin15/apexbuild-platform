@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, Plus, Filter, ClipboardList, X, FileText, User, Activity, Eye, Receipt, Share2, PenTool } from 'lucide-react';
+import { Search, Plus, Filter, ClipboardList, X, FileText, User, Activity, Eye, Receipt, Share2, PenTool, Camera } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import DiagnosticsReportModal from '../../components/diagnostics/DiagnosticsReportModal';
@@ -7,10 +7,12 @@ import PaymentReceiptModal from '../../components/diagnostics/PaymentReceiptModa
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 import SignaturePadModal from '../../components/common/SignaturePadModal';
+import CameraPhotoCaptureModal from '../../components/common/CameraPhotoCaptureModal';
 import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
 import haptics from '../../utils/haptics';
 import { enqueueSyncOperation } from '../../services/syncQueue';
 import { shareDiagnosticsOrder } from '../../utils/share';
+import { formatBytes } from '../../utils/imageCompressor';
 
 const DiagnosticsOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -35,6 +37,11 @@ const DiagnosticsOrders = () => {
   const [patientSignature, setPatientSignature] = useState(null);
   const [signedBy, setSignedBy] = useState('');
 
+  // Prescription Photo State
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
+  const [prescriptionPhoto, setPrescriptionPhoto] = useState(null);
+  const [prescriptionPhotoSize, setPrescriptionPhotoSize] = useState(null);
+
   // Offline Draft Hook
   const orderFormData = useMemo(() => ({
     selectedPatient,
@@ -44,8 +51,10 @@ const DiagnosticsOrders = () => {
     isHomeCollection,
     collectionAddress,
     patientSignature,
-    signedBy
-  }), [selectedPatient, selectedTests, discount, paidAmount, isHomeCollection, collectionAddress, patientSignature, signedBy]);
+    signedBy,
+    prescriptionPhoto,
+    prescriptionPhotoSize
+  }), [selectedPatient, selectedTests, discount, paidAmount, isHomeCollection, collectionAddress, patientSignature, signedBy, prescriptionPhoto, prescriptionPhotoSize]);
 
   const { hasDraft, draftData, lastSaved, clearDraft } = useOfflineDraft('diagnostics_order', orderFormData, isModalOpen);
 
@@ -59,6 +68,8 @@ const DiagnosticsOrders = () => {
       if (draftData.collectionAddress !== undefined) setCollectionAddress(draftData.collectionAddress);
       if (draftData.patientSignature !== undefined) setPatientSignature(draftData.patientSignature);
       if (draftData.signedBy !== undefined) setSignedBy(draftData.signedBy);
+      if (draftData.prescriptionPhoto !== undefined) setPrescriptionPhoto(draftData.prescriptionPhoto);
+      if (draftData.prescriptionPhotoSize !== undefined) setPrescriptionPhotoSize(draftData.prescriptionPhotoSize);
       toast.success('Test order draft restored!');
     }
   };
@@ -171,7 +182,9 @@ const DiagnosticsOrders = () => {
         isHomeCollection,
         homeCollectionDetails: isHomeCollection ? { address: collectionAddress } : undefined,
         patientSignature,
-        signedBy
+        signedBy,
+        prescriptionPhoto,
+        prescriptionPhotoSize
       };
 
       if (!navigator.onLine) {
@@ -197,6 +210,8 @@ const DiagnosticsOrders = () => {
         setCollectionAddress('');
         setPatientSignature(null);
         setSignedBy('');
+        setPrescriptionPhoto(null);
+        setPrescriptionPhotoSize(null);
         return;
       }
 
@@ -216,6 +231,8 @@ const DiagnosticsOrders = () => {
       setCollectionAddress('');
       setPatientSignature(null);
       setSignedBy('');
+      setPrescriptionPhoto(null);
+      setPrescriptionPhotoSize(null);
     } catch (error) {
       haptics.error();
       toast.error(error.response?.data?.message || 'Error creating order');
@@ -711,6 +728,49 @@ const DiagnosticsOrders = () => {
                       {patientSignature ? 'Re-sign' : 'Get Signature'}
                     </button>
                   </div>
+
+                  {/* Doctor Prescription / Rx Slip Photo */}
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                        <Camera className="w-4 h-4" />
+                      </div>
+                      <div className="truncate">
+                        <p className="text-xs font-bold text-slate-800">Doctor Prescription Photo</p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {prescriptionPhoto 
+                            ? `Captured (${formatBytes(prescriptionPhotoSize || 0)})` 
+                            : 'Snap doctor Rx slip or requisition'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {prescriptionPhoto && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPrescriptionPhoto(null);
+                            setPrescriptionPhotoSize(null);
+                          }}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          title="Remove photo"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setIsCameraModalOpen(true)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                          prescriptionPhoto 
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                            : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-2xs'
+                        }`}
+                      >
+                        {prescriptionPhoto ? 'Retake' : 'Take Photo'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
               </div>
@@ -834,6 +894,20 @@ const DiagnosticsOrders = () => {
         onSave={({ signatureDataUrl, signerName }) => {
           setPatientSignature(signatureDataUrl);
           setSignedBy(signerName);
+        }}
+      />
+
+      {/* Mobile Camera Doctor Prescription Photo Capture */}
+      <CameraPhotoCaptureModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        title="Capture Doctor Prescription (Rx)"
+        subtitle="Align handwritten prescription or requisition slip inside frame"
+        instructionGuide="Ensure doctor's notes, clinic letterhead, and tests are sharp"
+        onCapture={(result) => {
+          setPrescriptionPhoto(result.dataUrl);
+          setPrescriptionPhotoSize(result.compressedBytes);
+          toast.success(`Prescription photo captured & compressed (${formatBytes(result.compressedBytes)})`);
         }}
       />
       </div>

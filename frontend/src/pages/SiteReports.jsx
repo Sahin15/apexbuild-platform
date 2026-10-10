@@ -41,11 +41,13 @@ import useOfflineDraft from '../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../components/common/OfflineDraftIndicator';
 import BarcodeScannerModal from '../components/common/BarcodeScannerModal';
 import SignaturePadModal from '../components/common/SignaturePadModal';
+import CameraPhotoCaptureModal from '../components/common/CameraPhotoCaptureModal';
 import PullToRefreshContainer from '../components/common/PullToRefreshContainer';
 import haptics from '../utils/haptics';
 import { notifyDprSubmitted } from '../utils/notifications';
 import { enqueueSyncOperation } from '../services/syncQueue';
 import { shareCivilDPR } from '../utils/share';
+import { formatBytes } from '../utils/imageCompressor';
 
 export default function SiteReports({ isProjectView }) {
   const { id: routeProjectId } = useParams();
@@ -107,11 +109,13 @@ export default function SiteReports({ isProjectView }) {
     nextDayPlan: 'Commence M30 design mix pour for Raft Grid C1-E4. Position backup needle vibrators.',
     status: 'SUBMITTED',
     engineerSignature: null,
-    signedBy: ''
+    signedBy: '',
+    sitePhotos: []
   };
 
   const [formData, setFormData] = useState(initialForm);
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
 
   // Offline Draft Hook
   const dprDraftKey = `contractor_dpr_${projectId || routeProjectId || 'default'}`;
@@ -1554,6 +1558,41 @@ export default function SiteReports({ isProjectView }) {
                 )}
               </div>
 
+              {/* Attached Site Photos Strip */}
+              {formData.sitePhotos?.length > 0 && (
+                <div className="px-4 py-2.5 bg-slate-100/90 border-t border-slate-200 flex items-center gap-2 overflow-x-auto">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0 flex items-center gap-1">
+                    <Camera className="w-3.5 h-3.5 text-amber-600" /> Photos:
+                  </span>
+                  {formData.sitePhotos.map((photo, idx) => (
+                    <div key={idx} className="relative group shrink-0 w-12 h-12 rounded-lg border border-slate-300 overflow-hidden bg-black/10">
+                      <img src={photo.dataUrl} alt={`Site Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            sitePhotos: prev.sitePhotos.filter((_, i) => i !== idx)
+                          }));
+                        }}
+                        className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-black/60 text-white hover:bg-red-500 transition-colors"
+                        title="Remove photo"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setIsCameraModalOpen(true)}
+                    className="shrink-0 w-12 h-12 rounded-lg border-2 border-dashed border-slate-300 hover:border-amber-400 text-slate-400 hover:text-amber-600 flex items-center justify-center transition-colors"
+                    title="Add another photo"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
               {/* Modal Footer */}
               <div className="p-3 sm:p-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0 sticky bottom-0">
                 <div className="flex items-center justify-between sm:justify-start gap-2">
@@ -1567,6 +1606,20 @@ export default function SiteReports({ isProjectView }) {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {/* Camera Photo Capture Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsCameraModalOpen(true)}
+                    className={`btn text-xs px-3.5 py-2.5 rounded-lg flex items-center gap-1.5 transition-all active:scale-95 ${
+                      formData.sitePhotos?.length > 0
+                        ? 'bg-amber-50 text-amber-800 border border-amber-300 font-bold'
+                        : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 font-semibold'
+                    }`}
+                  >
+                    <Camera className="w-3.5 h-3.5 text-amber-600" />
+                    <span>{formData.sitePhotos?.length > 0 ? `Photos (${formData.sitePhotos.length})` : 'Add Photo'}</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => setIsSignatureModalOpen(true)}
@@ -2112,6 +2165,26 @@ export default function SiteReports({ isProjectView }) {
             engineerSignature: signatureDataUrl,
             signedBy: signerName
           }));
+        }}
+      />
+
+      {/* Mobile Camera Site Progress & Defect Photo Capture */}
+      <CameraPhotoCaptureModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        title="Capture DPR Site Progress Photo"
+        subtitle="Capture rebar, shuttering, concrete, or site inspections"
+        instructionGuide="Frame construction activity or inspection item clearly"
+        onCapture={(result) => {
+          setFormData(prev => ({
+            ...prev,
+            sitePhotos: [...(prev.sitePhotos || []), {
+              dataUrl: result.dataUrl,
+              size: result.compressedBytes,
+              capturedAt: new Date().toISOString()
+            }]
+          }));
+          toast.success(`Site photo captured & compressed (${formatBytes(result.compressedBytes)})`);
         }}
       />
       </div>

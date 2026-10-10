@@ -8,11 +8,13 @@ import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 import BarcodeScannerModal from '../../components/common/BarcodeScannerModal';
 import SignaturePadModal from '../../components/common/SignaturePadModal';
+import CameraPhotoCaptureModal from '../../components/common/CameraPhotoCaptureModal';
 import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
 import haptics from '../../utils/haptics';
 import { notifyDeliveryRecorded, notifyLowStock } from '../../utils/notifications';
 import { enqueueSyncOperation } from '../../services/syncQueue';
 import { shareDistributorDelivery } from '../../utils/share';
+import { formatBytes } from '../../utils/imageCompressor';
 
 export default function DistributorSales() {
   const [sales, setSales] = useState([]);
@@ -25,6 +27,7 @@ export default function DistributorSales() {
   const [activeReceipt, setActiveReceipt] = useState(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     customerId: '',
@@ -35,7 +38,9 @@ export default function DistributorSales() {
     paidAmount: '',
     paymentMethod: 'CASH',
     customerSignature: null,
-    signedBy: ''
+    signedBy: '',
+    proofPhoto: null,
+    proofPhotoSize: null
   });
 
   const { hasDraft, draftData, lastSaved, clearDraft } = useOfflineDraft('distributor_delivery', formData, showModal);
@@ -99,7 +104,7 @@ export default function DistributorSales() {
       toast.success('Offline mode: Delivery saved to sync queue! Will upload automatically once online.');
       clearDraft();
       setShowModal(false);
-      setFormData({ customerId: '', weight: '', sellingRate: '', discount: '', otherCharges: '', paidAmount: '', paymentMethod: 'CASH', customerSignature: null, signedBy: '' });
+      setFormData({ customerId: '', weight: '', sellingRate: '', discount: '', otherCharges: '', paidAmount: '', paymentMethod: 'CASH', customerSignature: null, signedBy: '', proofPhoto: null, proofPhotoSize: null });
       return;
     }
 
@@ -119,7 +124,7 @@ export default function DistributorSales() {
       }
       clearDraft();
       setShowModal(false);
-      setFormData({ customerId: '', weight: '', sellingRate: '', discount: '', otherCharges: '', paidAmount: '', paymentMethod: 'CASH', customerSignature: null, signedBy: '' });
+      setFormData({ customerId: '', weight: '', sellingRate: '', discount: '', otherCharges: '', paidAmount: '', paymentMethod: 'CASH', customerSignature: null, signedBy: '', proofPhoto: null, proofPhotoSize: null });
       fetchData();
     } catch (error) {
       haptics.error();
@@ -387,6 +392,46 @@ export default function DistributorSales() {
                     {formData.customerSignature ? 'Re-sign' : 'Get Signature'}
                   </button>
                 </div>
+
+                {/* Weighing Scale & Proof Photo Capture */}
+                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                      <Camera className="w-4 h-4" />
+                    </div>
+                    <div className="truncate">
+                      <p className="text-xs font-bold text-slate-800">Weighing Scale Photo</p>
+                      <p className="text-[11px] text-slate-500 truncate">
+                        {formData.proofPhoto 
+                          ? `Captured (${formatBytes(formData.proofPhotoSize || 0)})` 
+                          : 'Snap scale display or delivery crates'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {formData.proofPhoto && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, proofPhoto: null, proofPhotoSize: null }))}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        title="Remove photo"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsCameraModalOpen(true)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                        formData.proofPhoto 
+                          ? 'bg-amber-50 text-amber-700 border border-amber-200' 
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-2xs'
+                      }`}
+                    >
+                      {formData.proofPhoto ? 'Retake' : 'Take Photo'}
+                    </button>
+                  </div>
+                </div>
               </form>
             </div>
             
@@ -431,6 +476,23 @@ export default function DistributorSales() {
             customerSignature: signatureDataUrl,
             signedBy: signerName
           }));
+        }}
+      />
+
+      {/* Mobile Camera Photo Capture & Client Compression */}
+      <CameraPhotoCaptureModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        title="Weighing Scale / Crate Photo"
+        subtitle="Align weighing scale display or loaded crates"
+        instructionGuide="Ensure scale digital numbers are sharp and legible"
+        onCapture={(result) => {
+          setFormData(prev => ({
+            ...prev,
+            proofPhoto: result.dataUrl,
+            proofPhotoSize: result.compressedBytes
+          }));
+          toast.success(`Scale photo compressed (${formatBytes(result.compressedBytes)})`);
         }}
       />
       </div>

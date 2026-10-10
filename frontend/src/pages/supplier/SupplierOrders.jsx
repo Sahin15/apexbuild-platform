@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, ShoppingCart, Truck, ExternalLink, Share2, PenTool } from 'lucide-react';
+import { Search, Plus, ShoppingCart, Truck, ExternalLink, Share2, PenTool, Camera, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import useOfflineDraft from '../../hooks/useOfflineDraft';
 import OfflineDraftIndicator from '../../components/common/OfflineDraftIndicator';
 import SignaturePadModal from '../../components/common/SignaturePadModal';
+import CameraPhotoCaptureModal from '../../components/common/CameraPhotoCaptureModal';
 import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
 import haptics from '../../utils/haptics';
 import { notifyOrderCreated } from '../../utils/notifications';
 import { enqueueSyncOperation } from '../../services/syncQueue';
 import { shareSupplierOrder } from '../../utils/share';
+import { formatBytes } from '../../utils/imageCompressor';
 
 export default function SupplierOrders() {
   const [orders, setOrders] = useState([]);
@@ -23,6 +25,7 @@ export default function SupplierOrders() {
   const [drivers, setDrivers] = useState([]);
   
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     customer: '',
@@ -35,7 +38,9 @@ export default function SupplierOrders() {
     vehicle: '',
     driver: '',
     receiverSignature: null,
-    signedBy: ''
+    signedBy: '',
+    challanPhoto: null,
+    challanPhotoSize: null
   });
 
   const { hasDraft, draftData, lastSaved, clearDraft } = useOfflineDraft('supplier_order', formData, showModal);
@@ -180,7 +185,7 @@ export default function SupplierOrders() {
       toast.success('Offline mode: Sales order saved to sync queue! Will upload automatically once online.');
       clearDraft();
       setShowModal(false);
-      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '', receiverSignature: null, signedBy: '' });
+      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '', receiverSignature: null, signedBy: '', challanPhoto: null, challanPhotoSize: null });
       return;
     }
 
@@ -197,7 +202,7 @@ export default function SupplierOrders() {
       clearDraft();
       setShowModal(false);
       fetchData();
-      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '', receiverSignature: null, signedBy: '' });
+      setFormData({ customer: '', orderDate: new Date().toISOString().split('T')[0], items: [], transportCost: 0, otherCost: 0, paidAmount: 0, deliverImmediately: false, vehicle: '', driver: '', receiverSignature: null, signedBy: '', challanPhoto: null, challanPhotoSize: null });
     } catch (error) {
       haptics.error();
       toast.error(error.response?.data?.message || 'Failed to create order');
@@ -564,6 +569,46 @@ export default function SupplierOrders() {
                       {formData.receiverSignature ? 'Re-sign' : 'Get Signature'}
                     </button>
                   </div>
+
+                  {/* Physical Gate Challan / Delivery Proof Photo */}
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                        <Camera className="w-4 h-4" />
+                      </div>
+                      <div className="truncate">
+                        <p className="text-xs font-bold text-slate-800">Gate Challan Photo</p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {formData.challanPhoto 
+                            ? `Captured (${formatBytes(formData.challanPhotoSize || 0)})` 
+                            : 'Snap signed gate pass / delivery slip'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {formData.challanPhoto && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, challanPhoto: null, challanPhotoSize: null }))}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          title="Remove photo"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setIsCameraModalOpen(true)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                          formData.challanPhoto 
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200' 
+                            : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-2xs'
+                        }`}
+                      >
+                        {formData.challanPhoto ? 'Retake' : 'Take Photo'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </form>
             </div>
@@ -663,6 +708,13 @@ export default function SupplierOrders() {
                       <p className="text-xs font-bold text-slate-700 mt-1">{selectedOrder.signedBy || 'Authorized Receiver'}</p>
                     </div>
                   )}
+
+                  {selectedOrder.challanPhoto && (
+                    <div className="border-t border-dashed border-slate-200 pt-3 text-center">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-1">Gate Pass / Stamped Challan</p>
+                      <img src={selectedOrder.challanPhoto} alt="Delivery Challan Proof" className="max-h-28 mx-auto rounded-lg object-contain shadow-2xs border border-slate-200" />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -688,6 +740,23 @@ export default function SupplierOrders() {
             receiverSignature: signatureDataUrl,
             signedBy: signerName
           }));
+        }}
+      />
+
+      {/* Mobile Camera Gate Challan Photo Capture */}
+      <CameraPhotoCaptureModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        title="Capture Gate Challan / Delivery Slip"
+        subtitle="Align physical delivery challan or gate pass inside frame"
+        instructionGuide="Ensure challan number, stamps, and signatures are legible"
+        onCapture={(result) => {
+          setFormData(prev => ({
+            ...prev,
+            challanPhoto: result.dataUrl,
+            challanPhotoSize: result.compressedBytes
+          }));
+          toast.success(`Challan photo captured & compressed (${formatBytes(result.compressedBytes)})`);
         }}
       />
       </div>
