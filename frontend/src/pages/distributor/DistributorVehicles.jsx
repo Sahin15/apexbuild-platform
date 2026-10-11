@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Truck, Plus, X, Search, ShieldCheck, Wrench, Navigation2, History, Calendar, IndianRupee } from 'lucide-react';
+import { Truck, Plus, X, Search, ShieldCheck, Wrench, Navigation2, History, Calendar, IndianRupee, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import CustomSelect from '../../components/common/CustomSelect';
+import LiveTelematicsMap from '../../components/telematics/LiveTelematicsMap';
 
 export default function DistributorVehicles() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('map'); // 'map' | 'registry'
   const [vehicles, setVehicles] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -110,7 +112,43 @@ export default function DistributorVehicles() {
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+      {/* View Tabs */}
+      <div className="flex gap-2 p-1 bg-slate-200/80 rounded-2xl w-fit">
+        <button
+          type="button"
+          onClick={() => setActiveTab('map')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+            activeTab === 'map'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span>Live GPS Telematics Map</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('registry')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+            activeTab === 'registry'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Truck className="w-3.5 h-3.5" />
+          <span>Vehicle Registry ({vehicles.length})</span>
+        </button>
+      </div>
+
+      {activeTab === 'map' ? (
+        <LiveTelematicsMap platform="CHICKEN_DISTRIBUTOR" height="520px" />
+      ) : (
+        <>
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
         <Search className="w-5 h-5 text-slate-400" />
         <input 
           type="text" 
@@ -185,6 +223,8 @@ export default function DistributorVehicles() {
             ))
           )}
         </div>
+      )}
+        </>
       )}
 
       {/* Modal */}

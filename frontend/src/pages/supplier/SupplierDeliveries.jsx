@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Truck, PackageCheck, AlertCircle, ArrowRight } from 'lucide-react';
+import { Search, Plus, Truck, PackageCheck, AlertCircle, ArrowRight, Radio } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import LiveTelematicsMap from '../../components/telematics/LiveTelematicsMap';
 
 export default function SupplierDeliveries() {
   const [deliveries, setDeliveries] = useState([]);
@@ -139,6 +140,10 @@ export default function SupplierDeliveries() {
             <button onClick={() => setActiveTab('deliveries')} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'deliveries' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Deliveries</button>
             <button onClick={() => setActiveTab('vehicles')} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'vehicles' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Vehicles</button>
             <button onClick={() => setActiveTab('drivers')} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'drivers' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Drivers</button>
+            <button onClick={() => setActiveTab('telematics')} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${activeTab === 'telematics' ? 'bg-emerald-600 text-white shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'}`}>
+              <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <span>Live Fleet GPS</span>
+            </button>
           </div>
           {activeTab === 'deliveries' && (
             <button onClick={() => { resetForm(); setShowModal(true); }} className="btn btn-primary bg-emerald-600 hover:bg-emerald-700">
@@ -303,6 +308,12 @@ export default function SupplierDeliveries() {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {activeTab === 'telematics' && (
+          <div className="p-4 bg-slate-900">
+            <LiveTelematicsMap platform="MATERIAL_SUPPLIER" height="560px" />
           </div>
         )}
       </div>

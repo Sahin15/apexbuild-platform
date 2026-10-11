@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Truck, MapPin, Play, Square, Settings, Fuel, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { 
+  Truck, MapPin, Play, Square, Settings, Fuel, X, 
+  Navigation, Compass, Gauge, Radio, ShieldCheck, Clock, RefreshCw 
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -32,6 +35,94 @@ export default function DistributorDriver() {
     description: '',
     paymentMethod: 'CASH'
   });
+
+  // Live Telematics & GPS Stream State
+  const [liveGps, setLiveGps] = useState({
+    latitude: null,
+    longitude: null,
+    speed: 0,
+    heading: 0,
+    accuracy: null,
+    altitude: null
+  });
+  const [lastPingTime, setLastPingTime] = useState(null);
+  const [pingCount, setPingCount] = useState(0);
+  const watchIdRef = useRef(null);
+  const lastSentPosRef = useRef(null);
+
+  // Live GPS Telematics Beacon
+  useEffect(() => {
+    if (!activeTrip) {
+      if (watchIdRef.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      return;
+    }
+
+    if (!('geolocation' in navigator)) {
+      toast('Device GPS not supported in browser', { icon: '⚠️' });
+      return;
+    }
+
+    const targetVehicleId = activeTrip.vehicleId?._id || activeTrip.vehicleId;
+
+    const handlePos = async (pos) => {
+      const crd = pos.coords;
+      const speedKmH = crd.speed !== null && crd.speed > 0 ? Math.round(crd.speed * 3.6) : 0;
+      const headingDeg = crd.heading !== null && crd.heading >= 0 ? Math.round(crd.heading) : 0;
+
+      setLiveGps({
+        latitude: crd.latitude,
+        longitude: crd.longitude,
+        speed: speedKmH,
+        heading: headingDeg,
+        accuracy: Math.round(crd.accuracy),
+        altitude: crd.altitude ? Math.round(crd.altitude) : 0
+      });
+
+      // Throttle pings to once every 10s
+      const now = Date.now();
+      if (!lastSentPosRef.current || (now - lastSentPosRef.current.time > 10000)) {
+        lastSentPosRef.current = { time: now, lat: crd.latitude, lng: crd.longitude };
+
+        try {
+          await api.post('/telematics/ping', {
+            vehicleId: targetVehicleId,
+            tripId: activeTrip._id,
+            latitude: crd.latitude,
+            longitude: crd.longitude,
+            accuracy: Math.round(crd.accuracy),
+            speed: speedKmH,
+            heading: headingDeg,
+            altitude: crd.altitude || 0,
+            platform: 'CHICKEN_DISTRIBUTOR'
+          });
+          setLastPingTime(new Date());
+          setPingCount(prev => prev + 1);
+        } catch (err) {
+          // Silent retry on next interval
+        }
+      }
+    };
+
+    const handleErr = (err) => {
+      console.warn('[Driver Telematics] GPS watch error:', err.message);
+    };
+
+    watchIdRef.current = navigator.geolocation.watchPosition(handlePos, handleErr, {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 10000
+    });
+
+    return () => {
+      if (watchIdRef.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+    };
+  }, [activeTrip]);
 
   useEffect(() => {
     fetchData();
@@ -150,7 +241,62 @@ export default function DistributorDriver() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-800">Trip in Progress</h2>
-              <p className="text-sm text-amber-700 font-bold">Driving active...</p>
+              <p className="text-sm text-amber-700 font-bold">Driving active &bull; Broadcasting GPS to depot</p>
+            </div>
+          </div>
+
+          {/* Real-Time GPS Telematics HUD Card */}
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white shadow-lg space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
+                  Live Telemetry Beacon Active
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-slate-400">
+                Pings: {pingCount}
+              </span>
+            </div>
+
+            {/* Digital Speedometer & Metrics */}
+            <div className="grid grid-cols-3 gap-2 text-center pt-1">
+              <div className="bg-white/10 backdrop-blur-xs p-2.5 rounded-xl border border-white/10">
+                <span className="text-[10px] text-slate-400 font-bold uppercase block">Speed</span>
+                <div className="text-xl font-black text-emerald-400 flex items-center justify-center gap-0.5">
+                  <Gauge className="w-4 h-4 mr-0.5 text-emerald-400" />
+                  <span>{liveGps.speed}</span>
+                  <span className="text-[9px] text-slate-300 font-normal">km/h</span>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-xs p-2.5 rounded-xl border border-white/10">
+                <span className="text-[10px] text-slate-400 font-bold uppercase block">Heading</span>
+                <div className="text-xl font-black text-indigo-300 flex items-center justify-center gap-0.5">
+                  <Compass className="w-4 h-4 mr-0.5 text-indigo-400" />
+                  <span>{liveGps.heading}&deg;</span>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-xs p-2.5 rounded-xl border border-white/10">
+                <span className="text-[10px] text-slate-400 font-bold uppercase block">Accuracy</span>
+                <div className="text-xs font-bold text-slate-200 mt-1 flex items-center justify-center gap-0.5">
+                  <Navigation className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{liveGps.accuracy ? `&plusmn;${liveGps.accuracy}m` : 'Locating...'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
+              <span className="truncate">
+                {liveGps.latitude ? `${liveGps.latitude.toFixed(4)}, ${liveGps.longitude.toFixed(4)}` : 'Waiting for GPS fix...'}
+              </span>
+              <span>
+                {lastPingTime ? `Synced ${Math.floor((Date.now() - lastPingTime.getTime()) / 1000)}s ago` : 'Broadcasting...'}
+              </span>
             </div>
           </div>
 

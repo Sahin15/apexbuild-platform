@@ -77,6 +77,9 @@ import pushNotificationRoutes from './routes/pushNotificationRoutes.js';
 // Firebase Cloud Messaging Routes
 import fcmRoutes from './routes/fcmRoutes.js';
 
+// Live Telematics & GPS Tracking Routes
+import telematicsRoutes from './routes/telematicsRoutes.js';
+
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/superadmin', superAdminRoutes);
 app.use('/api/v1/platform', platformRoutes);
@@ -135,6 +138,9 @@ app.use('/api/v1/diagnostics', diagnosticsRoutes);
 // Push Notifications Endpoints
 app.use('/api/v1/notifications', pushNotificationRoutes);
 app.use('/api/v1/fcm', fcmRoutes);
+
+// Live Telematics Endpoints
+app.use('/api/v1/telematics', telematicsRoutes);
 
 // Health Route
 app.get('/api/v1/health', (req, res) => {
