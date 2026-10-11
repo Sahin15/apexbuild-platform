@@ -169,12 +169,6 @@ export default function RestaurantLayout() {
       status: 'active',
       badge: 'Live'
     },
-    { 
-      name: 'Restaurant Settings', 
-      path: '/restaurant/settings', 
-      icon: Settings,
-      status: 'active'
-    },
   ];
 
   const effectivePrimary = primaryColor || '#EA580C';
@@ -479,6 +473,14 @@ export default function RestaurantLayout() {
               >
                 <UserIcon className="h-4 w-4 mr-3 text-slate-400" />
                 My Profile
+              </Link>
+              <Link
+                to="/restaurant/settings"
+                onClick={() => setIsMoreMenuOpen(false)}
+                className="flex items-center px-5 py-3 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                <Settings className="h-4 w-4 mr-3 text-slate-400" />
+                Settings
               </Link>
               <Link
                 to="/restaurant/support"
