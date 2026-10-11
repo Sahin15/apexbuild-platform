@@ -5,6 +5,7 @@ import DistributorStock from '../models/DistributorStock.js';
 import DistributorStockMovement from '../models/DistributorStockMovement.js';
 import DistributorPayment from '../models/DistributorPayment.js';
 import PushNotificationService from '../services/PushNotificationService.js';
+import FcmNotificationService from '../services/FcmNotificationService.js';
 
 export const getSales = async (req, res, next) => {
   try {
@@ -104,6 +105,14 @@ export const createSale = async (req, res, next) => {
       url: '/distributor/deliveries',
       tag: `sale-${newSale[0]._id}`,
       data: { saleId: newSale[0]._id }
+    }).catch(() => {});
+
+    // Dispatch Firebase Cloud Message (FCM) to driver & mobile fleet
+    FcmNotificationService.sendToOrganization(orgId, 'CHICKEN_DISTRIBUTOR', {
+      title: '🚚 Chicken Delivery Dispatched',
+      body: `Delivery recorded for ${customer.shopName}: ${Number(weight)} KG (₹${netAmount.toLocaleString()})`,
+      clickAction: '/distributor/deliveries',
+      data: { saleId: newSale[0]._id.toString() }
     }).catch(() => {});
 
     res.status(201).json({ status: 'success', data: { sale: newSale[0] } });

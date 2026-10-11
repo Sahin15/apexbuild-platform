@@ -5,6 +5,7 @@ import Patient from '../models/Patient.js';
 import Doctor from '../models/Doctor.js';
 import LabPaymentReceipt from '../models/LabPaymentReceipt.js';
 import PushNotificationService from '../services/PushNotificationService.js';
+import FcmNotificationService from '../services/FcmNotificationService.js';
 import AppError from '../utils/AppError.js';
 
 export const getOrders = async (req, res, next) => {
@@ -124,6 +125,14 @@ export const createOrder = async (req, res, next) => {
       url: '/diagnostics/orders',
       tag: `diag-order-${order._id}`,
       data: { orderId: order._id }
+    }).catch(() => {});
+
+    // Dispatch Firebase Cloud Message (FCM) to lab technicians and phlebotomists
+    FcmNotificationService.sendToOrganization(orgId, 'DIAGNOSTICS', {
+      title: order.isHomeCollection ? '🩸 Home Sample Collection Booked' : '🔬 New Diagnostic Order Registered',
+      body: `Order #${order.orderId} for ${populatedOrder.patient?.firstName || 'Patient'} (${populatedOrder.tests?.length || 0} tests)`,
+      clickAction: '/diagnostics/orders',
+      data: { orderId: order._id.toString() }
     }).catch(() => {});
 
     res.status(201).json({

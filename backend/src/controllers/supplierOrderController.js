@@ -6,6 +6,7 @@ import SupplierInventoryLedger from '../models/SupplierInventoryLedger.js';
 import SupplierInvoice from '../models/SupplierInvoice.js';
 import SupplierDelivery from '../models/SupplierDelivery.js';
 import PushNotificationService from '../services/PushNotificationService.js';
+import FcmNotificationService from '../services/FcmNotificationService.js';
 import AppError from '../utils/AppError.js';
 
 export const getOrders = async (req, res, next) => {
@@ -116,6 +117,14 @@ export const createOrder = async (req, res, next) => {
       url: '/supplier/orders',
       tag: `order-${order._id}`,
       data: { orderId: order._id }
+    }).catch(() => {});
+
+    // Dispatch Firebase Cloud Message (FCM) to logistics & warehouse team
+    FcmNotificationService.sendToOrganization(orgId, 'MATERIAL_SUPPLIER', {
+      title: '📦 New Dispatch Order Logged',
+      body: `Order #${orderNumber} logged (Total: ₹${grandTotal.toLocaleString()})`,
+      clickAction: '/supplier/orders',
+      data: { orderId: order._id.toString() }
     }).catch(() => {});
 
     res.status(201).json({ status: 'success', data: { order } });

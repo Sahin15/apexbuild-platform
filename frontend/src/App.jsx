@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { EntitlementProvider } from './context/EntitlementContext';
+import { onForegroundMessage } from './services/firebase';
 import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
@@ -143,11 +145,45 @@ const DiagnosticsIndex = () => {
   return <Navigate to="/diagnostics/dashboard" replace />;
 };
 
+const FcmForegroundListener = () => {
+  const { user } = useAuth();
+  const isSuperadmin = user?.role === 'SUPERADMIN' || user?.organizationId?.businessType === 'SUPERADMIN';
+
+  useEffect(() => {
+    if (!user || isSuperadmin) return;
+
+    const unsubscribe = onForegroundMessage((payload) => {
+      const title = payload.notification?.title || payload.data?.title || 'ApexBuild Alert';
+      const body = payload.notification?.body || payload.data?.body || '';
+
+      toast(
+        (t) => (
+          <div className="flex items-start gap-2.5">
+            <span className="text-xl shrink-0">🔥</span>
+            <div>
+              <p className="font-bold text-xs text-slate-900 leading-snug">{title}</p>
+              {body && <p className="text-xs text-slate-600 mt-0.5 leading-snug">{body}</p>}
+            </div>
+          </div>
+        ),
+        { duration: 5000, position: 'top-right' }
+      );
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [user, isSuperadmin]);
+
+  return null;
+};
+
 function App() {
   return (
     <AuthProvider>
       <EntitlementProvider>
         <Toaster position="top-right" />
+        <FcmForegroundListener />
         <MasqueradeBar />
         <Router>
           <ThemeProvider>

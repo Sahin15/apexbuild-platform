@@ -4,3 +4,5 @@ node_modules/
 *.log
 .vapid-keys.json
 *.vapid-keys.json
+.firebase-service-account.json
+*.firebase-service-account.json
