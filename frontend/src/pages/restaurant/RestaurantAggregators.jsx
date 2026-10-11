@@ -11,6 +11,7 @@ import {
   ExternalLink, CloudRain
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useBrandTheme } from '../../context/ThemeContext';
@@ -172,6 +173,28 @@ export default function RestaurantAggregators() {
       fetchData(true);
     } catch (err) {
       toast.error('Failed to update rider status');
+    }
+  };
+
+  const handleAcceptDirectOrder = async (orderId) => {
+    try {
+      const res = await api.post(`/restaurant/online-order/${orderId}/accept`);
+      toast.success(res.data?.message || 'Order accepted & sent to kitchen!');
+      fetchData(true);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to accept order');
+    }
+  };
+
+  const handleRejectDirectOrder = async (order) => {
+    const reason = window.prompt(`Reject order ${order.orderNumber}? Enter reason:`, 'Kitchen at maximum capacity');
+    if (!reason) return;
+    try {
+      await api.post(`/restaurant/online-order/${order._id}/reject`, { reason });
+      toast.success(`Order ${order.orderNumber} rejected`);
+      fetchData(true);
+    } catch (err) {
+      toast.error('Failed to reject order');
     }
   };
 
@@ -502,6 +525,17 @@ export default function RestaurantAggregators() {
               <span className="font-extrabold text-stone-800 dark:text-stone-200">Active</span>
             </div>
           </div>
+
+          <div className="mt-3">
+            <Link
+              to="/order"
+              target="_blank"
+              className="w-full py-1.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors border border-emerald-200 dark:border-emerald-800"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Open Customer Storefront</span>
+            </Link>
+          </div>
         </div>
 
       </div>
@@ -775,8 +809,25 @@ export default function RestaurantAggregators() {
                         </p>
                       )}
 
-                      {/* Advance Rider Status Button */}
-                      {!isCompleted && (
+                      {/* Advance Rider Status Button or Accept/Reject */}
+                      {order.status === 'PENDING' ? (
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            onClick={() => handleAcceptDirectOrder(order._id)}
+                            className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                          >
+                            <UtensilsCrossed className="w-3.5 h-3.5" />
+                            <span>Accept & Cook</span>
+                          </button>
+                          <button
+                            onClick={() => handleRejectDirectOrder(order)}
+                            className="py-1.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1 border border-rose-200 dark:border-rose-800 transition-all cursor-pointer"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Reject</span>
+                          </button>
+                        </div>
+                      ) : !isCompleted ? (
                         <button
                           onClick={() => handleAdvanceRiderStatus(order)}
                           className="w-full py-1.5 px-3 rounded-xl text-xs font-bold text-stone-800 dark:text-stone-200 bg-white dark:bg-stone-700 hover:bg-stone-100 dark:hover:bg-stone-600 border border-stone-200 dark:border-stone-600 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
@@ -788,7 +839,7 @@ export default function RestaurantAggregators() {
                               : 'Mark Delivered ✅'}
                           </span>
                         </button>
-                      )}
+                      ) : null}
                     </div>
 
                   </div>

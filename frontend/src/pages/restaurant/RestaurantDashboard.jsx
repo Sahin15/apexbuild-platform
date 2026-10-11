@@ -5,7 +5,7 @@ import {
   TrendingUp, Users, Clock, AlertTriangle, CheckCircle2, 
   ArrowRight, Flame, Grid3x3, Plus, Sparkles, Store, 
   Layers, Package, Coffee, ChevronRight, Eye, RefreshCw, Receipt, Truck,
-  Bell, Globe, Check, X, CalendarDays, Phone, Heart, Gift, Briefcase, UserCheck
+  Bell, Globe, Check, X, CalendarDays, Phone, Heart, Gift, Briefcase, UserCheck, Bike, MapPin
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
@@ -34,6 +34,12 @@ export default function RestaurantDashboard() {
   const [rejectionReason, setRejectionReason] = useState('Fully booked for this dining slot');
   const [actionLoading, setActionLoading] = useState(null);
   const [simulatingBooking, setSimulatingBooking] = useState(false);
+
+  const [isRejectOrderModalOpen, setIsRejectOrderModalOpen] = useState(false);
+  const [orderToReject, setOrderToReject] = useState(null);
+  const [deliveryRejectionReason, setDeliveryRejectionReason] = useState('Kitchen at maximum capacity');
+  const [actionLoadingOrder, setActionLoadingOrder] = useState(null);
+  const [simulatingDeliveryOrder, setSimulatingDeliveryOrder] = useState(false);
 
   const fetchDashboardData = useCallback(async (isSilent = false) => {
     try {
@@ -122,6 +128,59 @@ export default function RestaurantDashboard() {
       toast.error('Failed to simulate online booking');
     } finally {
       setSimulatingBooking(false);
+    }
+  };
+
+  const handleAcceptDeliveryOrder = async (orderId) => {
+    try {
+      setActionLoadingOrder(orderId);
+      const res = await api.post(`/restaurant/online-order/${orderId}/accept`);
+      toast.success(res.data?.message || 'Food delivery order accepted & sent to kitchen!');
+      fetchDashboardData(true);
+    } catch (err) {
+      console.error('Accept delivery order error:', err);
+      toast.error(err.response?.data?.message || 'Failed to accept delivery order');
+    } finally {
+      setActionLoadingOrder(null);
+    }
+  };
+
+  const handleOpenRejectOrderModal = (order) => {
+    setOrderToReject(order);
+    setDeliveryRejectionReason('Kitchen at maximum capacity');
+    setIsRejectOrderModalOpen(true);
+  };
+
+  const handleConfirmRejectOrder = async () => {
+    if (!orderToReject) return;
+    try {
+      setActionLoadingOrder(orderToReject._id);
+      await api.post(`/restaurant/online-order/${orderToReject._id}/reject`, {
+        reason: deliveryRejectionReason
+      });
+      toast.success(`Order ${orderToReject.orderNumber} rejected`);
+      setIsRejectOrderModalOpen(false);
+      setOrderToReject(null);
+      fetchDashboardData(true);
+    } catch (err) {
+      console.error('Reject delivery order error:', err);
+      toast.error('Failed to reject delivery order');
+    } finally {
+      setActionLoadingOrder(null);
+    }
+  };
+
+  const handleSimulateDeliveryOrder = async () => {
+    try {
+      setSimulatingDeliveryOrder(true);
+      const res = await api.post('/restaurant/online-order/simulate');
+      toast.success(res.data?.message || 'New online food order simulated! See alert tray.');
+      fetchDashboardData(true);
+    } catch (err) {
+      console.error('Simulate order error:', err);
+      toast.error('Failed to simulate online food order');
+    } finally {
+      setSimulatingDeliveryOrder(false);
     }
   };
 
@@ -358,7 +417,15 @@ export default function RestaurantDashboard() {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 transition-all active:scale-95 cursor-pointer shadow-2xs"
           >
             <Globe className={`w-4 h-4 text-amber-700 ${simulatingBooking ? 'animate-spin' : ''}`} />
-            <span>Simulate Online Booking</span>
+            <span>Simulate Table Booking</span>
+          </button>
+          <button
+            onClick={handleSimulateDeliveryOrder}
+            disabled={simulatingDeliveryOrder}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-emerald-900 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 transition-all active:scale-95 cursor-pointer shadow-2xs"
+          >
+            <Bike className={`w-4 h-4 text-emerald-700 ${simulatingDeliveryOrder ? 'animate-spin' : ''}`} />
+            <span>Simulate Food Order</span>
           </button>
         </div>
       </div>
@@ -506,6 +573,139 @@ export default function RestaurantDashboard() {
 
                     <button
                       onClick={() => handleOpenRejectModal(booking)}
+                      disabled={isActing}
+                      className="py-2 px-3.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-600/40 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Reject</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* CONSTANT INCOMING ONLINE FOOD DELIVERY ORDER TRAY (Shows constantly until any action is taken) */}
+      {liveData?.pendingDeliveryOrders && liveData.pendingDeliveryOrders.length > 0 && (
+        <div className="rounded-3xl border-2 border-emerald-500/80 bg-gradient-to-r from-emerald-950/70 via-stone-900 to-emerald-950/60 p-5 shadow-2xl relative overflow-hidden backdrop-blur-md space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-500/30 pb-3">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-3.5 w-3.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
+              </span>
+              <div>
+                <h3 className="text-base font-black text-white flex items-center gap-2">
+                  <Bike className="w-5 h-5 text-emerald-400 animate-bounce" />
+                  Live Online Food Delivery Orders ({liveData.pendingDeliveryOrders.length} Awaiting Kitchen Acceptance)
+                </h3>
+                <p className="text-xs text-emerald-300/90 font-medium">
+                  Constantly requiring action. These food orders will remain here until you Accept & Send to Kitchen or Reject each order.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                to="/order"
+                target="_blank"
+                className="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-semibold border border-stone-700 flex items-center gap-1.5 transition-colors"
+              >
+                <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Customer Storefront</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Cards for each pending food delivery order */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
+            {liveData.pendingDeliveryOrders.map((ord) => {
+              const isActing = actionLoadingOrder === ord._id;
+
+              return (
+                <div
+                  key={ord._id}
+                  className="rounded-2xl bg-stone-900/90 border border-emerald-500/40 p-4 space-y-3 shadow-lg hover:border-emerald-400 transition-all flex flex-col justify-between"
+                >
+                  <div className="space-y-2">
+                    {/* Top Row: Ref & Guest Name */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white text-base">
+                            {ord.customerName}
+                          </span>
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            {ord.orderNumber}
+                          </span>
+                        </div>
+                        <div className="text-xs text-stone-400 flex items-center gap-1 mt-0.5">
+                          <Phone className="w-3 h-3 text-stone-500" />
+                          <span>{ord.customerPhone}</span>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-sm font-black text-emerald-400 block">
+                          ₹{ord.grandTotal}
+                        </span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase bg-stone-800 text-stone-300 border border-stone-700">
+                          {ord.paymentMethod?.replace(/_/g, ' ')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Delivery Destination */}
+                    <div className="text-xs text-stone-300 flex items-start gap-1.5 bg-stone-800/40 p-2 rounded-xl border border-stone-800">
+                      <MapPin className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
+                      <span className="line-clamp-2">{ord.deliveryAddress}</span>
+                    </div>
+
+                    {/* Ordered Items List */}
+                    <div className="space-y-1 pt-1">
+                      <p className="text-[11px] font-semibold text-stone-400">Order Items ({ord.items?.length || 0}):</p>
+                      <div className="flex flex-wrap gap-1">
+                        {ord.items?.map((it, idx) => (
+                          <span
+                            key={idx}
+                            className="text-[11px] px-2 py-0.5 rounded-md bg-stone-800 text-stone-200 border border-stone-700 flex items-center gap-1"
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${it.veg ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                            <span>{it.name} × {it.quantity}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Cooking Instructions */}
+                    {ord.cookingInstructions && (
+                      <p className="text-xs text-stone-300 italic bg-stone-800/40 p-2 rounded-xl border border-stone-800">
+                        "{ord.cookingInstructions}"
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Accept & Reject Action Buttons */}
+                  <div className="flex items-center gap-2 pt-3 border-t border-stone-800">
+                    <button
+                      onClick={() => handleAcceptDeliveryOrder(ord._id)}
+                      disabled={isActing}
+                      className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow transition-all active:scale-95 cursor-pointer"
+                    >
+                      {isActing ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <>
+                          <ChefHat className="w-3.5 h-3.5" />
+                          <span>Accept & Send to Kitchen</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => handleOpenRejectOrderModal(ord)}
                       disabled={isActing}
                       className="py-2 px-3.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-600/40 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
                     >
@@ -987,6 +1187,80 @@ export default function RestaurantDashboard() {
                 className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition-colors flex items-center gap-1.5"
               >
                 {actionLoading === bookingToReject._id ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <span>Confirm Reject</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REJECT DELIVERY ORDER MODAL */}
+      {isRejectOrderModalOpen && orderToReject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-stone-900 border border-stone-700 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
+                <X className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Reject Delivery Order</h3>
+                <p className="text-xs text-stone-400">Ref: {orderToReject.orderNumber}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-stone-300">
+              Rejecting food delivery for <b className="text-white">{orderToReject.customerName}</b> (₹{orderToReject.grandTotal}).
+            </p>
+
+            <div>
+              <label className="block text-xs font-semibold text-stone-300 mb-1">
+                Reason for Rejection
+              </label>
+              <select
+                value={deliveryRejectionReason}
+                onChange={(e) => setDeliveryRejectionReason(e.target.value)}
+                className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 mb-2"
+              >
+                <option value="Kitchen at maximum capacity">Kitchen at maximum capacity</option>
+                <option value="Delivery address outside 5 km service radius">Delivery address outside 5 km service radius</option>
+                <option value="Selected items sold out / 86'd">Selected items sold out / 86'd</option>
+                <option value="Kitchen closing for shift turnover">Kitchen closing for shift turnover</option>
+                <option value="Adverse weather / delivery rider unavailable">Adverse weather / delivery rider unavailable</option>
+                <option value="Custom reason">Other reason...</option>
+              </select>
+
+              {deliveryRejectionReason === 'Custom reason' && (
+                <input
+                  type="text"
+                  placeholder="Enter specific explanation for customer..."
+                  onChange={(e) => setDeliveryRejectionReason(e.target.value)}
+                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                />
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-stone-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRejectOrderModalOpen(false);
+                  setOrderToReject(null);
+                }}
+                className="px-3.5 py-1.5 rounded-xl text-stone-400 hover:text-white text-xs"
+              >
+                Keep Pending
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmRejectOrder}
+                disabled={actionLoadingOrder === orderToReject._id}
+                className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition-colors flex items-center gap-1.5"
+              >
+                {actionLoadingOrder === orderToReject._id ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <span>Confirm Reject</span>

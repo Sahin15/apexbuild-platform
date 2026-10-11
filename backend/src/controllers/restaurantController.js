@@ -119,6 +119,20 @@ export const getDashboardAnalytics = async (req, res, next) => {
       status: 'PENDING'
     }).populate('tableId', 'tableNumber capacity').sort({ createdAt: -1 });
 
+    // 10. Pending Online Delivery Orders (Incoming food orders waiting for staff accept/reject)
+    const pendingDeliveryOrders = await RestaurantOrder.find({
+      organizationId,
+      orderType: 'DELIVERY',
+      status: 'PENDING'
+    }).sort({ createdAt: -1 });
+
+    // 11. Active Delivery Pipeline
+    const activeDeliveryOrders = await RestaurantOrder.find({
+      organizationId,
+      orderType: 'DELIVERY',
+      status: { $in: ['CONFIRMED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY'] }
+    }).sort({ createdAt: -1 });
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -138,7 +152,10 @@ export const getDashboardAnalytics = async (req, res, next) => {
         weeklyTrend,
         areaSummaries,
         pendingOnlineBookings,
-        pendingOnlineBookingsCount: pendingOnlineBookings.length
+        pendingOnlineBookingsCount: pendingOnlineBookings.length,
+        pendingDeliveryOrders,
+        pendingDeliveryOrdersCount: pendingDeliveryOrders.length,
+        activeDeliveryOrders
       }
     });
   } catch (error) {
@@ -4011,7 +4028,7 @@ export const getAggregatorOverview = async (req, res, next) => {
     let activeQueue = await RestaurantOrder.find({
       organizationId,
       orderType: 'DELIVERY',
-      status: { $in: ['CONFIRMED', 'PREPARING', 'READY'] }
+      status: { $in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY'] }
     }).sort({ createdAt: -1 });
 
     // Seed 2 sample live aggregator orders if active queue is empty so the expediting board is live
@@ -4125,7 +4142,7 @@ export const getAggregatorOverview = async (req, res, next) => {
         activeQueue = await RestaurantOrder.find({
           organizationId,
           orderType: 'DELIVERY',
-          status: { $in: ['CONFIRMED', 'PREPARING', 'READY'] }
+          status: { $in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY'] }
         }).sort({ createdAt: -1 });
       }
     }
@@ -6277,6 +6294,500 @@ export const rejectOnlineBooking = async (req, res, next) => {
       status: 'success',
       message: `Online booking ${reservation.reservationCode} rejected`,
       data: { reservation }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ==========================================
+// 26. DIRECT ONLINE FOOD DELIVERY & ORDERING WORKFLOW
+// ==========================================
+
+export const getPublicOnlineMenu = async (req, res, next) => {
+  try {
+    let organizationId = req.user?.organizationId || req.query.organizationId || req.query.org;
+    if (!organizationId && req.query.orgSlug) {
+      const org = await Organization.findOne({ slug: req.query.orgSlug });
+      if (org) organizationId = org._id;
+    }
+    if (!organizationId) {
+      const defaultOrg = await Organization.findOne({ email: 'restaurant@example.com' })
+        || await Organization.findOne({ businessType: 'RESTAURANT' })
+        || await Organization.findOne();
+      if (defaultOrg) organizationId = defaultOrg._id;
+    }
+
+    if (!organizationId) {
+      return next(new AppError('Restaurant not identified', 400));
+    }
+
+    const organization = await Organization.findById(organizationId).select('name email phone address city state settings');
+    const categories = await RestaurantMenuCategory.find({ organizationId, isActive: true }).sort({ displayOrder: 1, name: 1 });
+    const menuItems = await RestaurantMenuItem.find({
+      organizationId,
+      isAvailable: true,
+      is86ed: { $ne: true }
+    }).sort({ displayOrder: 1, name: 1 });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        restaurant: organization,
+        categories,
+        menuItems
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createPublicOnlineFoodOrder = async (req, res, next) => {
+  try {
+    let organizationId = req.user?.organizationId || req.body.organizationId || req.query.organizationId || req.query.org;
+    if (!organizationId && req.body.orgSlug) {
+      const org = await Organization.findOne({ slug: req.body.orgSlug });
+      if (org) organizationId = org._id;
+    }
+    if (!organizationId) {
+      const defaultOrg = await Organization.findOne({ email: 'restaurant@example.com' })
+        || await Organization.findOne({ businessType: 'RESTAURANT' })
+        || await Organization.findOne();
+      if (defaultOrg) organizationId = defaultOrg._id;
+    }
+
+    if (!organizationId) {
+      return next(new AppError('Restaurant not found for online ordering', 400));
+    }
+
+    const {
+      customerName,
+      customerPhone,
+      customerEmail = '',
+      deliveryAddress,
+      deliveryLandmark = '',
+      deliveryPincode = '',
+      items = [],
+      cookingInstructions = '',
+      paymentMethod = 'CASH_ON_DELIVERY'
+    } = req.body;
+
+    if (!customerName || !customerPhone || !deliveryAddress) {
+      return next(new AppError('Customer name, phone number, and delivery address are required', 400));
+    }
+
+    if (!items || items.length === 0) {
+      return next(new AppError('Your cart is empty. Please select food items from the menu.', 400));
+    }
+
+    let subTotal = 0;
+    const formattedItems = [];
+
+    for (const item of items) {
+      const dbItem = await RestaurantMenuItem.findOne({ _id: item.menuItemId, organizationId });
+      const price = dbItem ? dbItem.price : Number(item.price) || 0;
+      const name = dbItem ? dbItem.name : item.name || 'Food Item';
+      const station = dbItem ? dbItem.station : 'General';
+      const veg = dbItem ? Boolean(dbItem.veg) : Boolean(item.veg);
+      const quantity = Math.max(1, Number(item.quantity) || 1);
+
+      subTotal += (price * quantity);
+      formattedItems.push({
+        menuItemId: dbItem ? dbItem._id : item.menuItemId,
+        name,
+        price,
+        quantity,
+        station,
+        veg,
+        notes: item.notes || '',
+        status: 'QUEUED'
+      });
+    }
+
+    const taxTotal = Math.round(subTotal * 0.05 * 100) / 100; // 5% GST
+    const packagingFee = 25;
+    const deliveryFee = subTotal >= 499 ? 0 : 40;
+    const grandTotal = Math.round(subTotal + taxTotal + packagingFee + deliveryFee);
+
+    const randCode = Math.floor(1000 + Math.random() * 9000);
+    const orderNumber = `DEL-${randCode}`;
+    const aggregatorOrderId = `WEB-${randCode}`;
+
+    let customer = await RestaurantCustomer.findOne({ organizationId, phone: customerPhone.trim() });
+    if (!customer) {
+      customer = await RestaurantCustomer.create({
+        organizationId,
+        name: customerName.trim(),
+        phone: customerPhone.trim(),
+        email: customerEmail.trim() || undefined,
+        address: deliveryAddress.trim(),
+        notes: `Registered via Online Food Order ${orderNumber}`
+      });
+    }
+
+    const order = await RestaurantOrder.create({
+      organizationId,
+      orderNumber,
+      orderType: 'DELIVERY',
+      aggregator: 'DIRECT_WEB',
+      aggregatorOrderId,
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      customerEmail: customerEmail.trim(),
+      deliveryAddress: deliveryAddress.trim(),
+      deliveryLandmark: deliveryLandmark.trim(),
+      deliveryPincode: deliveryPincode.trim(),
+      cookingInstructions: cookingInstructions.trim(),
+      items: formattedItems,
+      subTotal,
+      taxTotal,
+      packagingFee,
+      deliveryFee,
+      grandTotal,
+      status: 'PENDING',
+      paymentStatus: (paymentMethod === 'ONLINE_UPI' || paymentMethod === 'CARD') ? 'PAID' : 'PENDING',
+      paymentMethod,
+      estimatedPrepMinutes: 25,
+      estimatedDeliveryMinutes: 40,
+      riderDetails: {
+        name: '',
+        phone: '',
+        vehicleNumber: '',
+        status: 'UNASSIGNED',
+        estimatedMinutes: 20
+      }
+    });
+
+    res.status(201).json({
+      status: 'success',
+      message: `Online food order ${orderNumber} placed successfully! Restaurant will review and confirm shortly.`,
+      data: { order }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPublicOrderTracking = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    let order;
+
+    if (orderId.startsWith('DEL-') || orderId.startsWith('ORD-') || orderId.startsWith('WEB-')) {
+      order = await RestaurantOrder.findOne({
+        $or: [
+          { orderNumber: orderId },
+          { aggregatorOrderId: orderId }
+        ]
+      }).populate('organizationId', 'name phone address city');
+    } else {
+      order = await RestaurantOrder.findById(orderId).populate('organizationId', 'name phone address city');
+    }
+
+    if (!order) {
+      return next(new AppError('Order not found for tracking', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: { order }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPendingDeliveryOrders = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const pendingOrders = await RestaurantOrder.find({
+      organizationId,
+      orderType: 'DELIVERY',
+      status: 'PENDING'
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      status: 'success',
+      data: { pendingOrders }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const simulateOnlineDeliveryOrder = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const presets = [
+      {
+        name: 'Aakash Verma',
+        phone: '9845112233',
+        email: 'aakash.v@gmail.com',
+        address: 'Tower 4, Apt 1102, Godrej Woodsman, Bellary Rd (3.4 km)',
+        landmark: 'Near Hebbal Flyover',
+        pincode: '560024',
+        instructions: 'Please call before ringing bell, baby sleeping.',
+        paymentMethod: 'ONLINE_UPI'
+      },
+      {
+        name: 'Sneha & Tanmay Kulkarni',
+        phone: '9820556677',
+        email: 'sneha.k@outlook.com',
+        address: 'B-303, Prestige Green Gables, Kadubeesanahalli (2.1 km)',
+        landmark: 'Opposite Cisco Gate 2',
+        pincode: '560103',
+        instructions: 'Less spicy, please send extra tissue napkins and cutlery.',
+        paymentMethod: 'CASH_ON_DELIVERY'
+      },
+      {
+        name: 'Dr. Siddharth Sen',
+        phone: '9819223344',
+        email: 'dr.siddharth@apollohospitals.com',
+        address: 'Staff Quarters, Flat 12, Bannerghatta Main Rd (4.0 km)',
+        landmark: 'Near Meenakshi Mall',
+        pincode: '560076',
+        instructions: 'Deliver to hospital security gate if after 9 PM.',
+        paymentMethod: 'ONLINE_UPI'
+      }
+    ];
+
+    const preset = presets[Math.floor(Math.random() * presets.length)];
+    const menu = await RestaurantMenuItem.find({ organizationId, isAvailable: true }).limit(4);
+
+    let itemsToOrder = [];
+    if (menu.length > 0) {
+      const selected = menu.slice(0, 2);
+      itemsToOrder = selected.map((m, idx) => ({
+        menuItemId: m._id,
+        name: m.name,
+        price: m.price || 250,
+        quantity: idx === 0 ? 2 : 1,
+        station: m.station || 'General',
+        veg: Boolean(m.veg),
+        status: 'QUEUED'
+      }));
+    } else {
+      itemsToOrder = [
+        { name: 'Paneer Butter Masala', price: 290, quantity: 1, station: 'Curry Range', veg: true, status: 'QUEUED' },
+        { name: 'Butter Naan', price: 60, quantity: 3, station: 'Tandoor', veg: true, status: 'QUEUED' }
+      ];
+    }
+
+    const subTotal = itemsToOrder.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+    const taxTotal = Math.round(subTotal * 0.05 * 100) / 100;
+    const packagingFee = 25;
+    const deliveryFee = subTotal >= 499 ? 0 : 40;
+    const grandTotal = Math.round(subTotal + taxTotal + packagingFee + deliveryFee);
+
+    const randCode = Math.floor(1000 + Math.random() * 9000);
+    const orderNumber = `DEL-${randCode}`;
+
+    const order = await RestaurantOrder.create({
+      organizationId,
+      orderNumber,
+      orderType: 'DELIVERY',
+      aggregator: 'DIRECT_WEB',
+      aggregatorOrderId: `WEB-${randCode}`,
+      customerName: preset.name,
+      customerPhone: preset.phone,
+      customerEmail: preset.email,
+      deliveryAddress: preset.address,
+      deliveryLandmark: preset.landmark,
+      deliveryPincode: preset.pincode,
+      cookingInstructions: preset.instructions,
+      items: itemsToOrder,
+      subTotal,
+      taxTotal,
+      packagingFee,
+      deliveryFee,
+      grandTotal,
+      status: 'PENDING',
+      paymentStatus: preset.paymentMethod === 'ONLINE_UPI' ? 'PAID' : 'PENDING',
+      paymentMethod: preset.paymentMethod,
+      estimatedPrepMinutes: 25,
+      estimatedDeliveryMinutes: 40,
+      riderDetails: {
+        name: '',
+        phone: '',
+        vehicleNumber: '',
+        status: 'UNASSIGNED',
+        estimatedMinutes: 20
+      }
+    });
+
+    res.status(201).json({
+      status: 'success',
+      message: `Incoming online delivery order simulated from ${preset.name} (₹${grandTotal})!`,
+      data: { order }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const acceptOnlineDeliveryOrder = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const order = await RestaurantOrder.findOne({
+      _id: req.params.id,
+      organizationId
+    });
+
+    if (!order) {
+      return next(new AppError('Order not found', 404));
+    }
+
+    order.status = 'CONFIRMED';
+    order.acceptedAt = new Date();
+    order.acceptedBy = req.user._id;
+    order.confirmedAt = new Date();
+    if (req.body.estimatedPrepMinutes) {
+      order.estimatedPrepMinutes = Number(req.body.estimatedPrepMinutes);
+    }
+
+    order.items = order.items.map(it => ({ ...it.toObject(), status: 'QUEUED' }));
+
+    await order.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: `Order ${order.orderNumber} accepted & sent to kitchen!`,
+      data: { order }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const rejectOnlineDeliveryOrder = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const order = await RestaurantOrder.findOne({
+      _id: req.params.id,
+      organizationId
+    });
+
+    if (!order) {
+      return next(new AppError('Order not found', 404));
+    }
+
+    const reason = req.body.reason || req.body.rejectionReason || 'Kitchen at maximum capacity';
+    order.status = 'REJECTED';
+    order.rejectionReason = reason;
+    order.cancellationReason = reason;
+
+    await order.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: `Order ${order.orderNumber} rejected`,
+      data: { order }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const assignDeliveryRider = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const order = await RestaurantOrder.findOne({
+      _id: req.params.id,
+      organizationId
+    });
+
+    if (!order) {
+      return next(new AppError('Order not found', 404));
+    }
+
+    const {
+      riderName = 'Rider Assigned',
+      riderPhone = '',
+      riderVehicle = '',
+      estimatedMinutes = 20
+    } = req.body;
+
+    order.riderDetails = {
+      name: riderName.trim(),
+      phone: riderPhone.trim(),
+      vehicleNumber: riderVehicle.trim(),
+      status: 'ASSIGNED',
+      estimatedMinutes: Number(estimatedMinutes) || 20
+    };
+
+    await order.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: `Rider ${riderName} assigned to order ${order.orderNumber}`,
+      data: { order }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const dispatchDeliveryOrder = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const order = await RestaurantOrder.findOne({
+      _id: req.params.id,
+      organizationId
+    });
+
+    if (!order) {
+      return next(new AppError('Order not found', 404));
+    }
+
+    order.status = 'OUT_FOR_DELIVERY';
+    order.dispatchedAt = new Date();
+    if (!order.riderDetails) {
+      order.riderDetails = { status: 'OUT_FOR_DELIVERY' };
+    } else {
+      order.riderDetails.status = 'OUT_FOR_DELIVERY';
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: `Order ${order.orderNumber} is now out for delivery!`,
+      data: { order }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markDeliveryOrderDelivered = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const order = await RestaurantOrder.findOne({
+      _id: req.params.id,
+      organizationId
+    });
+
+    if (!order) {
+      return next(new AppError('Order not found', 404));
+    }
+
+    order.status = 'DELIVERED';
+    order.deliveredAt = new Date();
+    order.completedAt = new Date();
+    order.paymentStatus = 'PAID';
+    if (!order.riderDetails) {
+      order.riderDetails = { status: 'DELIVERED' };
+    } else {
+      order.riderDetails.status = 'DELIVERED';
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: `Order ${order.orderNumber} marked as delivered! Payment recorded.`,
+      data: { order }
     });
   } catch (error) {
     next(error);

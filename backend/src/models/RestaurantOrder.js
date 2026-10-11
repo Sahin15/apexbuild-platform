@@ -118,7 +118,7 @@ const restaurantOrderSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ['DRAFT', 'CONFIRMED', 'PREPARING', 'READY', 'SERVED', 'COMPLETED', 'CANCELLED'], 
+    enum: ['DRAFT', 'PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'SERVED', 'COMPLETED', 'CANCELLED', 'REJECTED'], 
     default: 'CONFIRMED',
     index: true 
   },
@@ -128,8 +128,49 @@ const restaurantOrderSchema = new mongoose.Schema({
     default: 'PENDING',
     index: true 
   },
+  paymentMethod: {
+    type: String,
+    enum: ['CASH_ON_DELIVERY', 'ONLINE_UPI', 'CARD', 'NET_BANKING', 'DIRECT_PAYMENT', 'NOT_SPECIFIED'],
+    default: 'CASH_ON_DELIVERY'
+  },
+  paymentTransactionId: {
+    type: String,
+    default: ''
+  },
   cancellationReason: { 
     type: String 
+  },
+  rejectionReason: {
+    type: String,
+    default: ''
+  },
+  deliveryLandmark: {
+    type: String,
+    default: ''
+  },
+  deliveryPincode: {
+    type: String,
+    default: ''
+  },
+  deliveryFee: {
+    type: Number,
+    default: 0
+  },
+  packagingFee: {
+    type: Number,
+    default: 0
+  },
+  customerEmail: {
+    type: String,
+    default: ''
+  },
+  estimatedPrepMinutes: {
+    type: Number,
+    default: 25
+  },
+  estimatedDeliveryMinutes: {
+    type: Number,
+    default: 35
   },
   aggregator: {
     type: String,
@@ -161,6 +202,19 @@ const restaurantOrderSchema = new mongoose.Schema({
     rate: { type: Number, default: 0 },
     commissionAmount: { type: Number, default: 0 },
     netPayout: { type: Number, default: 0 }
+  },
+  acceptedAt: {
+    type: Date
+  },
+  acceptedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  dispatchedAt: {
+    type: Date
+  },
+  deliveredAt: {
+    type: Date
   },
   confirmedAt: { 
     type: Date, 

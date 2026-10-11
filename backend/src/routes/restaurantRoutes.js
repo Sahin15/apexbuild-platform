@@ -108,13 +108,26 @@ import {
   createOnlineBooking,
   simulateOnlineBooking,
   acceptOnlineBooking,
-  rejectOnlineBooking
+  rejectOnlineBooking,
+  getPublicOnlineMenu,
+  createPublicOnlineFoodOrder,
+  getPublicOrderTracking,
+  getPendingDeliveryOrders,
+  simulateOnlineDeliveryOrder,
+  acceptOnlineDeliveryOrder,
+  rejectOnlineDeliveryOrder,
+  assignDeliveryRider,
+  dispatchDeliveryOrder,
+  markDeliveryOrderDelivered
 } from '../controllers/restaurantController.js';
 
 const router = express.Router();
 
-// Public guest table reservation endpoint (unauthenticated)
+// Public guest table reservation and food ordering endpoints (unauthenticated)
 router.post('/online-booking/public', createOnlineBooking);
+router.get('/online-order/menu', getPublicOnlineMenu);
+router.post('/online-order/public', createPublicOnlineFoodOrder);
+router.get('/online-order/track/:orderId', getPublicOrderTracking);
 
 // Require authenticated user and organization boundary
 router.use(protect, requireOrganization);
@@ -270,5 +283,14 @@ router.get('/online-booking/pending', getPendingOnlineBookings);
 router.post('/online-booking/simulate', simulateOnlineBooking);
 router.post('/online-booking/:id/accept', acceptOnlineBooking);
 router.post('/online-booking/:id/reject', rejectOnlineBooking);
+
+// Direct Online Food Delivery Workflow & Rider Dispatch
+router.get('/online-order/pending', getPendingDeliveryOrders);
+router.post('/online-order/simulate', simulateOnlineDeliveryOrder);
+router.post('/online-order/:id/accept', acceptOnlineDeliveryOrder);
+router.post('/online-order/:id/reject', rejectOnlineDeliveryOrder);
+router.post('/online-order/:id/assign-rider', assignDeliveryRider);
+router.post('/online-order/:id/dispatch', dispatchDeliveryOrder);
+router.post('/online-order/:id/delivered', markDeliveryOrderDelivered);
 
 export default router;

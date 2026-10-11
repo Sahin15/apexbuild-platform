@@ -131,6 +131,8 @@ import RestaurantAggregators from './pages/restaurant/RestaurantAggregators';
 import RestaurantReservations from './pages/restaurant/RestaurantReservations';
 import RestaurantStaff from './pages/restaurant/RestaurantStaff';
 import OnlineTableBooking from './pages/restaurant/OnlineTableBooking';
+import OnlineFoodOrdering from './pages/restaurant/OnlineFoodOrdering';
+import OnlineOrderTracking from './pages/restaurant/OnlineOrderTracking';
 
 const ProtectedRoute = ({ children, allowedBusinessTypes }) => {
   const { isAuthenticated, user } = useAuth();
@@ -216,6 +218,11 @@ function App() {
           <Route path="/reserve" element={<OnlineTableBooking />} />
           <Route path="/book-table" element={<OnlineTableBooking />} />
           <Route path="/restaurant/book" element={<OnlineTableBooking />} />
+          <Route path="/order" element={<OnlineFoodOrdering />} />
+          <Route path="/order-online" element={<OnlineFoodOrdering />} />
+          <Route path="/food-delivery" element={<OnlineFoodOrdering />} />
+          <Route path="/track-order/:orderId" element={<OnlineOrderTracking />} />
+          <Route path="/order-tracking/:orderId" element={<OnlineOrderTracking />} />
           
           {/* Protected Routes for CONTRACTORS wrapped in Layout */}
           <Route element={
@@ -382,6 +389,8 @@ function App() {
             <Route path="tables" element={<RestaurantTables />} />
             <Route path="reservations" element={<RestaurantReservations />} />
             <Route path="online-booking" element={<OnlineTableBooking />} />
+            <Route path="order-online" element={<OnlineFoodOrdering />} />
+            <Route path="delivery-tracking/:orderId" element={<OnlineOrderTracking />} />
             <Route path="billing" element={<RestaurantBilling />} />
             <Route path="shifts" element={<RestaurantShifts />} />
             <Route path="staff" element={<RestaurantStaff />} />
