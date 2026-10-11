@@ -118,7 +118,11 @@ import {
   rejectOnlineDeliveryOrder,
   assignDeliveryRider,
   dispatchDeliveryOrder,
-  markDeliveryOrderDelivered
+  markDeliveryOrderDelivered,
+  getDeliveryBoys,
+  createDeliveryBoy,
+  updateDeliveryBoyStatus,
+  assignDeliveryBoyToOrder
 } from '../controllers/restaurantController.js';
 
 const router = express.Router();
@@ -292,5 +296,11 @@ router.post('/online-order/:id/reject', rejectOnlineDeliveryOrder);
 router.post('/online-order/:id/assign-rider', assignDeliveryRider);
 router.post('/online-order/:id/dispatch', dispatchDeliveryOrder);
 router.post('/online-order/:id/delivered', markDeliveryOrderDelivered);
+
+// In-House Restaurant Delivery Boys Fleet & Direct Assignment
+router.get('/delivery-boys', getDeliveryBoys);
+router.post('/delivery-boys', createDeliveryBoy);
+router.patch('/delivery-boys/:id/status', updateDeliveryBoyStatus);
+router.post('/online-order/:orderId/assign-delivery-boy', assignDeliveryBoyToOrder);
 
 export default router;

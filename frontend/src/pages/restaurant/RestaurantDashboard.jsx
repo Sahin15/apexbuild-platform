@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useBrandTheme } from '../../context/ThemeContext';
+import OrderBuzzerModal from '../../components/restaurant/OrderBuzzerModal';
 
 export default function RestaurantDashboard() {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ export default function RestaurantDashboard() {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const [tablesList, setTablesList] = useState([]);
+  const [deliveryBoys, setDeliveryBoys] = useState([]);
   const [tableSelectionMap, setTableSelectionMap] = useState({});
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [bookingToReject, setBookingToReject] = useState(null);
@@ -40,6 +42,12 @@ export default function RestaurantDashboard() {
   const [deliveryRejectionReason, setDeliveryRejectionReason] = useState('Kitchen at maximum capacity');
   const [actionLoadingOrder, setActionLoadingOrder] = useState(null);
   const [simulatingDeliveryOrder, setSimulatingDeliveryOrder] = useState(false);
+
+  // Buzzer Modal State
+  const [isBuzzerOpen, setIsBuzzerOpen] = useState(false);
+  const [buzzerOrder, setBuzzerOrder] = useState(null);
+  const [dismissedBuzzerIds, setDismissedBuzzerIds] = useState(new Set());
+  const [buzzerLoading, setBuzzerLoading] = useState(false);
 
   const fetchDashboardData = useCallback(async (isSilent = false) => {
     try {
@@ -72,8 +80,66 @@ export default function RestaurantDashboard() {
       if (res.data?.data?.tables) setTablesList(res.data.data.tables);
     }).catch(err => console.error(err));
 
+    // Fetch in-house delivery boys
+    api.get('/restaurant/delivery-boys').then(res => {
+      if (res.data?.data) {
+        const list = res.data.data.deliveryBoys || (Array.isArray(res.data.data) ? res.data.data : []);
+        setDeliveryBoys(list);
+      }
+    }).catch(err => console.error(err));
+
     return () => clearInterval(interval);
   }, [fetchDashboardData]);
+
+  // Auto-trigger buzzer alert on fresh pending delivery orders
+  useEffect(() => {
+    if (liveData?.pendingDeliveryOrders?.length > 0) {
+      const pendingOrder = liveData.pendingDeliveryOrders.find(
+        o => !dismissedBuzzerIds.has(o._id)
+      );
+      if (pendingOrder && !isBuzzerOpen) {
+        setBuzzerOrder(pendingOrder);
+        setIsBuzzerOpen(true);
+      }
+    }
+  }, [liveData?.pendingDeliveryOrders, dismissedBuzzerIds, isBuzzerOpen]);
+
+  const handleAcceptOrderFromBuzzer = async (orderId, { deliveryBoyId, estimatedPrepMinutes } = {}) => {
+    try {
+      setBuzzerLoading(true);
+      await api.post(`/restaurant/online-order/${orderId}/accept`, { estimatedPrepMinutes });
+      if (deliveryBoyId) {
+        await api.post(`/restaurant/online-order/${orderId}/assign-delivery-boy`, { deliveryBoyId });
+      }
+      toast.success('Food delivery order accepted & sent to kitchen!');
+      setIsBuzzerOpen(false);
+      setBuzzerOrder(null);
+      setDismissedBuzzerIds(prev => new Set([...prev, orderId]));
+      fetchDashboardData(true);
+    } catch (err) {
+      console.error('Accept from buzzer error:', err);
+      toast.error(err.response?.data?.message || 'Failed to accept order');
+    } finally {
+      setBuzzerLoading(false);
+    }
+  };
+
+  const handleRejectOrderFromBuzzer = async (orderId, reason) => {
+    try {
+      setBuzzerLoading(true);
+      await api.post(`/restaurant/online-order/${orderId}/reject`, { reason });
+      toast.success('Food delivery order rejected');
+      setIsBuzzerOpen(false);
+      setBuzzerOrder(null);
+      setDismissedBuzzerIds(prev => new Set([...prev, orderId]));
+      fetchDashboardData(true);
+    } catch (err) {
+      console.error('Reject from buzzer error:', err);
+      toast.error(err.response?.data?.message || 'Failed to reject order');
+    } finally {
+      setBuzzerLoading(false);
+    }
+  };
 
   const handleAcceptOnlineBooking = async (bookingId) => {
     try {
@@ -607,7 +673,20 @@ export default function RestaurantDashboard() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => {
+                  if (liveData?.pendingDeliveryOrders?.length > 0) {
+                    setBuzzerOrder(liveData.pendingDeliveryOrders[0]);
+                    setIsBuzzerOpen(true);
+                  }
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black flex items-center gap-1.5 transition-all shadow-md animate-pulse cursor-pointer"
+              >
+                <Bell className="w-3.5 h-3.5 animate-bounce" />
+                <span>🚨 Open Order Buzzer Alert</span>
+              </button>
               <Link
                 to="/order"
                 target="_blank"
@@ -688,30 +767,46 @@ export default function RestaurantDashboard() {
                   </div>
 
                   {/* Accept & Reject Action Buttons */}
-                  <div className="flex items-center gap-2 pt-3 border-t border-stone-800">
+                  <div className="space-y-2 pt-3 border-t border-stone-800">
                     <button
-                      onClick={() => handleAcceptDeliveryOrder(ord._id)}
-                      disabled={isActing}
-                      className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow transition-all active:scale-95 cursor-pointer"
+                      type="button"
+                      onClick={() => {
+                        setBuzzerOrder(ord);
+                        setIsBuzzerOpen(true);
+                      }}
+                      className="w-full py-1.5 px-3 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 border border-rose-500/50 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                     >
-                      {isActing ? (
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <>
-                          <ChefHat className="w-3.5 h-3.5" />
-                          <span>Accept & Send to Kitchen</span>
-                        </>
-                      )}
+                      <Bell className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Review in Buzzer Console</span>
                     </button>
 
-                    <button
-                      onClick={() => handleOpenRejectOrderModal(ord)}
-                      disabled={isActing}
-                      className="py-2 px-3.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-600/40 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                      <span>Reject</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleAcceptDeliveryOrder(ord._id)}
+                        disabled={isActing}
+                        className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow transition-all active:scale-95 cursor-pointer"
+                      >
+                        {isActing ? (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            <ChefHat className="w-3.5 h-3.5" />
+                            <span>Accept & Cook</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenRejectOrderModal(ord)}
+                        disabled={isActing}
+                        className="py-2 px-3.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-600/40 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        <span>Reject</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -1270,6 +1365,16 @@ export default function RestaurantDashboard() {
           </div>
         </div>
       )}
+
+      {/* In-House Online Food Delivery Buzzer Modal */}
+      <OrderBuzzerModal
+        order={buzzerOrder}
+        isOpen={isBuzzerOpen}
+        onAccept={handleAcceptOrderFromBuzzer}
+        onReject={handleRejectOrderFromBuzzer}
+        deliveryBoys={deliveryBoys}
+        actionLoading={buzzerLoading}
+      />
 
     </div>
   );

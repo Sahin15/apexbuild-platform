@@ -39,15 +39,49 @@ const restaurantStaffSchema = new mongoose.Schema({
       'BUSSER', 
       'CASHIER', 
       'RESTAURANT_MANAGER', 
-      'CLEANER'
+      'CLEANER',
+      'DELIVERY_BOY'
     ],
     required: true,
     default: 'STEWARD'
   },
   department: {
     type: String,
-    enum: ['KITCHEN_BOH', 'SERVICE_FOH', 'BAR_BEVERAGE', 'MANAGEMENT', 'HOUSEKEEPING'],
+    enum: ['KITCHEN_BOH', 'SERVICE_FOH', 'BAR_BEVERAGE', 'MANAGEMENT', 'HOUSEKEEPING', 'DELIVERY_FLEET'],
     default: 'SERVICE_FOH'
+  },
+  vehicleType: {
+    type: String,
+    enum: ['BIKE', 'SCOOTER', 'EV_SCOOTER', 'CYCLE', 'NONE'],
+    default: 'BIKE'
+  },
+  vehicleNumber: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  drivingLicenseNumber: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  deliveryBoyStatus: {
+    type: String,
+    enum: ['AVAILABLE', 'ON_DELIVERY', 'OFF_DUTY'],
+    default: 'AVAILABLE',
+    index: true
+  },
+  currentOrderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'RestaurantOrder'
+  },
+  totalDeliveriesCompleted: {
+    type: Number,
+    default: 0
+  },
+  cashInHand: {
+    type: Number,
+    default: 0
   },
   hourlyWage: {
     type: Number,

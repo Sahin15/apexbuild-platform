@@ -188,13 +188,17 @@ const restaurantOrderSchema = new mongoose.Schema({
     default: ''
   },
   riderDetails: {
+    deliveryBoyId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'RestaurantStaff' 
+    },
     name: { type: String, default: '' },
     phone: { type: String, default: '' },
     vehicleNumber: { type: String, default: '' },
     status: { 
       type: String, 
       enum: ['UNASSIGNED', 'ASSIGNED', 'ARRIVED_AT_STORE', 'OUT_FOR_DELIVERY', 'DELIVERED'],
-      default: 'ASSIGNED'
+      default: 'UNASSIGNED'
     },
     estimatedMinutes: { type: Number, default: 15 }
   },

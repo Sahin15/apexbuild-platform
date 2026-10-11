@@ -8,13 +8,15 @@ import {
   Printer, ArrowUpRight, ChevronRight, FileText,
   CreditCard, Coins, ShoppingBag, Store, AlertCircle,
   Radio, Play, Power, Navigation, User, MapPin, Tag,
-  ExternalLink, CloudRain
+  ExternalLink, CloudRain, Bell, Bike, UserPlus, Users,
+  CheckCircle, ShieldCheck, Wallet, Award
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useBrandTheme } from '../../context/ThemeContext';
+import OrderBuzzerModal from '../../components/restaurant/OrderBuzzerModal';
 
 export const AGGREGATOR_INFO = {
   ZOMATO: {
@@ -48,11 +50,40 @@ export default function RestaurantAggregators() {
   const { primaryColor } = useBrandTheme();
   const effectivePrimary = primaryColor || '#EA580C';
 
+  // Navigation tab
+  const [activeTab, setActiveTab] = useState('ORDERS'); // 'ORDERS' | 'FLEET'
+
   // Data states
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
+  const [deliveryBoys, setDeliveryBoys] = useState([]);
+
+  // Buzzer Modal State
+  const [isBuzzerOpen, setIsBuzzerOpen] = useState(false);
+  const [buzzerOrder, setBuzzerOrder] = useState(null);
+  const [dismissedBuzzerIds, setDismissedBuzzerIds] = useState(new Set());
+  const [buzzerActionLoading, setBuzzerActionLoading] = useState(false);
+
+  // Assign Delivery Boy Modal State
+  const [isAssignDriverModalOpen, setIsAssignDriverModalOpen] = useState(false);
+  const [orderForDriverAssignment, setOrderForDriverAssignment] = useState(null);
+  const [selectedDriverId, setSelectedDriverId] = useState('');
+  const [isAssigningDriver, setIsAssigningDriver] = useState(false);
+
+  // Add Delivery Boy Modal State
+  const [isAddDriverModalOpen, setIsAddDriverModalOpen] = useState(false);
+  const [isSubmittingDriver, setIsSubmittingDriver] = useState(false);
+  const [newDriverForm, setNewDriverForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    vehicleType: 'BIKE',
+    vehicleNumber: '',
+    drivingLicenseNumber: '',
+    salaryMonthly: '18000'
+  });
 
   // Filters
   const [platformFilter, setPlatformFilter] = useState('ALL'); // 'ALL' | 'ZOMATO' | 'SWIGGY' | 'DIRECT_WEB'
@@ -97,9 +128,10 @@ export default function RestaurantAggregators() {
       if (!isSilent) setLoading(true);
       else setRefreshing(true);
 
-      const [aggRes, menuRes] = await Promise.all([
+      const [aggRes, menuRes, boysRes] = await Promise.all([
         api.get('/restaurant/aggregators'),
-        api.get('/restaurant/menu')
+        api.get('/restaurant/menu'),
+        api.get('/restaurant/delivery-boys')
       ]);
 
       if (aggRes.data?.data) {
@@ -124,6 +156,11 @@ export default function RestaurantAggregators() {
         });
         setMenuItems(allItems);
       }
+
+      if (boysRes.data?.data) {
+        const boysList = boysRes.data.data.deliveryBoys || (Array.isArray(boysRes.data.data) ? boysRes.data.data : []);
+        setDeliveryBoys(boysList);
+      }
     } catch (err) {
       console.error('Failed to load delivery aggregators overview:', err);
       toast.error('Unable to fetch delivery orders: ' + (err.response?.data?.message || err.message));
@@ -142,6 +179,19 @@ export default function RestaurantAggregators() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
+  // Auto-detect incoming pending orders to pop open buzzer alert
+  useEffect(() => {
+    if (data?.activeQueue) {
+      const pendingOrder = data.activeQueue.find(
+        o => o.status === 'PENDING' && !dismissedBuzzerIds.has(o._id)
+      );
+      if (pendingOrder && !isBuzzerOpen) {
+        setBuzzerOrder(pendingOrder);
+        setIsBuzzerOpen(true);
+      }
+    }
+  }, [data?.activeQueue, dismissedBuzzerIds, isBuzzerOpen]);
+
   // Toggle Store Online / Offline
   const handleToggleStore = async (platform) => {
     try {
@@ -157,7 +207,7 @@ export default function RestaurantAggregators() {
     }
   };
 
-  // Advance Rider Dispatch Status
+  // Advance Rider Dispatch Status & Reconcile In-House Delivery Staff
   const handleAdvanceRiderStatus = async (order) => {
     const cur = order.riderDetails?.status || 'ASSIGNED';
     let nextStatus = 'ASSIGNED';
@@ -168,11 +218,56 @@ export default function RestaurantAggregators() {
     else return;
 
     try {
-      await api.patch(`/restaurant/aggregators/rider/${order._id}`, { status: nextStatus });
-      toast.success(`Order ${order.aggregatorOrderId || order.orderNumber}: Rider is now ${nextStatus.replace(/_/g, ' ')}`);
+      if (nextStatus === 'DELIVERED') {
+        // Call delivered endpoint which automatically reconciles delivery boy status, deliveries count & COD cash
+        await api.post(`/restaurant/online-order/${order._id}/delivered`);
+        toast.success(`Order ${order.aggregatorOrderId || order.orderNumber}: Marked DELIVERED! Rider released to Available.`);
+      } else {
+        await api.patch(`/restaurant/aggregators/rider/${order._id}`, { status: nextStatus });
+        toast.success(`Order ${order.aggregatorOrderId || order.orderNumber}: Rider is now ${nextStatus.replace(/_/g, ' ')}`);
+      }
       fetchData(true);
     } catch (err) {
       toast.error('Failed to update rider status');
+    }
+  };
+
+  // Buzzer Modal Accept Order Action
+  const handleAcceptOrderFromBuzzer = async (orderId, { deliveryBoyId, estimatedPrepMinutes } = {}) => {
+    try {
+      setBuzzerActionLoading(true);
+      await api.post(`/restaurant/online-order/${orderId}/accept`, { estimatedPrepMinutes });
+      if (deliveryBoyId) {
+        await api.post(`/restaurant/online-order/${orderId}/assign-delivery-boy`, { deliveryBoyId });
+      }
+      toast.success('Food order accepted & dispatched to kitchen!');
+      setIsBuzzerOpen(false);
+      setBuzzerOrder(null);
+      setDismissedBuzzerIds(prev => new Set([...prev, orderId]));
+      fetchData(true);
+    } catch (err) {
+      console.error('Accept from buzzer error:', err);
+      toast.error(err.response?.data?.message || 'Failed to accept order');
+    } finally {
+      setBuzzerActionLoading(false);
+    }
+  };
+
+  // Buzzer Modal Reject Order Action
+  const handleRejectOrderFromBuzzer = async (orderId, reason) => {
+    try {
+      setBuzzerActionLoading(true);
+      await api.post(`/restaurant/online-order/${orderId}/reject`, { reason });
+      toast.success('Food order rejected');
+      setIsBuzzerOpen(false);
+      setBuzzerOrder(null);
+      setDismissedBuzzerIds(prev => new Set([...prev, orderId]));
+      fetchData(true);
+    } catch (err) {
+      console.error('Reject from buzzer error:', err);
+      toast.error(err.response?.data?.message || 'Failed to reject order');
+    } finally {
+      setBuzzerActionLoading(false);
     }
   };
 
@@ -195,6 +290,83 @@ export default function RestaurantAggregators() {
       fetchData(true);
     } catch (err) {
       toast.error('Failed to reject order');
+    }
+  };
+
+  // Open Assign Delivery Boy Modal for an order card
+  const handleOpenAssignDriverModal = (order) => {
+    setOrderForDriverAssignment(order);
+    setSelectedDriverId(order.riderDetails?.deliveryBoyId || '');
+    setIsAssignDriverModalOpen(true);
+  };
+
+  // Confirm Assign Delivery Boy to Order
+  const handleConfirmAssignDriver = async () => {
+    if (!orderForDriverAssignment || !selectedDriverId) {
+      toast.error('Please select an in-house delivery boy');
+      return;
+    }
+    try {
+      setIsAssigningDriver(true);
+      const res = await api.post(`/restaurant/online-order/${orderForDriverAssignment._id}/assign-delivery-boy`, {
+        deliveryBoyId: selectedDriverId
+      });
+      toast.success(res.data?.message || 'Delivery boy assigned successfully!');
+      setIsAssignDriverModalOpen(false);
+      setOrderForDriverAssignment(null);
+      fetchData(true);
+    } catch (err) {
+      console.error('Assign driver error:', err);
+      toast.error(err.response?.data?.message || 'Failed to assign delivery boy');
+    } finally {
+      setIsAssigningDriver(false);
+    }
+  };
+
+  // Toggle In-House Delivery Boy Shift Status
+  const handleToggleDriverStatus = async (driverId, newStatus) => {
+    try {
+      await api.patch(`/restaurant/delivery-boys/${driverId}/status`, {
+        deliveryBoyStatus: newStatus
+      });
+      toast.success(`Driver status updated to ${newStatus}`);
+      fetchData(true);
+    } catch (err) {
+      console.error('Failed to update driver status:', err);
+      toast.error('Failed to update driver status');
+    }
+  };
+
+  // Create New In-House Delivery Boy
+  const handleCreateDriver = async (e) => {
+    e.preventDefault();
+    if (!newDriverForm.name || !newDriverForm.phone || !newDriverForm.vehicleNumber) {
+      toast.error('Please fill required fields (Name, Phone, Vehicle Number)');
+      return;
+    }
+    try {
+      setIsSubmittingDriver(true);
+      await api.post('/restaurant/delivery-boys', {
+        ...newDriverForm,
+        salaryMonthly: Number(newDriverForm.salaryMonthly) || 18000
+      });
+      toast.success(`In-house delivery boy ${newDriverForm.name} onboarded!`);
+      setIsAddDriverModalOpen(false);
+      setNewDriverForm({
+        name: '',
+        phone: '',
+        email: '',
+        vehicleType: 'BIKE',
+        vehicleNumber: '',
+        drivingLicenseNumber: '',
+        salaryMonthly: '18000'
+      });
+      fetchData(true);
+    } catch (err) {
+      console.error('Failed to create delivery boy:', err);
+      toast.error(err.response?.data?.message || 'Failed to register delivery boy');
+    } finally {
+      setIsSubmittingDriver(false);
     }
   };
 
@@ -383,6 +555,30 @@ export default function RestaurantAggregators() {
           >
             <CloudRain className="w-3.5 h-3.5" />
             <span>{config.surgeRainMode ? 'Rain Surge ON (+10m)' : 'Rain Surge Mode'}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              const pending = activeQueue.find(o => o.status === 'PENDING') || activeQueue[0];
+              if (pending) {
+                setBuzzerOrder(pending);
+                setIsBuzzerOpen(true);
+              } else {
+                toast('No pending online orders right now. Click "Simulate Incoming Order" to trigger the buzzer audio alert!', { icon: '🔔' });
+              }
+            }}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer border ${
+              activeQueue.filter(o => o.status === 'PENDING').length > 0
+                ? 'bg-rose-600 text-white border-rose-700 shadow-md animate-pulse'
+                : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:bg-stone-200'
+            }`}
+          >
+            <Bell className={`w-3.5 h-3.5 ${activeQueue.filter(o => o.status === 'PENDING').length > 0 ? 'animate-bounce' : ''}`} />
+            <span>
+              {activeQueue.filter(o => o.status === 'PENDING').length > 0
+                ? `🚨 Order Buzzer (${activeQueue.filter(o => o.status === 'PENDING').length})`
+                : 'Order Buzzer'}
+            </span>
           </button>
 
           <button
@@ -595,7 +791,239 @@ export default function RestaurantAggregators() {
 
       </div>
 
-      {/* Filter Toolbar */}
+      {/* Tab Switcher: Orders Queue vs In-House Delivery Fleet */}
+      <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveTab('ORDERS')}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer ${
+            activeTab === 'ORDERS'
+              ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-sm'
+              : 'bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-400'
+          }`}
+        >
+          <ShoppingBag className="w-4 h-4" />
+          <span>Live Delivery Orders Queue ({activeQueue.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('FLEET')}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer ${
+            activeTab === 'FLEET'
+              ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-sm'
+              : 'bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-400'
+          }`}
+        >
+          <Bike className="w-4 h-4 text-emerald-500" />
+          <span>In-House Delivery Fleet ({deliveryBoys.length} Drivers)</span>
+          {deliveryBoys.filter(b => b.deliveryBoyStatus === 'AVAILABLE').length > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+              {deliveryBoys.filter(b => b.deliveryBoyStatus === 'AVAILABLE').length} Available
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === 'FLEET' ? (
+        <div className="space-y-6">
+          {/* Fleet Header Strip */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-stone-900 p-5 rounded-3xl border border-stone-200/80 dark:border-stone-800 shadow-xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <Bike className="w-5 h-5 text-emerald-600" />
+                <h2 className="text-base font-black text-stone-900 dark:text-stone-100">
+                  Restaurant In-House Delivery Fleet
+                </h2>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  Active Dispatch Console
+                </span>
+              </div>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                Manage your internal delivery boys, monitor live trip availability, vehicles, and reconcile cash on delivery (COD).
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsAddDriverModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md transition-all active:scale-95 cursor-pointer self-start sm:self-auto"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>+ Add Delivery Boy</span>
+            </button>
+          </div>
+
+          {/* Fleet Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+            <div className="bg-white dark:bg-stone-900 p-4 rounded-2xl border border-stone-200/80 dark:border-stone-800 shadow-2xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block">Total Delivery Staff</span>
+              <p className="text-xl font-black text-stone-900 dark:text-stone-100 mt-1">
+                {deliveryBoys.length} <span className="text-xs font-bold text-stone-400">drivers</span>
+              </p>
+              <span className="text-[11px] text-stone-400 font-medium mt-1 block">In-house restaurant fleet</span>
+            </div>
+
+            <div className="bg-white dark:bg-stone-900 p-4 rounded-2xl border border-stone-200/80 dark:border-stone-800 shadow-2xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block">Available on Standby</span>
+              <p className="text-xl font-black text-emerald-600 mt-1">
+                {deliveryBoys.filter(b => b.deliveryBoyStatus === 'AVAILABLE').length} <span className="text-xs font-bold text-stone-400">ready</span>
+              </p>
+              <span className="text-[11px] text-emerald-600 font-medium mt-1 block">Ready for immediate dispatch</span>
+            </div>
+
+            <div className="bg-white dark:bg-stone-900 p-4 rounded-2xl border border-stone-200/80 dark:border-stone-800 shadow-2xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block">Out on Delivery</span>
+              <p className="text-xl font-black text-blue-600 mt-1">
+                {deliveryBoys.filter(b => b.deliveryBoyStatus === 'ON_DELIVERY').length} <span className="text-xs font-bold text-stone-400">trips</span>
+              </p>
+              <span className="text-[11px] text-blue-600 font-medium mt-1 block">Active food delivery trips</span>
+            </div>
+
+            <div className="bg-white dark:bg-stone-900 p-4 rounded-2xl border border-stone-200/80 dark:border-stone-800 shadow-2xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 block">Total COD Cash in Hand</span>
+              <p className="text-xl font-black text-amber-600 mt-1">
+                ₹{deliveryBoys.reduce((acc, b) => acc + (b.cashInHand || 0), 0).toLocaleString('en-IN')}
+              </p>
+              <span className="text-[11px] text-stone-400 font-medium mt-1 block">Awaiting cashier settlement</span>
+            </div>
+          </div>
+
+          {/* Delivery Boys Cards List */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {deliveryBoys.map(boy => {
+              const status = boy.deliveryBoyStatus || 'AVAILABLE';
+              const isAvailable = status === 'AVAILABLE';
+              const isOnDelivery = status === 'ON_DELIVERY';
+
+              return (
+                <div
+                  key={boy._id}
+                  className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-200/90 dark:border-stone-800 p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-3">
+                    {/* Driver Top Info */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 font-black text-sm">
+                          {boy.vehicleType === 'EV_SCOOTER' ? '⚡' : boy.vehicleType === 'CYCLE' ? '🚲' : '🛵'}
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-black text-stone-900 dark:text-stone-100">{boy.name}</h3>
+                          <span className="text-[11px] font-bold text-stone-400 flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-stone-400" />
+                            <a href={`tel:${boy.phone}`} className="hover:underline hover:text-emerald-600">{boy.phone}</a>
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${
+                        isAvailable 
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                          : isOnDelivery
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 animate-pulse'
+                            : 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
+                      }`}>
+                        {status.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+
+                    {/* Vehicle Details */}
+                    <div className="p-2.5 rounded-xl bg-stone-50 dark:bg-stone-800/40 border border-stone-200/70 dark:border-stone-800 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-stone-400 text-[10px] font-bold uppercase">Vehicle</span>
+                        <span className="font-extrabold text-stone-800 dark:text-stone-200">
+                          {boy.vehicleType?.replace('_', ' ')} • {boy.vehicleNumber}
+                        </span>
+                      </div>
+                      {boy.drivingLicenseNumber && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-stone-400 text-[10px] font-bold uppercase">License</span>
+                          <span className="font-mono text-stone-600 dark:text-stone-300 text-[11px]">
+                            {boy.drivingLicenseNumber}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Deliveries & Cash Stats */}
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <div className="p-2 rounded-xl bg-stone-50 dark:bg-stone-800/40 border border-stone-200/60 dark:border-stone-800">
+                        <span className="text-[10px] text-stone-400 block font-bold uppercase">Trips Completed</span>
+                        <span className="text-base font-black text-stone-900 dark:text-stone-100">
+                          {boy.totalDeliveriesCompleted || 0}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40">
+                        <span className="text-[10px] text-amber-700 dark:text-amber-400 block font-bold uppercase">Cash In Hand</span>
+                        <span className="text-base font-black text-amber-700 dark:text-amber-300">
+                          ₹{boy.cashInHand || 0}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Active Order Trip details if out */}
+                    {isOnDelivery && boy.currentOrderId && (
+                      <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-xs space-y-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 block flex items-center gap-1">
+                          <Navigation className="w-3 h-3" />
+                          <span>Active Delivery Trip</span>
+                        </span>
+                        <p className="font-bold text-stone-900 dark:text-stone-100">
+                          Order #{boy.currentOrderId.orderNumber || boy.currentOrderId}
+                        </p>
+                        {boy.currentOrderId.customerName && (
+                          <p className="text-stone-600 dark:text-stone-300 text-[11px]">
+                            Customer: {boy.currentOrderId.customerName}
+                          </p>
+                        )}
+                        {boy.currentOrderId.deliveryAddress && (
+                          <p className="text-stone-500 dark:text-stone-400 text-[11px] line-clamp-1">
+                            Dest: {boy.currentOrderId.deliveryAddress}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Status Toggle Buttons */}
+                  <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between gap-1.5">
+                    <span className="text-[10px] font-bold text-stone-400 uppercase">Duty Status:</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleDriverStatus(boy._id, 'AVAILABLE')}
+                        disabled={isAvailable}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          isAvailable
+                            ? 'bg-emerald-600 text-white shadow-2xs'
+                            : 'bg-stone-100 text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 dark:bg-stone-800 dark:text-stone-300'
+                        }`}
+                      >
+                        Available
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleDriverStatus(boy._id, 'OFF_DUTY')}
+                        disabled={status === 'OFF_DUTY'}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          status === 'OFF_DUTY'
+                            ? 'bg-stone-800 text-white shadow-2xs dark:bg-stone-200 dark:text-stone-900'
+                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300'
+                        }`}
+                      >
+                        Off Duty
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Filter Toolbar */}
       <div className="bg-white dark:bg-stone-900 p-4 rounded-2xl border border-stone-200/80 dark:border-stone-800 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         
         {/* Platform Pills */}
@@ -783,12 +1211,12 @@ export default function RestaurantAggregators() {
                       </div>
                     </div>
 
-                    {/* Rider Dispatch Tracker */}
-                    <div className="p-3 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200/70 dark:border-stone-700/60 space-y-2">
+                    {/* Rider Dispatch & In-House Delivery Boy Tracker */}
+                    <div className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200/70 dark:border-stone-700/60 space-y-2.5">
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-1.5 font-extrabold text-stone-800 dark:text-stone-200">
-                          <Navigation className="w-3.5 h-3.5 text-blue-600" />
-                          <span>{order.riderDetails?.name || 'Rider Assigned'}</span>
+                          <Bike className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>{order.riderDetails?.name || 'In-House Delivery Boy'}</span>
                         </div>
                         <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
                           riderStatus === 'DELIVERED' 
@@ -803,42 +1231,89 @@ export default function RestaurantAggregators() {
                         </span>
                       </div>
 
-                      {order.riderDetails?.vehicleNumber && (
-                        <p className="text-[11px] text-stone-500 font-mono">
-                          Vehicle: {order.riderDetails.vehicleNumber}
-                        </p>
+                      {order.riderDetails?.vehicleNumber ? (
+                        <div className="flex items-center justify-between text-[11px] text-stone-500 font-mono">
+                          <span>Vehicle: {order.riderDetails.vehicleNumber}</span>
+                          {order.riderDetails?.phone && (
+                            <a href={`tel:${order.riderDetails.phone}`} className="text-emerald-600 font-bold hover:underline flex items-center gap-1">
+                              <Phone className="w-2.5 h-2.5" />
+                              {order.riderDetails.phone}
+                            </a>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between text-[11px] text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-2.5 py-1.5 rounded-xl border border-amber-200/60 dark:border-amber-900/40">
+                          <span className="font-semibold">⚠️ No driver assigned</span>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAssignDriverModal(order)}
+                            className="font-bold text-xs underline cursor-pointer hover:text-amber-800"
+                          >
+                            Assign Driver
+                          </button>
+                        </div>
                       )}
 
                       {/* Advance Rider Status Button or Accept/Reject */}
                       {order.status === 'PENDING' ? (
-                        <div className="flex items-center gap-2 pt-1">
+                        <div className="flex flex-col gap-1.5 pt-1">
                           <button
-                            onClick={() => handleAcceptDirectOrder(order._id)}
-                            className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                            type="button"
+                            onClick={() => {
+                              setBuzzerOrder(order);
+                              setIsBuzzerOpen(true);
+                            }}
+                            className="w-full py-1.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer animate-pulse"
                           >
-                            <UtensilsCrossed className="w-3.5 h-3.5" />
-                            <span>Accept & Cook</span>
+                            <Bell className="w-3.5 h-3.5" />
+                            <span>🚨 Review with Buzzer Alert</span>
                           </button>
-                          <button
-                            onClick={() => handleRejectDirectOrder(order)}
-                            className="py-1.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1 border border-rose-200 dark:border-rose-800 transition-all cursor-pointer"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                            <span>Reject</span>
-                          </button>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleAcceptDirectOrder(order._id)}
+                              className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                            >
+                              <UtensilsCrossed className="w-3.5 h-3.5" />
+                              <span>Accept & Cook</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRejectDirectOrder(order)}
+                              className="py-1.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1 border border-rose-200 dark:border-rose-800 transition-all cursor-pointer"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                              <span>Reject</span>
+                            </button>
+                          </div>
                         </div>
                       ) : !isCompleted ? (
-                        <button
-                          onClick={() => handleAdvanceRiderStatus(order)}
-                          className="w-full py-1.5 px-3 rounded-xl text-xs font-bold text-stone-800 dark:text-stone-200 bg-white dark:bg-stone-700 hover:bg-stone-100 dark:hover:bg-stone-600 border border-stone-200 dark:border-stone-600 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
-                        >
-                          <span>Next:</span>
-                          <span className="text-orange-600 font-black">
-                            {riderStatus === 'ASSIGNED' ? 'Mark At Store Door 🚪'
-                              : riderStatus === 'ARRIVED_AT_STORE' ? 'Handover & Dispatch 🛵'
-                              : 'Mark Delivered ✅'}
-                          </span>
-                        </button>
+                        <div className="space-y-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleAdvanceRiderStatus(order)}
+                            className="w-full py-1.5 px-3 rounded-xl text-xs font-bold text-stone-800 dark:text-stone-200 bg-white dark:bg-stone-700 hover:bg-stone-100 dark:hover:bg-stone-600 border border-stone-200 dark:border-stone-600 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                          >
+                            <span>Next:</span>
+                            <span className="text-orange-600 font-black">
+                              {riderStatus === 'ASSIGNED' ? 'Mark Rider At Kitchen Door 🚪'
+                                : riderStatus === 'ARRIVED_AT_STORE' ? 'Handover Food & Dispatch 🛵'
+                                : 'Mark Food Delivered to Customer ✅'}
+                            </span>
+                          </button>
+
+                          <div className="flex items-center justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenAssignDriverModal(order)}
+                              className="text-[10px] font-bold text-stone-400 hover:text-emerald-600 hover:underline cursor-pointer flex items-center gap-1"
+                            >
+                              <Bike className="w-3 h-3" />
+                              <span>{order.riderDetails?.name ? 'Change Driver' : 'Assign Driver'}</span>
+                            </button>
+                          </div>
+                        </div>
                       ) : null}
                     </div>
 
@@ -884,6 +1359,8 @@ export default function RestaurantAggregators() {
             );
           })}
         </div>
+      )}
+        </>
       )}
 
       {/* SIMULATE AGGREGATOR ORDER MODAL */}
@@ -1141,6 +1618,252 @@ export default function RestaurantAggregators() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* ORDER BUZZER POPUP MODAL (Audible & Visual Alert) */}
+      <OrderBuzzerModal
+        order={buzzerOrder}
+        isOpen={isBuzzerOpen}
+        onAccept={handleAcceptOrderFromBuzzer}
+        onReject={handleRejectOrderFromBuzzer}
+        deliveryBoys={deliveryBoys}
+        actionLoading={buzzerActionLoading}
+      />
+
+      {/* ASSIGN IN-HOUSE DELIVERY BOY MODAL */}
+      {isAssignDriverModalOpen && orderForDriverAssignment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white dark:bg-stone-900 w-full max-w-md rounded-3xl shadow-2xl border border-stone-200 dark:border-stone-800 overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-stone-100 dark:border-stone-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bike className="w-4 h-4 text-emerald-600" />
+                <h3 className="text-sm font-extrabold text-stone-900 dark:text-stone-100">
+                  Assign In-House Delivery Boy
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAssignDriverModalOpen(false)}
+                className="p-1 rounded-lg text-stone-400 hover:text-stone-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="p-3 rounded-2xl bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700/60 text-xs space-y-1">
+                <div className="flex items-center justify-between font-bold">
+                  <span>Order Ref: {orderForDriverAssignment.aggregatorOrderId || orderForDriverAssignment.orderNumber}</span>
+                  <span className="text-emerald-600">₹{orderForDriverAssignment.totalAmount}</span>
+                </div>
+                <p className="text-stone-600 dark:text-stone-300">Customer: {orderForDriverAssignment.customerName}</p>
+                <p className="text-stone-400 text-[11px] line-clamp-1">{orderForDriverAssignment.deliveryAddress}</p>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-2">
+                  Select Available Rider:
+                </label>
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {deliveryBoys.map(boy => {
+                    const isAvailable = boy.deliveryBoyStatus === 'AVAILABLE';
+                    const isSelected = selectedDriverId === boy._id;
+
+                    return (
+                      <div
+                        key={boy._id}
+                        onClick={() => setSelectedDriverId(boy._id)}
+                        className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-center justify-between text-xs ${
+                          isSelected
+                            ? 'bg-emerald-50 border-emerald-500 text-emerald-950 dark:bg-emerald-950/40 dark:border-emerald-500 dark:text-emerald-200'
+                            : 'bg-white dark:bg-stone-800/70 border-stone-200 dark:border-stone-700 hover:border-emerald-300 text-stone-800 dark:text-stone-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-base">
+                            {boy.vehicleType === 'EV_SCOOTER' ? '⚡' : boy.vehicleType === 'CYCLE' ? '🚲' : '🛵'}
+                          </span>
+                          <div>
+                            <p className="font-extrabold">{boy.name}</p>
+                            <p className="text-[11px] text-stone-400">
+                              {boy.vehicleType?.replace('_', ' ')} • {boy.vehicleNumber}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                            isAvailable
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                              : 'bg-stone-100 text-stone-500 dark:bg-stone-700 dark:text-stone-400'
+                          }`}>
+                            {boy.deliveryBoyStatus}
+                          </span>
+                          <span className="text-[10px] text-stone-400 block mt-0.5">
+                            {boy.totalDeliveriesCompleted || 0} trips done
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAssignDriverModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-stone-600 dark:text-stone-400 hover:bg-stone-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmAssignDriver}
+                  disabled={isAssigningDriver || !selectedDriverId}
+                  className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>{isAssigningDriver ? 'Assigning...' : 'Confirm Assignment'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD IN-HOUSE DELIVERY BOY MODAL */}
+      {isAddDriverModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white dark:bg-stone-900 w-full max-w-lg rounded-3xl shadow-2xl border border-stone-200 dark:border-stone-800 overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-stone-100 dark:border-stone-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-emerald-600" />
+                <div>
+                  <h3 className="text-base font-extrabold text-stone-900 dark:text-stone-100">
+                    Register In-House Delivery Boy
+                  </h3>
+                  <p className="text-xs text-stone-400">Onboard restaurant driver for direct food deliveries</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddDriverModalOpen(false)}
+                className="p-1.5 rounded-xl text-stone-400 hover:text-stone-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateDriver} className="p-6 space-y-3.5">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+                    Driver Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={newDriverForm.name}
+                    onChange={(e) => setNewDriverForm(p => ({ ...p, name: e.target.value }))}
+                    placeholder="e.g. Ramesh Kumar"
+                    required
+                    className="w-full px-3 py-2 rounded-xl text-xs bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+                    Mobile Phone *
+                  </label>
+                  <input
+                    type="text"
+                    value={newDriverForm.phone}
+                    onChange={(e) => setNewDriverForm(p => ({ ...p, phone: e.target.value }))}
+                    placeholder="+91 98765-43210"
+                    required
+                    className="w-full px-3 py-2 rounded-xl text-xs bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+                    Vehicle Type *
+                  </label>
+                  <select
+                    value={newDriverForm.vehicleType}
+                    onChange={(e) => setNewDriverForm(p => ({ ...p, vehicleType: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl text-xs bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-stone-100"
+                  >
+                    <option value="BIKE">Motorcycle / Bike 🏍️</option>
+                    <option value="SCOOTER">Scooter 🛵</option>
+                    <option value="EV_SCOOTER">Electric Scooter (EV) ⚡</option>
+                    <option value="CYCLE">Bicycle 🚲</option>
+                    <option value="NONE">Walking / None 🚶</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+                    Vehicle Registration Number *
+                  </label>
+                  <input
+                    type="text"
+                    value={newDriverForm.vehicleNumber}
+                    onChange={(e) => setNewDriverForm(p => ({ ...p, vehicleNumber: e.target.value }))}
+                    placeholder="e.g. KA-03-HA-8821"
+                    required
+                    className="w-full px-3 py-2 rounded-xl text-xs bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+                    Driving License Number
+                  </label>
+                  <input
+                    type="text"
+                    value={newDriverForm.drivingLicenseNumber}
+                    onChange={(e) => setNewDriverForm(p => ({ ...p, drivingLicenseNumber: e.target.value }))}
+                    placeholder="e.g. DL-04-2023-99881"
+                    className="w-full px-3 py-2 rounded-xl text-xs bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+                    Monthly Salary (₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={newDriverForm.salaryMonthly}
+                    onChange={(e) => setNewDriverForm(p => ({ ...p, salaryMonthly: e.target.value }))}
+                    placeholder="18000"
+                    className="w-full px-3 py-2 rounded-xl text-xs bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddDriverModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-stone-600 dark:text-stone-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingDriver}
+                  className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>{isSubmittingDriver ? 'Registering...' : 'Register Delivery Boy'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

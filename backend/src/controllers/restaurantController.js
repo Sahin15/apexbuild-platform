@@ -6782,12 +6782,236 @@ export const markDeliveryOrderDelivered = async (req, res, next) => {
       order.riderDetails.status = 'DELIVERED';
     }
 
+    // Release assigned restaurant delivery boy back to AVAILABLE
+    let deliveryBoy = null;
+    const deliveryBoyId = order.riderDetails?.deliveryBoyId || order.deliveryBoyId;
+    if (deliveryBoyId) {
+      deliveryBoy = await RestaurantStaff.findOne({ _id: deliveryBoyId, organizationId });
+      if (deliveryBoy) {
+        deliveryBoy.deliveryBoyStatus = 'AVAILABLE';
+        deliveryBoy.currentOrderId = null;
+        deliveryBoy.totalDeliveriesCompleted = (deliveryBoy.totalDeliveriesCompleted || 0) + 1;
+        if (order.paymentMethod === 'CASH_ON_DELIVERY') {
+          deliveryBoy.cashInHand = (deliveryBoy.cashInHand || 0) + (order.grandTotal || 0);
+        }
+        await deliveryBoy.save();
+      }
+    }
+
     await order.save();
 
     res.status(200).json({
       status: 'success',
       message: `Order ${order.orderNumber} marked as delivered! Payment recorded.`,
-      data: { order }
+      data: { order, deliveryBoy }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ==========================================
+// 27. IN-HOUSE RESTAURANT DELIVERY BOYS FLEET
+// ==========================================
+
+export const getDeliveryBoys = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+
+    let deliveryBoys = await RestaurantStaff.find({
+      organizationId,
+      role: 'DELIVERY_BOY',
+      isActive: true
+    }).populate('currentOrderId', 'orderNumber grandTotal deliveryAddress status customerName');
+
+    // Seed 3 realistic in-house restaurant delivery staff if none exist
+    if (deliveryBoys.length === 0) {
+      const seedBoys = [
+        {
+          name: 'Raju Sharma',
+          phone: '98450-11221',
+          vehicleType: 'BIKE',
+          vehicleNumber: 'KA-05-AB-1234 (Hero Splendor)',
+          drivingLicenseNumber: 'KA-05-2022-004512',
+          monthlySalary: 18000,
+          status: 'ACTIVE',
+          deliveryBoyStatus: 'AVAILABLE'
+        },
+        {
+          name: 'Imran Khan',
+          phone: '98450-33442',
+          vehicleType: 'EV_SCOOTER',
+          vehicleNumber: 'KA-05-EV-5678 (Ather 450X)',
+          drivingLicenseNumber: 'KA-05-2021-008934',
+          monthlySalary: 19000,
+          status: 'ACTIVE',
+          deliveryBoyStatus: 'AVAILABLE'
+        },
+        {
+          name: 'Deepak Verma',
+          phone: '98450-77883',
+          vehicleType: 'SCOOTER',
+          vehicleNumber: 'KA-05-CD-9900 (Honda Activa)',
+          drivingLicenseNumber: 'KA-05-2023-001290',
+          monthlySalary: 17500,
+          status: 'ACTIVE',
+          deliveryBoyStatus: 'AVAILABLE'
+        }
+      ];
+
+      for (let i = 0; i < seedBoys.length; i++) {
+        const b = seedBoys[i];
+        await RestaurantStaff.create({
+          organizationId,
+          employeeCode: `RDB-10${i + 1}`,
+          name: b.name,
+          phone: b.phone,
+          role: 'DELIVERY_BOY',
+          department: 'DELIVERY_FLEET',
+          vehicleType: b.vehicleType,
+          vehicleNumber: b.vehicleNumber,
+          drivingLicenseNumber: b.drivingLicenseNumber,
+          monthlySalary: b.monthlySalary,
+          deliveryBoyStatus: b.deliveryBoyStatus,
+          status: 'ACTIVE',
+          joiningDate: new Date()
+        });
+      }
+
+      deliveryBoys = await RestaurantStaff.find({
+        organizationId,
+        role: 'DELIVERY_BOY',
+        isActive: true
+      }).populate('currentOrderId', 'orderNumber grandTotal deliveryAddress status customerName');
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: { deliveryBoys }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createDeliveryBoy = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const {
+      name,
+      phone,
+      email = '',
+      vehicleType = 'BIKE',
+      vehicleNumber = '',
+      drivingLicenseNumber = '',
+      monthlySalary = 18000
+    } = req.body;
+
+    if (!name || !phone) {
+      return next(new AppError('Delivery boy name and phone number are required', 400));
+    }
+
+    const randCode = Math.floor(100 + Math.random() * 900);
+    const employeeCode = `RDB-${randCode}`;
+
+    const deliveryBoy = await RestaurantStaff.create({
+      organizationId,
+      employeeCode,
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      role: 'DELIVERY_BOY',
+      department: 'DELIVERY_FLEET',
+      vehicleType,
+      vehicleNumber: vehicleNumber.trim(),
+      drivingLicenseNumber: drivingLicenseNumber.trim(),
+      monthlySalary: Number(monthlySalary) || 18000,
+      deliveryBoyStatus: 'AVAILABLE',
+      status: 'ACTIVE',
+      joiningDate: new Date()
+    });
+
+    res.status(201).json({
+      status: 'success',
+      message: `Delivery boy ${deliveryBoy.name} added to in-house delivery fleet!`,
+      data: { deliveryBoy }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateDeliveryBoyStatus = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const { id } = req.params;
+    const { status, deliveryBoyStatus } = req.body;
+
+    const deliveryBoy = await RestaurantStaff.findOne({ _id: id, organizationId });
+    if (!deliveryBoy) {
+      return next(new AppError('Delivery boy not found', 404));
+    }
+
+    if (deliveryBoyStatus) deliveryBoy.deliveryBoyStatus = deliveryBoyStatus;
+    if (status) deliveryBoy.status = status;
+
+    await deliveryBoy.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: `${deliveryBoy.name} status updated to ${deliveryBoy.deliveryBoyStatus}`,
+      data: { deliveryBoy }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const assignDeliveryBoyToOrder = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const { orderId } = req.params;
+    const { deliveryBoyId, estimatedMinutes = 25 } = req.body;
+
+    const order = await RestaurantOrder.findOne({ _id: orderId, organizationId });
+    if (!order) {
+      return next(new AppError('Order not found', 404));
+    }
+
+    const deliveryBoy = await RestaurantStaff.findOne({
+      _id: deliveryBoyId,
+      organizationId,
+      role: 'DELIVERY_BOY'
+    });
+
+    if (!deliveryBoy) {
+      return next(new AppError('Delivery boy not found in restaurant staff', 404));
+    }
+
+    // Link in order
+    order.deliveryBoyId = deliveryBoy._id;
+    order.riderDetails = {
+      deliveryBoyId: deliveryBoy._id,
+      name: deliveryBoy.name,
+      phone: deliveryBoy.phone,
+      vehicleNumber: deliveryBoy.vehicleNumber || 'Restaurant Fleet',
+      status: 'ASSIGNED',
+      estimatedMinutes: Number(estimatedMinutes) || 25
+    };
+    await order.save();
+
+    // Update delivery boy
+    deliveryBoy.deliveryBoyStatus = 'ON_DELIVERY';
+    deliveryBoy.currentOrderId = order._id;
+    await deliveryBoy.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: `In-house delivery boy ${deliveryBoy.name} assigned to order ${order.orderNumber}!`,
+      data: {
+        order,
+        deliveryBoy
+      }
     });
   } catch (error) {
     next(error);
