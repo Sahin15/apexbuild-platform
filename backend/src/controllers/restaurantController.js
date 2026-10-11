@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import RestaurantArea from '../models/RestaurantArea.js';
 import RestaurantTable from '../models/RestaurantTable.js';
 import RestaurantMenuCategory from '../models/RestaurantMenuCategory.js';
@@ -375,9 +376,11 @@ export const getKdsTickets = async (req, res, next) => {
         id: `TK-${order.orderNumber.replace('ORD-', '')}`,
         orderId: order._id,
         orderNumber: order.orderNumber,
-        table: (order.aggregator && order.aggregator !== 'NONE') 
-          ? `🛵 ${order.aggregator} #${order.aggregatorOrderId || order.orderNumber}`
-          : (order.tableName || order.orderType),
+        table: order.aggregator === 'QR_TABLE'
+          ? `📱 Table ${order.tableName || ''} (QR Self-Order)`
+          : (order.aggregator && order.aggregator !== 'NONE') 
+            ? `🛵 ${order.aggregator} #${order.aggregatorOrderId || order.orderNumber}`
+            : (order.tableName || order.orderType),
         channel: order.orderType,
         aggregator: order.aggregator || 'NONE',
         aggregatorOrderId: order.aggregatorOrderId || '',
@@ -7016,6 +7019,305 @@ export const assignDeliveryBoyToOrder = async (req, res, next) => {
       data: {
         order,
         deliveryBoy
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ==========================================
+// PUBLIC QR DIGITAL TABLE ORDERING WORKFLOW
+// ==========================================
+
+export const getPublicTableDetails = async (req, res, next) => {
+  try {
+    const { tableId } = req.params;
+    if (!tableId || !mongoose.Types.ObjectId.isValid(tableId)) {
+      return next(new AppError('Invalid table QR identifier', 400));
+    }
+
+    const table = await RestaurantTable.findById(tableId)
+      .populate('areaId', 'name')
+      .populate('organizationId', 'name settings address phone logo');
+
+    if (!table || !table.isActive) {
+      return next(new AppError('Dining table not found or currently inactive', 404));
+    }
+
+    const org = table.organizationId;
+    let activeOrder = null;
+
+    if (table.activeOrderId) {
+      activeOrder = await RestaurantOrder.findById(table.activeOrderId)
+        .select('orderNumber items subTotal taxTotal grandTotal status cookingInstructions createdAt');
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        table: {
+          _id: table._id,
+          tableNumber: table.tableNumber,
+          capacity: table.capacity,
+          status: table.status,
+          currentGuests: table.currentGuests,
+          areaName: table.areaId?.name || 'Main Dining Hall',
+          activeOrder
+        },
+        restaurant: {
+          _id: org?._id,
+          name: org?.settings?.branding?.customAppName || org?.name || 'ApexBuild Restaurant',
+          address: org?.address || '',
+          phone: org?.phone || '',
+          logo: org?.logo || '',
+          primaryColor: org?.settings?.branding?.primaryColor || '#EA580C',
+          currency: '₹'
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPublicTableMenu = async (req, res, next) => {
+  try {
+    const { tableId } = req.params;
+    if (!tableId || !mongoose.Types.ObjectId.isValid(tableId)) {
+      return next(new AppError('Invalid table QR identifier', 400));
+    }
+
+    const table = await RestaurantTable.findById(tableId);
+    if (!table) {
+      return next(new AppError('Dining table not found', 404));
+    }
+
+    const organizationId = table.organizationId;
+
+    const [categories, items] = await Promise.all([
+      RestaurantMenuCategory.find({ organizationId }).sort('displayOrder name'),
+      RestaurantMenuItem.find({
+        organizationId,
+        is86ed: { $ne: true }
+      }).populate('categoryId', 'name').sort('displayOrder name')
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        categories: [
+          { _id: 'ALL', name: 'All Categories' },
+          ...categories
+        ],
+        items
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const placePublicTableOrder = async (req, res, next) => {
+  try {
+    const {
+      tableId,
+      customerName = '',
+      customerPhone = '',
+      guestCount = 2,
+      items = [],
+      specialInstructions = ''
+    } = req.body;
+
+    if (!tableId || !mongoose.Types.ObjectId.isValid(tableId)) {
+      return next(new AppError('Invalid table identifier', 400));
+    }
+
+    if (!items || items.length === 0) {
+      return next(new AppError('Your cart is empty. Please select food items from the menu.', 400));
+    }
+
+    const table = await RestaurantTable.findById(tableId);
+    if (!table || !table.isActive) {
+      return next(new AppError('Dining table not found or inactive', 404));
+    }
+
+    const organizationId = table.organizationId;
+    let newSubTotal = 0;
+    const formattedNewItems = [];
+
+    for (const item of items) {
+      const dbItem = await RestaurantMenuItem.findOne({ _id: item.menuItemId, organizationId });
+      const price = dbItem ? dbItem.price : (Number(item.price) || 0);
+      const name = dbItem ? dbItem.name : (item.name || 'Food Item');
+      const station = dbItem ? dbItem.station : 'General';
+      const veg = dbItem ? Boolean(dbItem.veg) : Boolean(item.veg);
+      const quantity = Math.max(1, Number(item.quantity) || 1);
+
+      newSubTotal += (price * quantity);
+      formattedNewItems.push({
+        menuItemId: dbItem ? dbItem._id : item.menuItemId,
+        name,
+        price,
+        quantity,
+        station,
+        veg,
+        notes: item.notes || '',
+        status: 'QUEUED'
+      });
+    }
+
+    let existingOrder = null;
+    if (table.activeOrderId) {
+      existingOrder = await RestaurantOrder.findOne({
+        _id: table.activeOrderId,
+        organizationId,
+        status: { $nin: ['COMPLETED', 'CANCELLED', 'REJECTED'] }
+      });
+    }
+
+    let savedOrder;
+
+    if (existingOrder) {
+      // Append new items to the table's active order (Subsequent KOT round)
+      existingOrder.items.push(...formattedNewItems);
+      existingOrder.subTotal = Math.round((existingOrder.subTotal + newSubTotal) * 100) / 100;
+      existingOrder.taxTotal = Math.round(existingOrder.subTotal * 0.05 * 100) / 100; // 5% GST
+      existingOrder.grandTotal = Math.round(existingOrder.subTotal + existingOrder.taxTotal);
+      if (customerName && !existingOrder.customerName) existingOrder.customerName = customerName;
+      if (customerPhone && !existingOrder.customerPhone) existingOrder.customerPhone = customerPhone;
+      if (specialInstructions) {
+        existingOrder.cookingInstructions = existingOrder.cookingInstructions
+          ? `${existingOrder.cookingInstructions} | ${specialInstructions}`
+          : specialInstructions;
+      }
+      if (['SERVED', 'READY'].includes(existingOrder.status)) {
+        existingOrder.status = 'PREPARING'; // New items need kitchen prep
+      }
+      savedOrder = await existingOrder.save();
+    } else {
+      // Create new Dine-in Order
+      const randCode = Math.floor(1000 + Math.random() * 9000);
+      const orderNumber = `KOT-${table.tableNumber}-${randCode}`;
+      const taxTotal = Math.round(newSubTotal * 0.05 * 100) / 100;
+      const grandTotal = Math.round(newSubTotal + taxTotal);
+
+      savedOrder = await RestaurantOrder.create({
+        organizationId,
+        orderNumber,
+        orderType: 'DINE_IN',
+        tableId: table._id,
+        tableName: table.tableNumber,
+        guestCount: Number(guestCount) || 2,
+        customerName: customerName || `Guest @ ${table.tableNumber}`,
+        customerPhone: customerPhone || '',
+        cookingInstructions: specialInstructions || '',
+        items: formattedNewItems,
+        subTotal: newSubTotal,
+        taxTotal,
+        grandTotal,
+        status: 'CONFIRMED',
+        aggregator: 'QR_TABLE',
+        confirmedAt: new Date()
+      });
+
+      table.activeOrderId = savedOrder._id;
+    }
+
+    // Update table status to OCCUPIED
+    table.status = 'OCCUPIED';
+    table.currentGuests = Number(guestCount) || table.currentGuests || 2;
+    table.lastOccupiedAt = new Date();
+    await table.save();
+
+    // Auto-link/update Customer record if phone number was given
+    if (customerPhone && customerPhone.length >= 10) {
+      try {
+        let customer = await RestaurantCustomer.findOne({ phone: customerPhone, organizationId });
+        if (customer) {
+          customer.totalVisits += 1;
+          customer.totalSpend += savedOrder.grandTotal;
+          customer.averageSpendPerVisit = Math.round(customer.totalSpend / customer.totalVisits);
+          customer.lastVisitDate = new Date();
+          customer.loyaltyPoints += Math.floor(savedOrder.grandTotal / 100);
+          if (customerName && customer.name.startsWith('Guest')) customer.name = customerName;
+          await customer.save();
+        } else {
+          await RestaurantCustomer.create({
+            organizationId,
+            name: customerName || `Table Guest (${table.tableNumber})`,
+            phone: customerPhone,
+            totalVisits: 1,
+            totalSpend: savedOrder.grandTotal,
+            averageSpendPerVisit: savedOrder.grandTotal,
+            loyaltyPoints: Math.floor(savedOrder.grandTotal / 100),
+            vipTier: 'STANDARD'
+          });
+        }
+      } catch (custErr) {
+        // Non-blocking
+      }
+    }
+
+    res.status(201).json({
+      status: 'success',
+      message: `Order for Table ${table.tableNumber} sent to Kitchen KDS!`,
+      data: {
+        order: savedOrder,
+        tableNumber: table.tableNumber,
+        tableStatus: table.status
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const requestPublicTableBill = async (req, res, next) => {
+  try {
+    const { tableId } = req.body;
+    if (!tableId || !mongoose.Types.ObjectId.isValid(tableId)) {
+      return next(new AppError('Invalid table identifier', 400));
+    }
+
+    const table = await RestaurantTable.findById(tableId);
+    if (!table) {
+      return next(new AppError('Dining table not found', 404));
+    }
+
+    table.status = 'BILLED';
+    await table.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: `Bill requested for Table ${table.tableNumber}! Your steward is preparing the invoice.`,
+      data: {
+        tableNumber: table.tableNumber,
+        status: table.status
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const callPublicTableSteward = async (req, res, next) => {
+  try {
+    const { tableId, reason = 'Assistance' } = req.body;
+    if (!tableId || !mongoose.Types.ObjectId.isValid(tableId)) {
+      return next(new AppError('Invalid table identifier', 400));
+    }
+
+    const table = await RestaurantTable.findById(tableId);
+    if (!table) {
+      return next(new AppError('Dining table not found', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: `Steward called for Table ${table.tableNumber} (${reason}). Assistance is on the way!`,
+      data: {
+        tableNumber: table.tableNumber
       }
     });
   } catch (error) {

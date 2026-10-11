@@ -122,7 +122,12 @@ import {
   getDeliveryBoys,
   createDeliveryBoy,
   updateDeliveryBoyStatus,
-  assignDeliveryBoyToOrder
+  assignDeliveryBoyToOrder,
+  getPublicTableDetails,
+  getPublicTableMenu,
+  placePublicTableOrder,
+  requestPublicTableBill,
+  callPublicTableSteward
 } from '../controllers/restaurantController.js';
 
 const router = express.Router();
@@ -132,6 +137,13 @@ router.post('/online-booking/public', createOnlineBooking);
 router.get('/online-order/menu', getPublicOnlineMenu);
 router.post('/online-order/public', createPublicOnlineFoodOrder);
 router.get('/online-order/track/:orderId', getPublicOrderTracking);
+
+// Public guest QR Table Digital Ordering (unauthenticated)
+router.get('/table-order/table/:tableId', getPublicTableDetails);
+router.get('/table-order/menu/:tableId', getPublicTableMenu);
+router.post('/table-order/place-order', placePublicTableOrder);
+router.post('/table-order/request-bill', requestPublicTableBill);
+router.post('/table-order/call-steward', callPublicTableSteward);
 
 // Require authenticated user and organization boundary
 router.use(protect, requireOrganization);

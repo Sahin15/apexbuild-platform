@@ -82,3 +82,27 @@
     @apply block text-sm font-medium text-slate-700 mb-1;
   }
 }
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .standee-print-card, .standee-print-card * {
+    visibility: visible !important;
+  }
+  .standee-print-card {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 15px auto !important;
+    display: block !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color: #111827 !important;
+    background: #ffffff !important;
+    border: 2px solid #e2e8f0 !important;
+  }
+}
+

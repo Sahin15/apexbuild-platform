@@ -4,8 +4,10 @@ import {
   Grid3x3, Plus, Search, Filter, Edit2, Trash2, 
   CheckCircle2, AlertTriangle, Sparkles, Clock, Users, 
   ChevronRight, X, RefreshCw, ArrowRightLeft, UtensilsCrossed, 
-  Layers, Check, Eye, Coffee, Store
+  Layers, Check, Eye, Coffee, Store, QrCode, Printer, 
+  Download, Copy, ExternalLink
 } from 'lucide-react';
+import QRCode from 'qrcode';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { useBrandTheme } from '../../context/ThemeContext';
@@ -39,6 +41,56 @@ export default function RestaurantTables() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [tableToDelete, setTableToDelete] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // QR Standee Generator states
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [qrTable, setQrTable] = useState(null);
+  const [qrDataUrls, setQrDataUrls] = useState({});
+  const [bulkMode, setBulkMode] = useState(false);
+  const [generatingQR, setGeneratingQR] = useState(false);
+
+  // Open QR Standee Modal
+  const handleOpenQRModal = async (tbl = null) => {
+    setQrTable(tbl);
+    setBulkMode(!tbl);
+    setIsQRModalOpen(true);
+    setGeneratingQR(true);
+    const targetTables = tbl ? [tbl] : tables;
+    const urls = {};
+    for (const t of targetTables) {
+      const tableUrl = `${window.location.origin}/table-order/${t._id}`;
+      try {
+        urls[t._id] = await QRCode.toDataURL(tableUrl, {
+          width: 320,
+          margin: 1,
+          color: {
+            dark: '#1c1917',
+            light: '#ffffff'
+          }
+        });
+      } catch (e) {
+        console.error('Failed to generate QR for table:', t._id, e);
+      }
+    }
+    setQrDataUrls(urls);
+    setGeneratingQR(false);
+  };
+
+  const handleDownloadQR = (t) => {
+    const dataUrl = qrDataUrls[t._id];
+    if (!dataUrl) return;
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `Table-${t.tableNumber}-QR.png`;
+    a.click();
+    toast.success(`Downloaded QR code for Table ${t.tableNumber}`);
+  };
+
+  const handleCopyLink = (t) => {
+    const link = `${window.location.origin}/table-order/${t._id}`;
+    navigator.clipboard?.writeText(link);
+    toast.success(`Copied table link: ${link}`);
+  };
 
   // Form states
   const [tableForm, setTableForm] = useState({
@@ -358,6 +410,15 @@ export default function RestaurantTables() {
 
         <div className="flex items-center gap-2 self-start md:self-center flex-wrap">
           <button
+            onClick={() => handleOpenQRModal(null)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 transition-all cursor-pointer shadow-2xs"
+            title="Generate and print QR standees for dining tables"
+          >
+            <QrCode className="w-3.5 h-3.5 text-orange-600" />
+            QR Standees ({tables.length})
+          </button>
+
+          <button
             onClick={() => {
               setEditingArea(null);
               setAreaForm({ name: '', description: '', displayOrder: areas.length });
@@ -626,6 +687,16 @@ export default function RestaurantTables() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          handleOpenQRModal(table);
+                        }}
+                        className="text-[10px] text-slate-500 hover:text-orange-600 font-bold flex items-center gap-1 p-1 hover:bg-orange-50 rounded cursor-pointer"
+                        title="View Table QR Standee"
+                      >
+                        <QrCode className="w-3 h-3" /> QR
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setSelectedTable(table);
                           setIsTransferModalOpen(true);
                         }}
@@ -647,13 +718,25 @@ export default function RestaurantTables() {
                     </div>
                   ) : (
                     <div className="w-full flex items-center justify-between">
-                      <button
-                        onClick={(e) => handleOpenEditTable(table, e)}
-                        className="text-slate-400 hover:text-slate-700 p-1 rounded hover:bg-slate-100 cursor-pointer"
-                        title="Edit Table"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenQRModal(table);
+                          }}
+                          className="text-slate-400 hover:text-orange-600 p-1 rounded hover:bg-orange-50 cursor-pointer"
+                          title="Generate Table QR Code"
+                        >
+                          <QrCode className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => handleOpenEditTable(table, e)}
+                          className="text-slate-400 hover:text-slate-700 p-1 rounded hover:bg-slate-100 cursor-pointer"
+                          title="Edit Table"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                      </div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -778,6 +861,13 @@ export default function RestaurantTables() {
               </button>
 
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleOpenQRModal(selectedTable)}
+                  className="px-3 py-2 rounded-xl text-xs font-bold bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200 cursor-pointer flex items-center gap-1.5"
+                  title="View / Print Table QR Standee"
+                >
+                  <QrCode className="w-3.5 h-3.5" /> Standee
+                </button>
                 {selectedTable.status === 'OCCUPIED' && (
                   <button
                     onClick={() => setIsTransferModalOpen(true)}
@@ -1106,6 +1196,255 @@ export default function RestaurantTables() {
                 {submitting ? 'Archiving...' : 'Yes, Archive Table'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: QR STANDEE GENERATOR & PRINT MODAL */}
+      {isQRModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in duration-150">
+            
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-orange-600/10 text-orange-600 flex items-center justify-center font-bold">
+                    <QrCode className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-slate-900">
+                      Table QR Code & Standee Generator
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Print acrylic standees or tent cards for contactless table ordering
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Header Mode Switcher & Close */}
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                <div className="flex items-center bg-slate-200/80 p-0.5 rounded-xl text-xs font-bold">
+                  <button
+                    onClick={() => {
+                      setBulkMode(false);
+                      if (!qrTable && tables.length > 0) setQrTable(tables[0]);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      !bulkMode ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Single Preview
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBulkMode(true);
+                      handleOpenQRModal(null);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      bulkMode ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Bulk Print ({tables.length})
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setIsQRModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-800 hover:bg-slate-200 flex items-center justify-center cursor-pointer transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 overflow-y-auto space-y-6 flex-1 bg-slate-100/60">
+              {generatingQR ? (
+                <div className="py-16 text-center">
+                  <RefreshCw className="w-8 h-8 animate-spin text-orange-600 mx-auto mb-2" />
+                  <p className="text-xs font-bold text-slate-600">Generating high-res QR vectors...</p>
+                </div>
+              ) : !bulkMode && qrTable ? (
+                <div className="max-w-md mx-auto space-y-4">
+                  
+                  {/* Table Switcher Selector */}
+                  <div className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs">
+                    <span className="text-xs font-bold text-slate-600 pl-2">Select Table:</span>
+                    <select
+                      value={qrTable._id}
+                      onChange={(e) => {
+                        const tbl = tables.find(t => t._id === e.target.value);
+                        if (tbl) handleOpenQRModal(tbl);
+                      }}
+                      className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 outline-none"
+                    >
+                      {tables.map(t => (
+                        <option key={t._id} value={t._id}>
+                          Table {t.tableNumber} ({typeof t.areaId === 'object' ? t.areaId?.name : 'Main'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Acrylic Tent Standee Mockup Card */}
+                  <div 
+                    id="standee-print-single"
+                    className="standee-print-card bg-stone-900 text-white rounded-3xl p-6 border-2 border-stone-800 shadow-2xl text-center space-y-4 relative overflow-hidden"
+                  >
+                    {/* Top Brand Tag */}
+                    <div className="flex items-center justify-center gap-1.5">
+                      <div className="w-6 h-6 rounded-lg bg-orange-600 flex items-center justify-center text-white">
+                        <Flame className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="font-black text-sm tracking-wider uppercase">
+                        Dining Experience
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                        Scan to Order • Table Self-Service
+                      </span>
+                      <h2 className="text-3xl font-black text-white mt-1.5 tracking-tight">
+                        TABLE {qrTable.tableNumber}
+                      </h2>
+                      <p className="text-xs text-stone-400 mt-0.5">
+                        {typeof qrTable.areaId === 'object' ? qrTable.areaId?.name : 'Main Hall'} • Capacity {qrTable.capacity} Guests
+                      </p>
+                    </div>
+
+                    {/* QR Code Graphic Frame */}
+                    <div className="bg-white p-4 rounded-2xl shadow-inner inline-block mx-auto border-4 border-stone-800">
+                      {qrDataUrls[qrTable._id] ? (
+                        <img
+                          src={qrDataUrls[qrTable._id]}
+                          alt={`QR for Table ${qrTable.tableNumber}`}
+                          className="w-48 h-48 mx-auto"
+                        />
+                      ) : (
+                        <div className="w-48 h-48 flex items-center justify-center text-slate-400">
+                          <RefreshCw className="w-6 h-6 animate-spin" />
+                        </div>
+                      )}
+                      <p className="text-[10px] font-black tracking-widest text-slate-900 uppercase mt-2">
+                        Point Camera to Scan
+                      </p>
+                    </div>
+
+                    {/* Step-by-step guest cues */}
+                    <div className="pt-2 border-t border-stone-800/80 text-[11px] text-stone-400 space-y-1">
+                      <p className="font-semibold text-stone-300">
+                        1. Scan QR • 2. Pick Dishes • 3. Kitchen Prepares
+                      </p>
+                      <p className="text-[10px] text-stone-500">
+                        Call steward & digital bill available directly on your phone
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Actions for Single Standee */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => handleDownloadQR(qrTable)}
+                      className="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleCopyLink(qrTable)}
+                      className="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy Link</span>
+                    </button>
+
+                    <a
+                      href={`/table-order/${qrTable._id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2.5 px-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-md shadow-orange-600/20 flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Preview</span>
+                    </a>
+                  </div>
+
+                </div>
+              ) : (
+                /* Bulk Standees Grid */
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-xs text-slate-600 px-1 font-semibold">
+                    <span>Showing standees for all {tables.length} tables on floor</span>
+                    <span>Ready for print sheet</span>
+                  </div>
+
+                  <div id="standee-print-bulk" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {tables.map(t => (
+                      <div 
+                        key={t._id}
+                        className="standee-print-card bg-stone-900 text-white rounded-2xl p-4 border border-stone-800 shadow-sm text-center space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-orange-400 uppercase tracking-wider">
+                            Table {t.tableNumber}
+                          </span>
+                          <span className="text-[10px] text-stone-400">
+                            {typeof t.areaId === 'object' ? t.areaId?.name : 'Main'}
+                          </span>
+                        </div>
+
+                        <div className="bg-white p-2.5 rounded-xl inline-block mx-auto">
+                          {qrDataUrls[t._id] ? (
+                            <img
+                              src={qrDataUrls[t._id]}
+                              alt={`QR Table ${t.tableNumber}`}
+                              className="w-32 h-32 mx-auto"
+                            />
+                          ) : (
+                            <div className="w-32 h-32 flex items-center justify-center text-slate-400">
+                              <RefreshCw className="w-5 h-5 animate-spin" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="text-[10px] text-stone-400 flex items-center justify-between pt-1 border-t border-stone-800">
+                          <span>Scan with Camera</span>
+                          <span className="font-bold text-orange-400">Seats {t.capacity}p</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3">
+              <span className="text-xs text-slate-500 font-medium">
+                Standard Standee Dimensions: 4" × 6" Tent Card or Acrylic Block
+              </span>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsQRModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="px-5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-orange-500/20 bg-orange-600 hover:bg-orange-700 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print Standees</span>
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

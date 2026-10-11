@@ -132,6 +132,7 @@ import RestaurantStaff from './pages/restaurant/RestaurantStaff';
 import OnlineTableBooking from './pages/restaurant/OnlineTableBooking';
 import OnlineFoodOrdering from './pages/restaurant/OnlineFoodOrdering';
 import OnlineOrderTracking from './pages/restaurant/OnlineOrderTracking';
+import GuestTableOrder from './pages/restaurant/GuestTableOrder';
 
 const ProtectedRoute = ({ children, allowedBusinessTypes }) => {
   const { isAuthenticated, user } = useAuth();
@@ -222,6 +223,10 @@ function App() {
           <Route path="/food-delivery" element={<OnlineFoodOrdering />} />
           <Route path="/track-order/:orderId" element={<OnlineOrderTracking />} />
           <Route path="/order-tracking/:orderId" element={<OnlineOrderTracking />} />
+          <Route path="/table-order/:tableId" element={<GuestTableOrder />} />
+          <Route path="/table-order" element={<GuestTableOrder />} />
+          <Route path="/restaurant/table-order/:tableId" element={<GuestTableOrder />} />
+          <Route path="/restaurant/table-order" element={<GuestTableOrder />} />
           
           {/* Protected Routes for CONTRACTORS wrapped in Layout */}
           <Route element={

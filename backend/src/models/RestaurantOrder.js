@@ -174,7 +174,7 @@ const restaurantOrderSchema = new mongoose.Schema({
   },
   aggregator: {
     type: String,
-    enum: ['NONE', 'ZOMATO', 'SWIGGY', 'DIRECT_WEB', 'MAGICPIN'],
+    enum: ['NONE', 'ZOMATO', 'SWIGGY', 'DIRECT_WEB', 'MAGICPIN', 'QR_TABLE'],
     default: 'NONE',
     index: true
   },
