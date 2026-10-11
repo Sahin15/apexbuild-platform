@@ -475,21 +475,29 @@ export default function RestaurantReports() {
               </div>
 
               <div className="space-y-3">
-                {channels.map(ch => {
-                  const percent = rev.netSales > 0 ? Math.round((ch.sales / rev.netSales) * 100) : 0;
-                  const icon = ch.channel.includes('Dine') ? <Utensils className="w-3.5 h-3.5 text-orange-600" />
-                    : ch.channel.includes('Take') ? <Store className="w-3.5 h-3.5 text-amber-600" />
+                {channels.map((ch, idx) => {
+                  const channelName = ch?.channel || ch?.name || `Channel ${idx + 1}`;
+                  const salesAmount = Number(ch?.sales ?? ch?.revenue ?? 0);
+                  const ordersCount = Number(ch?.orders || 0);
+                  const coversCount = Number(ch?.covers || 0);
+                  const percent = rev.netSales > 0 ? Math.round((salesAmount / rev.netSales) * 100) : 0;
+                  const avgCheck = ch?.avgAOV !== undefined && ch?.avgAOV !== null
+                    ? ch.avgAOV 
+                    : (ordersCount > 0 ? Math.round(salesAmount / ordersCount) : 0);
+
+                  const icon = channelName.includes('Dine') ? <Utensils className="w-3.5 h-3.5 text-orange-600" />
+                    : channelName.includes('Take') ? <Store className="w-3.5 h-3.5 text-amber-600" />
                     : <Truck className="w-3.5 h-3.5 text-blue-600" />;
 
                   return (
-                    <div key={ch.channel} className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200/70 dark:border-stone-700/60">
+                    <div key={channelName || idx} className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200/70 dark:border-stone-700/60">
                       <div className="flex items-center justify-between text-xs font-bold mb-1">
                         <div className="flex items-center gap-2 text-stone-900 dark:text-stone-100">
                           {icon}
-                          <span>{ch.channel}</span>
+                          <span>{channelName}</span>
                         </div>
                         <span className="text-stone-900 dark:text-stone-100">
-                          ₹{Number(ch.sales).toLocaleString('en-IN')} ({percent}%)
+                          ₹{salesAmount.toLocaleString('en-IN')} ({percent}%)
                         </span>
                       </div>
 
@@ -501,8 +509,8 @@ export default function RestaurantReports() {
                       </div>
 
                       <div className="flex items-center justify-between text-[11px] text-stone-500 dark:text-stone-400">
-                        <span>{ch.orders} orders ({ch.covers} covers)</span>
-                        <span className="font-bold text-stone-700 dark:text-stone-300">Avg Check: ₹{ch.avgAOV}</span>
+                        <span>{ordersCount} orders ({coversCount} covers)</span>
+                        <span className="font-bold text-stone-700 dark:text-stone-300">Avg Check: ₹{avgCheck}</span>
                       </div>
                     </div>
                   );

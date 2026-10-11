@@ -3679,9 +3679,9 @@ export const getFinancialPnlReport = async (req, res, next) => {
 
     const paymentMethodMap = { CASH: 0, UPI: 0, CARD: 0, OTHER: 0 };
     const channelMap = {
-      DINE_IN: { name: 'Dine-In Table Service', sales: 0, orders: 0, covers: 0 },
-      TAKEAWAY: { name: 'Direct Counter Takeaway', sales: 0, orders: 0, covers: 0 },
-      DELIVERY: { name: 'Direct Delivery Orders', sales: 0, orders: 0, covers: 0 }
+      DINE_IN: { channel: 'Dine-In Table Service', name: 'Dine-In Table Service', sales: 0, orders: 0, covers: 0, avgAOV: 0 },
+      TAKEAWAY: { channel: 'Direct Counter Takeaway', name: 'Direct Counter Takeaway', sales: 0, orders: 0, covers: 0, avgAOV: 0 },
+      DELIVERY: { channel: 'Direct Delivery Orders', name: 'Direct Delivery Orders', sales: 0, orders: 0, covers: 0, avgAOV: 0 }
     };
 
     let totalIngredientCost = 0;
@@ -3840,6 +3840,11 @@ export const getFinancialPnlReport = async (req, res, next) => {
     }
 
     // 11. Top Selling Menu Items Matrix
+    Object.values(channelMap).forEach(ch => {
+      ch.sales = Math.round(ch.sales * 100) / 100;
+      ch.avgAOV = ch.orders > 0 ? Math.round((ch.sales / ch.orders) * 100) / 100 : 0;
+    });
+
     const topItems = Array.from(itemSalesMap.values())
       .map(item => ({
         ...item,
