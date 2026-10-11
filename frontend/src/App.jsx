@@ -129,6 +129,7 @@ import RestaurantExpenses from './pages/restaurant/RestaurantExpenses';
 import RestaurantReports from './pages/restaurant/RestaurantReports';
 import RestaurantAggregators from './pages/restaurant/RestaurantAggregators';
 import RestaurantReservations from './pages/restaurant/RestaurantReservations';
+import RestaurantStaff from './pages/restaurant/RestaurantStaff';
 
 const ProtectedRoute = ({ children, allowedBusinessTypes }) => {
   const { isAuthenticated, user } = useAuth();
@@ -378,6 +379,7 @@ function App() {
             <Route path="reservations" element={<RestaurantReservations />} />
             <Route path="billing" element={<RestaurantBilling />} />
             <Route path="shifts" element={<RestaurantShifts />} />
+            <Route path="staff" element={<RestaurantStaff />} />
             <Route path="recipes" element={<RestaurantRecipes />} />
             <Route path="inventory" element={<RestaurantInventory />} />
             <Route path="purchases" element={<RestaurantPurchases />} />

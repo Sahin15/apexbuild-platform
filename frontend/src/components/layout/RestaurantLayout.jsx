@@ -149,6 +149,13 @@ export default function RestaurantLayout() {
       badge: 'Live'
     },
     { 
+      name: 'Staff & Rostering', 
+      path: '/restaurant/staff', 
+      icon: Users,
+      status: 'active',
+      badge: 'Live'
+    },
+    { 
       name: 'Operating Expenses', 
       path: '/restaurant/expenses', 
       icon: Receipt,

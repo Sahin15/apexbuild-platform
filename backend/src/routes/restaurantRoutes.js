@@ -86,7 +86,24 @@ import {
   updateReservation,
   seatReservation,
   sendReservationConfirmation,
-  cancelReservation
+  cancelReservation,
+  getStaffAnalytics,
+  getStaffMembers,
+  getStaffById,
+  createStaffMember,
+  updateStaffMember,
+  deleteStaffMember,
+  getRosterSchedule,
+  createRosterShift,
+  updateRosterShift,
+  clockInStaff,
+  clockOutStaff,
+  deleteRosterShift,
+  getTipPoolAnalytics,
+  getTipPools,
+  calculateTipPool,
+  disburseTipPool,
+  updateTipPayoutStatus
 } from '../controllers/restaurantController.js';
 
 const router = express.Router();
@@ -216,5 +233,28 @@ router.put('/reservations/:id', updateReservation);
 router.post('/reservations/:id/seat', seatReservation);
 router.post('/reservations/:id/send-confirmation', sendReservationConfirmation);
 router.delete('/reservations/:id', cancelReservation);
+
+// Staff Directory, Rostering & Tips Pool
+router.get('/staff/analytics', getStaffAnalytics);
+router.get('/staff', getStaffMembers);
+router.get('/staff/:id', getStaffById);
+router.post('/staff', createStaffMember);
+router.put('/staff/:id', updateStaffMember);
+router.delete('/staff/:id', deleteStaffMember);
+
+// Staff Shift Rostering & Attendance
+router.get('/staff-roster', getRosterSchedule);
+router.post('/staff-roster', createRosterShift);
+router.put('/staff-roster/:id', updateRosterShift);
+router.post('/staff-roster/:id/clock-in', clockInStaff);
+router.post('/staff-roster/:id/clock-out', clockOutStaff);
+router.delete('/staff-roster/:id', deleteRosterShift);
+
+// Gratuity & Tips Pool Distribution
+router.get('/staff-tips/analytics', getTipPoolAnalytics);
+router.get('/staff-tips', getTipPools);
+router.post('/staff-tips/calculate', calculateTipPool);
+router.post('/staff-tips/:id/disburse', disburseTipPool);
+router.patch('/staff-tips/:id/payout/:payoutId', updateTipPayoutStatus);
 
 export default router;

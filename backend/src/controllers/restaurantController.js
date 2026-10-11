@@ -14,6 +14,9 @@ import RestaurantCustomer from '../models/RestaurantCustomer.js';
 import RestaurantExpense from '../models/RestaurantExpense.js';
 import RestaurantAggregatorConfig from '../models/RestaurantAggregatorConfig.js';
 import RestaurantReservation from '../models/RestaurantReservation.js';
+import RestaurantStaff from '../models/RestaurantStaff.js';
+import RestaurantRosterShift from '../models/RestaurantRosterShift.js';
+import RestaurantTipPool from '../models/RestaurantTipPool.js';
 import Organization from '../models/Organization.js';
 import AppError from '../utils/AppError.js';
 
@@ -5130,6 +5133,853 @@ export const cancelReservation = async (req, res, next) => {
       status: 'success',
       message: 'Reservation cancelled successfully',
       data: { reservation }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ==========================================
+// 13. STAFF ATTENDANCE, ROSTERING & TIPS POOL
+// ==========================================
+
+const seedStaffIfEmpty = async (organizationId) => {
+  const staffCount = await RestaurantStaff.countDocuments({ organizationId });
+  if (staffCount > 0) return;
+
+  const sampleStaff = [
+    {
+      employeeCode: 'EMP-101',
+      name: 'Vikramaditya Roy',
+      phone: '9811001122',
+      email: 'vikram.roy@apexkitchen.in',
+      role: 'HEAD_CHEF',
+      department: 'KITCHEN_BOH',
+      hourlyWage: 250,
+      monthlySalary: 48000,
+      tipShareWeight: 1.2,
+      status: 'ACTIVE',
+      emergencyContact: { name: 'Maitreyi Roy', phone: '9811001199', relation: 'Spouse' },
+      bankDetails: { accountName: 'Vikramaditya Roy', accountNumber: '918020012345678', ifscCode: 'HDFC0001234', upiId: 'vikramroy@oksbi' },
+      notes: 'Master culinary lead, handles hot kitchen line and signature recipes.'
+    },
+    {
+      employeeCode: 'EMP-102',
+      name: 'Sunita Deshmukh',
+      phone: '9811002233',
+      email: 'sunita.d@apexkitchen.in',
+      role: 'SOUS_CHEF',
+      department: 'KITCHEN_BOH',
+      hourlyWage: 180,
+      monthlySalary: 34000,
+      tipShareWeight: 1.1,
+      status: 'ACTIVE',
+      bankDetails: { accountName: 'Sunita Deshmukh', accountNumber: '918020023456789', ifscCode: 'ICIC0002345', upiId: 'sunita.d@okaxis' },
+      notes: 'Oversees kitchen prep lists and gravy/curry consistency.'
+    },
+    {
+      employeeCode: 'EMP-103',
+      name: 'Rahul Nair',
+      phone: '9811003344',
+      email: 'rahul.nair@apexkitchen.in',
+      role: 'HEAD_STEWARD',
+      department: 'SERVICE_FOH',
+      hourlyWage: 160,
+      monthlySalary: 30000,
+      tipShareWeight: 1.3,
+      status: 'ACTIVE',
+      bankDetails: { accountName: 'Rahul Nair', accountNumber: '918020034567890', ifscCode: 'SBIN0003456', upiId: 'rahul.nair@paytm' },
+      notes: 'Head of dining room service, floor assignments, and VIP guest relations.'
+    },
+    {
+      employeeCode: 'EMP-104',
+      name: 'Ananya Sen',
+      phone: '9811004455',
+      email: 'ananya.s@apexkitchen.in',
+      role: 'STEWARD',
+      department: 'SERVICE_FOH',
+      hourlyWage: 120,
+      monthlySalary: 22000,
+      tipShareWeight: 1.0,
+      status: 'ACTIVE',
+      bankDetails: { accountName: 'Ananya Sen', accountNumber: '918020045678901', ifscCode: 'UTIB0004567', upiId: 'ananya.sen@okicici' },
+      notes: 'Section A tables specialist with top customer feedback.'
+    },
+    {
+      employeeCode: 'EMP-105',
+      name: 'Deepa Karmakar',
+      phone: '9811005566',
+      email: 'deepa.k@apexkitchen.in',
+      role: 'STEWARD',
+      department: 'SERVICE_FOH',
+      hourlyWage: 120,
+      monthlySalary: 22000,
+      tipShareWeight: 1.0,
+      status: 'ACTIVE',
+      bankDetails: { accountName: 'Deepa Karmakar', accountNumber: '918020056789012', ifscCode: 'HDFC0005678', upiId: 'deepa.k@oksbi' },
+      notes: 'Section B outdoor patio steward.'
+    },
+    {
+      employeeCode: 'EMP-106',
+      name: 'Amitav Ghosh',
+      phone: '9811006677',
+      email: 'amitav.barista@apexkitchen.in',
+      role: 'BARISTA',
+      department: 'BAR_BEVERAGE',
+      hourlyWage: 140,
+      monthlySalary: 26000,
+      tipShareWeight: 1.1,
+      status: 'ACTIVE',
+      bankDetails: { accountName: 'Amitav Ghosh', accountNumber: '918020067890123', ifscCode: 'PUNB0006789', upiId: 'amitav.ghosh@ybl' },
+      notes: 'Expert in craft mocktails, artisanal coffee, and beverage bar inventory.'
+    },
+    {
+      employeeCode: 'EMP-107',
+      name: 'Ramesh Yadav',
+      phone: '9811007788',
+      email: 'ramesh.y@apexkitchen.in',
+      role: 'BUSSER',
+      department: 'SERVICE_FOH',
+      hourlyWage: 100,
+      monthlySalary: 17000,
+      tipShareWeight: 0.8,
+      status: 'ACTIVE',
+      notes: 'Table clearing, water service, and cutlery restocking.'
+    }
+  ];
+
+  const createdStaff = await RestaurantStaff.insertMany(
+    sampleStaff.map(s => ({ ...s, organizationId }))
+  );
+
+  // Seed Today's scheduled shifts & attendance
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const todayDate = new Date(`${todayStr}T00:00:00.000Z`);
+
+  const sampleRosters = [
+    {
+      staffId: createdStaff[0]._id, // Chef Vikram
+      date: todayDate,
+      shiftType: 'LUNCH_PEAK',
+      scheduledStartTime: '11:00',
+      scheduledEndTime: '17:00',
+      station: 'Main Kitchen Pass',
+      status: 'CLOCKED_IN',
+      clockInTime: new Date(`${todayStr}T10:50:00.000Z`)
+    },
+    {
+      staffId: createdStaff[1]._id, // Sous Chef Sunita
+      date: todayDate,
+      shiftType: 'LUNCH_PEAK',
+      scheduledStartTime: '11:00',
+      scheduledEndTime: '17:00',
+      station: 'Curry & Gravy Station',
+      status: 'CLOCKED_IN',
+      clockInTime: new Date(`${todayStr}T11:02:00.000Z`)
+    },
+    {
+      staffId: createdStaff[2]._id, // Rahul Head Steward
+      date: todayDate,
+      shiftType: 'LUNCH_PEAK',
+      scheduledStartTime: '11:30',
+      scheduledEndTime: '17:30',
+      station: 'Main Dining Floor',
+      status: 'CLOCKED_IN',
+      clockInTime: new Date(`${todayStr}T11:25:00.000Z`)
+    },
+    {
+      staffId: createdStaff[3]._id, // Ananya
+      date: todayDate,
+      shiftType: 'LUNCH_PEAK',
+      scheduledStartTime: '12:00',
+      scheduledEndTime: '17:00',
+      station: 'Section A - Tables 1-6',
+      status: 'CLOCKED_IN',
+      clockInTime: new Date(`${todayStr}T11:55:00.000Z`)
+    },
+    {
+      staffId: createdStaff[4]._id, // Deepa
+      date: todayDate,
+      shiftType: 'EVENING_DINNER',
+      scheduledStartTime: '17:30',
+      scheduledEndTime: '23:30',
+      station: 'Section B - Patio & Rooftop',
+      status: 'SCHEDULED'
+    },
+    {
+      staffId: createdStaff[5]._id, // Amitav Barista
+      date: todayDate,
+      shiftType: 'DOUBLE_SHIFT',
+      scheduledStartTime: '12:00',
+      scheduledEndTime: '22:00',
+      station: 'Coffee Bar & Mocktails Counter',
+      status: 'CLOCKED_IN',
+      clockInTime: new Date(`${todayStr}T11:45:00.000Z`)
+    },
+    {
+      staffId: createdStaff[6]._id, // Ramesh Busser
+      date: todayDate,
+      shiftType: 'LUNCH_PEAK',
+      scheduledStartTime: '11:30',
+      scheduledEndTime: '16:30',
+      station: 'Dining Hall Bussing Station',
+      status: 'CLOCKED_IN',
+      clockInTime: new Date(`${todayStr}T11:28:00.000Z`)
+    }
+  ];
+
+  await RestaurantRosterShift.insertMany(
+    sampleRosters.map(r => ({ ...r, organizationId }))
+  );
+};
+
+// 1. Staff Analytics
+export const getStaffAnalytics = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    await seedStaffIfEmpty(organizationId);
+
+    const staffMembers = await RestaurantStaff.find({ organizationId, isActive: true });
+    const totalStaff = staffMembers.length;
+    const activeStaff = staffMembers.filter(s => s.status === 'ACTIVE').length;
+    const onLeaveStaff = staffMembers.filter(s => s.status === 'ON_LEAVE').length;
+
+    // Monthly payroll liability
+    const monthlyPayroll = staffMembers.reduce((sum, s) => sum + (s.monthlySalary || 0), 0);
+
+    // Department breakdown
+    const departmentCounts = {
+      KITCHEN_BOH: staffMembers.filter(s => s.department === 'KITCHEN_BOH').length,
+      SERVICE_FOH: staffMembers.filter(s => s.department === 'SERVICE_FOH').length,
+      BAR_BEVERAGE: staffMembers.filter(s => s.department === 'BAR_BEVERAGE').length,
+      MANAGEMENT: staffMembers.filter(s => s.department === 'MANAGEMENT').length,
+      HOUSEKEEPING: staffMembers.filter(s => s.department === 'HOUSEKEEPING').length,
+    };
+
+    // Today's on-duty clocked in
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const todayShifts = await RestaurantRosterShift.find({
+      organizationId,
+      date: { $gte: startOfToday, $lte: endOfToday }
+    });
+
+    const scheduledToday = todayShifts.length;
+    const clockedInToday = todayShifts.filter(s => s.status === 'CLOCKED_IN').length;
+    const clockedOutToday = todayShifts.filter(s => s.status === 'CLOCKED_OUT').length;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        summary: {
+          totalStaff,
+          activeStaff,
+          onLeaveStaff,
+          scheduledToday,
+          clockedInToday,
+          clockedOutToday,
+          monthlyPayroll
+        },
+        departmentCounts
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 2. Staff Directory CRUD
+export const getStaffMembers = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    await seedStaffIfEmpty(organizationId);
+
+    const { department, role, status, search } = req.query;
+    const filter = { organizationId, isActive: true };
+
+    if (department && department !== 'ALL') filter.department = department;
+    if (role && role !== 'ALL') filter.role = role;
+    if (status && status !== 'ALL') filter.status = status;
+
+    if (search) {
+      const reg = new RegExp(search.trim(), 'i');
+      filter.$or = [
+        { name: reg },
+        { phone: reg },
+        { employeeCode: reg }
+      ];
+    }
+
+    const staff = await RestaurantStaff.find(filter)
+      .sort({ department: 1, role: 1, name: 1 });
+
+    res.status(200).json({
+      status: 'success',
+      results: staff.length,
+      data: { staff }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getStaffById = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const staff = await RestaurantStaff.findOne({ _id: req.params.id, organizationId });
+    if (!staff) return next(new AppError('Staff member not found', 404));
+
+    res.status(200).json({
+      status: 'success',
+      data: { staff }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createStaffMember = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const {
+      employeeCode,
+      name,
+      phone,
+      email,
+      role,
+      department,
+      hourlyWage,
+      monthlySalary,
+      tipShareWeight,
+      status,
+      emergencyContact,
+      bankDetails,
+      notes
+    } = req.body;
+
+    if (!name || !phone) {
+      return next(new AppError('Name and phone number are required', 400));
+    }
+
+    // Auto-generate employeeCode if not provided
+    let finalCode = employeeCode?.trim();
+    if (!finalCode) {
+      const count = await RestaurantStaff.countDocuments({ organizationId });
+      finalCode = `EMP-${100 + count + 1}`;
+    }
+
+    const newStaff = await RestaurantStaff.create({
+      organizationId,
+      employeeCode: finalCode,
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email ? email.trim() : undefined,
+      role: role || 'STEWARD',
+      department: department || 'SERVICE_FOH',
+      hourlyWage: Number(hourlyWage) || 0,
+      monthlySalary: Number(monthlySalary) || 0,
+      tipShareWeight: Number(tipShareWeight) >= 0 ? Number(tipShareWeight) : 1.0,
+      status: status || 'ACTIVE',
+      emergencyContact,
+      bankDetails,
+      notes
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: { staff: newStaff }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateStaffMember = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const staff = await RestaurantStaff.findOne({ _id: req.params.id, organizationId });
+    if (!staff) return next(new AppError('Staff member not found', 404));
+
+    const fields = [
+      'name', 'phone', 'email', 'role', 'department', 
+      'hourlyWage', 'monthlySalary', 'tipShareWeight', 'status',
+      'emergencyContact', 'bankDetails', 'notes'
+    ];
+
+    fields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        if (['hourlyWage', 'monthlySalary', 'tipShareWeight'].includes(field)) {
+          staff[field] = Number(req.body[field]);
+        } else {
+          staff[field] = req.body[field];
+        }
+      }
+    });
+
+    await staff.save();
+
+    res.status(200).json({
+      status: 'success',
+      data: { staff }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteStaffMember = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const staff = await RestaurantStaff.findOne({ _id: req.params.id, organizationId });
+    if (!staff) return next(new AppError('Staff member not found', 404));
+
+    staff.isActive = false;
+    staff.status = 'INACTIVE';
+    await staff.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Staff member deactivated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 3. Shift Rostering & Attendance
+export const getRosterSchedule = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    await seedStaffIfEmpty(organizationId);
+
+    const { date, shiftType } = req.query;
+    const targetDate = date ? new Date(date) : new Date();
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const filter = {
+      organizationId,
+      date: { $gte: startOfDay, $lte: endOfDay }
+    };
+
+    if (shiftType && shiftType !== 'ALL') {
+      filter.shiftType = shiftType;
+    }
+
+    const roster = await RestaurantRosterShift.find(filter)
+      .populate('staffId', 'name phone role department employeeCode tipShareWeight status')
+      .sort({ scheduledStartTime: 1 });
+
+    res.status(200).json({
+      status: 'success',
+      results: roster.length,
+      data: { roster }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createRosterShift = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const {
+      staffId,
+      date,
+      shiftType,
+      scheduledStartTime,
+      scheduledEndTime,
+      station,
+      notes
+    } = req.body;
+
+    if (!staffId || !date || !scheduledStartTime || !scheduledEndTime) {
+      return next(new AppError('Staff member, date, and start/end times are required', 400));
+    }
+
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const shift = await RestaurantRosterShift.create({
+      organizationId,
+      staffId,
+      date: targetDate,
+      shiftType: shiftType || 'LUNCH_PEAK',
+      scheduledStartTime: scheduledStartTime.trim(),
+      scheduledEndTime: scheduledEndTime.trim(),
+      station: station || 'Floor Section',
+      notes,
+      createdBy: req.user._id
+    });
+
+    const populated = await RestaurantRosterShift.findById(shift._id)
+      .populate('staffId', 'name phone role department employeeCode');
+
+    res.status(201).json({
+      status: 'success',
+      data: { shift: populated }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateRosterShift = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const shift = await RestaurantRosterShift.findOne({ _id: req.params.id, organizationId });
+    if (!shift) return next(new AppError('Roster shift not found', 404));
+
+    const { shiftType, scheduledStartTime, scheduledEndTime, station, status, notes } = req.body;
+    if (shiftType) shift.shiftType = shiftType;
+    if (scheduledStartTime) shift.scheduledStartTime = scheduledStartTime;
+    if (scheduledEndTime) shift.scheduledEndTime = scheduledEndTime;
+    if (station !== undefined) shift.station = station;
+    if (status) shift.status = status;
+    if (notes !== undefined) shift.notes = notes;
+
+    await shift.save();
+
+    const populated = await RestaurantRosterShift.findById(shift._id)
+      .populate('staffId', 'name phone role department employeeCode');
+
+    res.status(200).json({
+      status: 'success',
+      data: { shift: populated }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const clockInStaff = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const shift = await RestaurantRosterShift.findOne({ _id: req.params.id, organizationId });
+    if (!shift) return next(new AppError('Roster shift not found', 404));
+
+    shift.status = 'CLOCKED_IN';
+    shift.clockInTime = new Date();
+    await shift.save();
+
+    const populated = await RestaurantRosterShift.findById(shift._id)
+      .populate('staffId', 'name phone role department employeeCode');
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Staff clocked in successfully',
+      data: { shift: populated }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const clockOutStaff = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const shift = await RestaurantRosterShift.findOne({ _id: req.params.id, organizationId });
+    if (!shift) return next(new AppError('Roster shift not found', 404));
+
+    shift.status = 'CLOCKED_OUT';
+    shift.clockOutTime = new Date();
+
+    if (shift.clockInTime) {
+      const diffMs = shift.clockOutTime - shift.clockInTime;
+      const hours = Math.max(0.5, Math.round((diffMs / 3600000) * 10) / 10);
+      shift.actualHoursWorked = hours;
+
+      if (hours > 8) {
+        shift.overtimeMinutes = Math.round((hours - 8) * 60);
+      }
+    } else {
+      shift.actualHoursWorked = 6.0;
+    }
+
+    await shift.save();
+
+    const populated = await RestaurantRosterShift.findById(shift._id)
+      .populate('staffId', 'name phone role department employeeCode');
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Staff clocked out successfully',
+      data: { shift: populated }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteRosterShift = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    await RestaurantRosterShift.findOneAndDelete({ _id: req.params.id, organizationId });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Roster shift removed'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 4. Gratuity & Tips Pool Distribution
+export const getTipPoolAnalytics = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const targetDate = req.query.date ? new Date(req.query.date) : new Date();
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Sum service charge from paid bills today
+    const todayBills = await RestaurantBill.find({
+      organizationId,
+      createdAt: { $gte: startOfDay, $lte: endOfDay },
+      paymentStatus: 'PAID'
+    });
+    const autoServiceChargeToday = todayBills.reduce((sum, b) => sum + (b.serviceCharge || 0), 0);
+
+    // Today's tip pools
+    const todayPools = await RestaurantTipPool.find({
+      organizationId,
+      poolDate: { $gte: startOfDay, $lte: endOfDay }
+    });
+
+    const todayTipsCollected = todayPools.reduce((sum, p) => sum + (p.totalTipsCollected || 0), 0) || autoServiceChargeToday;
+    const todayTipsDisbursed = todayPools
+      .filter(p => p.status === 'DISBURSED')
+      .reduce((sum, p) => sum + (p.totalTipsCollected || 0), 0);
+
+    // Month's total distributed tips
+    const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+    const monthPools = await RestaurantTipPool.find({
+      organizationId,
+      poolDate: { $gte: startOfMonth, $lte: endOfDay },
+      status: 'DISBURSED'
+    });
+    const monthTotalTipsDisbursed = monthPools.reduce((sum, p) => sum + (p.totalTipsCollected || 0), 0);
+
+    const activeStaffCount = await RestaurantStaff.countDocuments({ organizationId, status: 'ACTIVE', isActive: true });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        todayTipsCollected: Math.max(todayTipsCollected, autoServiceChargeToday),
+        autoServiceChargeToday,
+        todayTipsDisbursed,
+        monthTotalTipsDisbursed,
+        activeStaffCount
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTipPools = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const { date, status } = req.query;
+    const filter = { organizationId };
+
+    if (date && date !== 'ALL') {
+      const targetDate = new Date(date);
+      const startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      filter.poolDate = { $gte: startOfDay, $lte: endOfDay };
+    }
+
+    if (status && status !== 'ALL') {
+      filter.status = status;
+    }
+
+    const pools = await RestaurantTipPool.find(filter)
+      .populate('payouts.staffId', 'name role department employeeCode phone upiId')
+      .sort({ poolDate: -1, createdAt: -1 });
+
+    res.status(200).json({
+      status: 'success',
+      results: pools.length,
+      data: { pools }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const calculateTipPool = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const {
+      poolDate,
+      shiftPeriod = 'FULL_DAY',
+      cashTips = 0,
+      digitalTips = 0,
+      serviceChargeCollected = 0,
+      distributionFormula = 'ROLE_WEIGHTED',
+      notes
+    } = req.body;
+
+    const totalTipsCollected = (Number(cashTips) || 0) + (Number(digitalTips) || 0) + (Number(serviceChargeCollected) || 0);
+    if (totalTipsCollected <= 0) {
+      return next(new AppError('Total tip pool amount must be greater than zero', 400));
+    }
+
+    const targetDate = poolDate ? new Date(poolDate) : new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Eligible staff: active BOH and FOH members
+    const eligibleStaff = await RestaurantStaff.find({
+      organizationId,
+      status: 'ACTIVE',
+      isActive: true,
+      department: { $in: ['SERVICE_FOH', 'KITCHEN_BOH', 'BAR_BEVERAGE'] }
+    });
+
+    if (eligibleStaff.length === 0) {
+      return next(new AppError('No eligible active service or kitchen staff found for tips pool', 400));
+    }
+
+    // Lookup hours worked on that date if HOURS_WORKED_WEIGHTED
+    const rosterShifts = await RestaurantRosterShift.find({
+      organizationId,
+      date: { $gte: targetDate, $lte: endOfDay }
+    });
+
+    const shiftMap = {};
+    rosterShifts.forEach(s => {
+      shiftMap[s.staffId.toString()] = s.actualHoursWorked || 6;
+    });
+
+    // Compute shares
+    let totalShares = 0;
+    const payouts = eligibleStaff.map(staff => {
+      let weight = staff.tipShareWeight || 1.0;
+      let hoursWorked = shiftMap[staff._id.toString()] || 6;
+      let points = 1.0;
+
+      if (distributionFormula === 'EQUAL_SPLIT') {
+        points = 1.0;
+      } else if (distributionFormula === 'ROLE_WEIGHTED') {
+        points = weight;
+      } else if (distributionFormula === 'HOURS_WORKED_WEIGHTED') {
+        points = Math.round(weight * (hoursWorked / 6) * 100) / 100;
+      }
+
+      totalShares += points;
+
+      return {
+        staffId: staff._id,
+        staffName: staff.name,
+        role: staff.role,
+        department: staff.department,
+        hoursWorked,
+        weight,
+        points,
+        calculatedTipAmount: 0,
+        payoutStatus: 'PENDING',
+        payoutMethod: 'CASH',
+        upiId: staff.bankDetails?.upiId || ''
+      };
+    });
+
+    const tipPerShare = totalShares > 0 ? (totalTipsCollected / totalShares) : 0;
+    payouts.forEach(p => {
+      p.calculatedTipAmount = Math.round(p.points * tipPerShare);
+    });
+
+    // Create or update tip pool
+    const pool = await RestaurantTipPool.create({
+      organizationId,
+      poolDate: targetDate,
+      shiftPeriod,
+      totalTipsCollected,
+      cashTips: Number(cashTips) || 0,
+      digitalTips: Number(digitalTips) || 0,
+      serviceChargeCollected: Number(serviceChargeCollected) || 0,
+      distributionFormula,
+      totalShares: Math.round(totalShares * 100) / 100,
+      tipPerShare: Math.round(tipPerShare * 100) / 100,
+      eligibleStaffCount: eligibleStaff.length,
+      payouts,
+      status: 'CALCULATED',
+      notes
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: { pool }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const disburseTipPool = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const pool = await RestaurantTipPool.findOne({ _id: req.params.id, organizationId });
+    if (!pool) return next(new AppError('Tip pool not found', 404));
+
+    pool.status = 'DISBURSED';
+    pool.disbursedAt = new Date();
+    pool.disbursedBy = req.user._id;
+
+    // Mark all payouts as paid
+    pool.payouts.forEach(p => {
+      p.payoutStatus = 'PAID';
+      p.paidAt = new Date();
+    });
+
+    await pool.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: `Gratuity pool of ₹${pool.totalTipsCollected} successfully disbursed!`,
+      data: { pool }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateTipPayoutStatus = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const { id, payoutId } = req.params;
+    const { payoutStatus, payoutMethod } = req.body;
+
+    const pool = await RestaurantTipPool.findOne({ _id: id, organizationId });
+    if (!pool) return next(new AppError('Tip pool not found', 404));
+
+    const item = pool.payouts.id(payoutId);
+    if (!item) return next(new AppError('Payout item not found in pool', 404));
+
+    if (payoutStatus) {
+      item.payoutStatus = payoutStatus;
+      if (payoutStatus === 'PAID') item.paidAt = new Date();
+    }
+    if (payoutMethod) item.payoutMethod = payoutMethod;
+
+    await pool.save();
+
+    res.status(200).json({
+      status: 'success',
+      data: { pool }
     });
   } catch (error) {
     next(error);
