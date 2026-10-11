@@ -489,7 +489,7 @@ export default function Settings() {
             Settings & Workspace Control
           </h1>
           <p className="text-sm text-slate-500 font-medium mt-1">
-            Manage your company profile, brand personality, and inspect platform subscription status.
+            Manage your company profile, brand personality, and plan & billing subscription status.
           </p>
         </div>
       </div>
@@ -531,7 +531,7 @@ export default function Settings() {
               Business Profile
             </h3>
             <p className="text-xs text-slate-400 font-medium mt-0.5">
-              Contact & Billing details
+              Company & Contact details
             </p>
           </div>
         </button>
@@ -575,7 +575,7 @@ export default function Settings() {
           </div>
         </button>
 
-        {/* Tab 3: Subscription & Plans */}
+        {/* Tab 3: Plan & Billing */}
         <button 
           onClick={() => handleTabChange('billing')}
           style={activeTab === 'billing' ? {
@@ -606,10 +606,10 @@ export default function Settings() {
               style={activeTab === 'billing' ? { color: primaryColor } : {}}
               className="font-bold text-sm leading-tight text-slate-800"
             >
-              Subscription & Plans
+              Plan & Billing
             </h3>
             <p className="text-xs text-slate-400 font-medium mt-0.5">
-              2-Tier Platform Plans
+              Licenses, Plans & Invoices
             </p>
           </div>
         </button>
@@ -1358,14 +1358,14 @@ export default function Settings() {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl md:text-2xl font-black text-slate-900">
-                  {osConfig.name} Subscriptions
+                  Plan & Billing
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700">
-                  2 Plans Available
+                  {osConfig.name} Licenses
                 </span>
               </div>
               <p className="text-sm text-slate-500 font-medium mt-1">
-                Active workspace subscription, renewal options, and 2-tier plan comparison.
+                Manage your active operating system licenses, 2-tier plan comparison, renewal options, and official platform invoices.
               </p>
             </div>
             
