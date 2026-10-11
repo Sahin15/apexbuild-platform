@@ -21,7 +21,7 @@ import { useBrandTheme } from '../../context/ThemeContext';
 export const EXPENSE_CATEGORIES = [
   { id: 'LPG_GAS', label: 'Commercial LPG & Fuel', icon: '🔥', color: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300' },
   { id: 'UTILITIES', label: 'Electricity & Water', icon: '⚡', color: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300' },
-  { id: 'PACKAGING_DISPOSABLES', label: 'Packaging & Takeaway Disposables', icon: '📦', color: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300' },
+  { id: 'PACKAGING_DISPOSABLES', label: 'Packaging & Takeaway Disposables', icon: '📦', color: 'bg-stone-100 text-stone-700 border-stone-200 dark:bg-stone-800 dark:text-stone-300' },
   { id: 'CLEANING_HYGIENE', label: 'Dishwash & Kitchen Hygiene', icon: '🧼', color: 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-300' },
   { id: 'MAINTENANCE_REPAIRS', label: 'Equipment & AC Maintenance', icon: '🔧', color: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300' },
   { id: 'STAFF_WELFARE_MEALS', label: 'Staff Meals & Welfare', icon: '🍲', color: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300' },
@@ -433,14 +433,14 @@ export default function RestaurantExpenses() {
         <div className="bg-white dark:bg-stone-900 p-5 rounded-2xl border border-stone-200/80 dark:border-stone-800 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Top Spend Driver</span>
-            <div className="p-2 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+            <div className="p-2 rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-950/40 dark:text-orange-400">
               <Zap className="w-4 h-4" />
             </div>
           </div>
           <p className="text-lg font-black text-stone-900 dark:text-stone-100 mt-2 truncate">
             {getCatInfo(summary.topCategory).label}
           </p>
-          <p className="text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-1">
+          <p className="text-[11px] font-bold text-orange-600 dark:text-orange-400 mt-1">
             ₹{Number(summary.topCategoryAmount).toLocaleString('en-IN')} ({summary.totalThisMonth > 0 ? Math.round((summary.topCategoryAmount / summary.totalThisMonth) * 100) : 0}% of month)
           </p>
         </div>

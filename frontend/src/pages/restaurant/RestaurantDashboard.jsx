@@ -570,7 +570,7 @@ export default function RestaurantDashboard() {
                       </span>
 
                       <span className="px-2 py-0.5 rounded-md bg-stone-800 text-white font-semibold border border-stone-700 flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-blue-400" />
+                        <Clock className="w-3 h-3 text-orange-400" />
                         {booking.timeSlot} • {new Date(booking.reservationDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                       </span>
 
@@ -884,7 +884,7 @@ export default function RestaurantDashboard() {
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Avg Ticket (AOV)</span>
-            <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+            <div className="p-1.5 rounded-lg bg-orange-50 text-orange-600">
               <Users className="w-4 h-4" />
             </div>
           </div>
@@ -1010,7 +1010,7 @@ export default function RestaurantDashboard() {
                             ? 'bg-orange-50 text-orange-700 border border-orange-200/60'
                             : ord.channel === 'TAKEAWAY'
                               ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
-                              : 'bg-blue-50 text-blue-700 border border-blue-200/60'
+                              : 'bg-orange-50 text-orange-700 border border-orange-200/60'
                         }`}>
                           {ord.target}
                         </span>
@@ -1037,7 +1037,7 @@ export default function RestaurantDashboard() {
                             : ord.orderStatus === 'READY'
                               ? 'bg-emerald-100 text-emerald-800'
                               : ord.orderStatus === 'SERVED' || ord.orderStatus === 'COMPLETED'
-                                ? 'bg-blue-100 text-blue-800'
+                                ? 'bg-emerald-100 text-emerald-800'
                                 : 'bg-slate-100 text-slate-700'
                         }`}>
                           {ord.orderStatus === 'PREPARING' && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}

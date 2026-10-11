@@ -305,8 +305,8 @@ export default function RestaurantTables() {
         };
       case 'BILLED':
         return {
-          bg: 'bg-blue-50 border-blue-200 text-blue-800',
-          dot: 'bg-blue-600',
+          bg: 'bg-rose-50 border-rose-200 text-rose-800',
+          dot: 'bg-rose-600',
           label: 'Billed'
         };
       case 'CLEANING':
@@ -403,8 +403,8 @@ export default function RestaurantTables() {
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Billed</span>
-          <p className="text-xl font-black text-blue-600 mt-1">{stats.billed}</p>
-          <span className="text-[10px] text-blue-600 font-medium">Awaiting settlement</span>
+          <p className="text-xl font-black text-rose-600 mt-1">{stats.billed}</p>
+          <span className="text-[10px] text-rose-600 font-medium">Awaiting settlement</span>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
@@ -560,7 +560,7 @@ export default function RestaurantTables() {
                     : table.status === 'AVAILABLE'
                       ? 'border-slate-200 hover:border-emerald-400'
                       : table.status === 'BILLED'
-                        ? 'border-blue-400 bg-blue-50/10'
+                        ? 'border-rose-400 bg-rose-50/10'
                         : table.status === 'CLEANING'
                           ? 'border-purple-300 bg-purple-50/10'
                           : 'border-amber-300 bg-amber-50/10'

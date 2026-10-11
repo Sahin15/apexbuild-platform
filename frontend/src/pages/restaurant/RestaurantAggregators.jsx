@@ -549,7 +549,7 @@ export default function RestaurantAggregators() {
             onClick={() => handleToggleStore('surgeRainMode')}
             className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
               config.surgeRainMode 
-                ? 'bg-blue-600 text-white border-blue-700 shadow-sm animate-pulse' 
+                ? 'bg-amber-600 text-white border-amber-700 shadow-sm animate-pulse' 
                 : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700'
             }`}
           >
@@ -873,11 +873,11 @@ export default function RestaurantAggregators() {
             </div>
 
             <div className="bg-white dark:bg-stone-900 p-4 rounded-2xl border border-stone-200/80 dark:border-stone-800 shadow-2xs">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block">Out on Delivery</span>
-              <p className="text-xl font-black text-blue-600 mt-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 block">Out on Delivery</span>
+              <p className="text-xl font-black text-orange-600 mt-1">
                 {deliveryBoys.filter(b => b.deliveryBoyStatus === 'ON_DELIVERY').length} <span className="text-xs font-bold text-stone-400">trips</span>
               </p>
-              <span className="text-[11px] text-blue-600 font-medium mt-1 block">Active food delivery trips</span>
+              <span className="text-[11px] text-orange-600 font-medium mt-1 block">Active food delivery trips</span>
             </div>
 
             <div className="bg-white dark:bg-stone-900 p-4 rounded-2xl border border-stone-200/80 dark:border-stone-800 shadow-2xs">
@@ -921,7 +921,7 @@ export default function RestaurantAggregators() {
                         isAvailable 
                           ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
                           : isOnDelivery
-                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 animate-pulse'
+                            ? 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 animate-pulse'
                             : 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
                       }`}>
                         {status.replace(/_/g, ' ')}
@@ -964,8 +964,8 @@ export default function RestaurantAggregators() {
 
                     {/* Active Order Trip details if out */}
                     {isOnDelivery && boy.currentOrderId && (
-                      <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-xs space-y-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 block flex items-center gap-1">
+                      <div className="p-3 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900/60 text-xs space-y-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-orange-700 dark:text-orange-300 block flex items-center gap-1">
                           <Navigation className="w-3 h-3" />
                           <span>Active Delivery Trip</span>
                         </span>
@@ -1222,7 +1222,7 @@ export default function RestaurantAggregators() {
                           riderStatus === 'DELIVERED' 
                             ? 'bg-emerald-100 text-emerald-800'
                             : riderStatus === 'OUT_FOR_DELIVERY'
-                              ? 'bg-blue-100 text-blue-800'
+                              ? 'bg-orange-100 text-orange-800'
                               : riderStatus === 'ARRIVED_AT_STORE'
                                 ? 'bg-purple-100 text-purple-800'
                                 : 'bg-amber-100 text-amber-800'

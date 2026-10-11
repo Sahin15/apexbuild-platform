@@ -21,9 +21,10 @@ const POPULAR_COLORS = [
   { name: 'Cyan', hex: '#0891B2' },
   { name: 'Emerald', hex: '#059669' },
   { name: 'Green', hex: '#16A34A' },
+  { name: 'Orange (Culinary)', hex: '#EA580C' },
+  { name: 'Amber', hex: '#D97706' },
   { name: 'Red', hex: '#DC2626' },
   { name: 'Rose', hex: '#E11D48' },
-  { name: 'Amber', hex: '#D97706' },
   { name: 'Slate', hex: '#1E293B' },
 ];
 

@@ -779,7 +779,7 @@ export default function RestaurantPurchases() {
                                 : isPartiallyReceived
                                   ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400'
                                   : isOrdered
-                                    ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400'
+                                    ? 'bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-950/40 dark:text-orange-400'
                                     : 'bg-stone-100 text-stone-600 border-stone-200'
                             }`}>
                               {po.status?.replace('_', ' ')}
@@ -863,7 +863,7 @@ export default function RestaurantPurchases() {
                   <span className="text-xs px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 font-medium">
                     {vendor.category}
                   </span>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300 border border-orange-200">
                     {vendor.paymentTerms?.replace('_', ' ')}
                   </span>
                 </div>

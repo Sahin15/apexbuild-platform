@@ -340,10 +340,10 @@ export default function RestaurantShifts() {
               <span className="text-[10px] text-amber-600/80">{currentShift.drops?.length || 0} transfer logs</span>
             </div>
 
-            <div className="bg-blue-50/60 p-3.5 rounded-2xl border border-blue-200/70">
-              <span className="text-[10px] uppercase font-bold text-blue-800 block">Digital Volume</span>
-              <p className="text-lg font-black text-blue-700 mt-1">₹{(currentShift.upiSales || 0) + (currentShift.cardSales || 0)}</p>
-              <span className="text-[10px] text-blue-600/80">UPI + Card settlements</span>
+            <div className="bg-orange-50/60 p-3.5 rounded-2xl border border-orange-200/70">
+              <span className="text-[10px] uppercase font-bold text-orange-800 block">Digital Volume</span>
+              <p className="text-lg font-black text-orange-700 mt-1">₹{(currentShift.upiSales || 0) + (currentShift.cardSales || 0)}</p>
+              <span className="text-[10px] text-orange-600/80">UPI + Card settlements</span>
             </div>
 
           </div>

@@ -286,11 +286,11 @@ export default function RestaurantReports() {
             <div className="bg-white dark:bg-stone-900 p-4 rounded-2xl border border-stone-200/80 dark:border-stone-800 shadow-2xs">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Gross Margin</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-800">
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-orange-100 text-orange-800">
                   {gp.grossMarginPercentage}%
                 </span>
               </div>
-              <p className="text-xl font-black text-blue-600 mt-1">
+              <p className="text-xl font-black text-orange-600 mt-1">
                 ₹{Number(gp.grossProfit).toLocaleString('en-IN')}
               </p>
               <div className="text-[11px] text-stone-400 mt-1 pt-1 border-t border-stone-100 dark:border-stone-800">
@@ -487,7 +487,7 @@ export default function RestaurantReports() {
 
                   const icon = channelName.includes('Dine') ? <Utensils className="w-3.5 h-3.5 text-orange-600" />
                     : channelName.includes('Take') ? <Store className="w-3.5 h-3.5 text-amber-600" />
-                    : <Truck className="w-3.5 h-3.5 text-blue-600" />;
+                    : <Truck className="w-3.5 h-3.5 text-orange-600" />;
 
                   return (
                     <div key={channelName || idx} className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200/70 dark:border-stone-700/60">
@@ -671,7 +671,7 @@ export default function RestaurantReports() {
               </div>
 
               {/* GROSS MARGIN HIGHLIGHT ROW */}
-              <div className="p-4 bg-blue-50/60 dark:bg-blue-950/30 flex items-center justify-between font-extrabold text-blue-900 dark:text-blue-300">
+              <div className="p-4 bg-orange-50/60 dark:bg-orange-950/30 flex items-center justify-between font-extrabold text-orange-900 dark:text-orange-300">
                 <span className="text-xs uppercase tracking-wide">3.0 GROSS PROFIT (Revenue minus Food COGS)</span>
                 <span className="text-sm">₹{Number(gp.grossProfit).toLocaleString('en-IN')} ({gp.grossMarginPercentage}%)</span>
               </div>
@@ -804,7 +804,7 @@ export default function RestaurantReports() {
                       <td className="py-3 px-4 text-right text-stone-500">
                         ₹{Number(item.cost).toLocaleString('en-IN')}
                       </td>
-                      <td className="py-3 px-4 text-right font-bold text-blue-600">
+                      <td className="py-3 px-4 text-right font-bold text-orange-600">
                         ₹{Number(item.margin).toLocaleString('en-IN')}
                       </td>
                       <td className="py-3 px-4 text-center font-bold">
@@ -894,9 +894,9 @@ export default function RestaurantReports() {
                     <td className="py-1.5 text-right text-stone-500">₹{Number(cogs.rawIngredientCost).toFixed(2)}</td>
                     <td className="py-1.5 text-right text-stone-400"></td>
                   </tr>
-                  <tr className="font-black text-stone-900 bg-blue-50">
+                  <tr className="font-black text-stone-900 bg-orange-50">
                     <td className="py-2.5">3. GROSS OPERATING MARGIN</td>
-                    <td className="py-2.5 text-right font-black text-blue-700">₹{Number(gp.grossProfit).toFixed(2)}</td>
+                    <td className="py-2.5 text-right font-black text-orange-700">₹{Number(gp.grossProfit).toFixed(2)}</td>
                     <td className="py-2.5 text-right font-bold">{gp.grossMarginPercentage}%</td>
                   </tr>
                   <tr className="font-extrabold text-stone-900 bg-stone-50">

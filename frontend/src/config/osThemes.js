@@ -236,19 +236,19 @@ export const OS_CONFIG = {
 };
 
 export const getOSConfig = (businessType, pathname = '') => {
+  // Pathname route takes precedence if on a dedicated OS workspace
+  if (pathname.startsWith('/restaurant')) return OS_CONFIG.RESTAURANT;
+  if (pathname.startsWith('/superadmin')) return OS_CONFIG.SUPERADMIN;
+  if (pathname.startsWith('/supplier')) return OS_CONFIG.MATERIAL_SUPPLIER;
+  if (pathname.startsWith('/diagnostics')) return OS_CONFIG.DIAGNOSTICS;
+  if (pathname.startsWith('/distributor')) return OS_CONFIG.CHICKEN_DISTRIBUTOR;
+
   if (businessType && OS_CONFIG[businessType]) {
     return OS_CONFIG[businessType];
   }
   // Normalization for aliases
   if (businessType === 'SUPPLIER') return OS_CONFIG.MATERIAL_SUPPLIER;
   if (businessType === 'DISTRIBUTOR') return OS_CONFIG.CHICKEN_DISTRIBUTOR;
-
-  // Pathname fallbacks
-  if (pathname.startsWith('/superadmin')) return OS_CONFIG.SUPERADMIN;
-  if (pathname.startsWith('/supplier')) return OS_CONFIG.MATERIAL_SUPPLIER;
-  if (pathname.startsWith('/diagnostics')) return OS_CONFIG.DIAGNOSTICS;
-  if (pathname.startsWith('/distributor')) return OS_CONFIG.CHICKEN_DISTRIBUTOR;
-  if (pathname.startsWith('/restaurant')) return OS_CONFIG.RESTAURANT;
 
   return OS_CONFIG.CONTRACTOR;
 };

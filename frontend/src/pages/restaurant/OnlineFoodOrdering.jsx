@@ -277,7 +277,7 @@ export default function OnlineFoodOrdering() {
                 </div>
               </div>
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-stone-800/60 border border-stone-700/60">
-                <ShieldCheck className="w-4 h-4 text-blue-400" />
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
                 <div>
                   <p className="font-bold text-white text-[11px] leading-tight">100% Tamper Proof</p>
                   <p className="text-[10px] text-stone-400">Sealed Bags</p>
@@ -781,7 +781,7 @@ export default function OnlineFoodOrdering() {
                         : 'bg-stone-800/80 border-stone-700 text-stone-400 hover:text-white'
                     }`}
                   >
-                    <CreditCard className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+                    <CreditCard className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" />
                     <div>
                       <p className="font-bold text-xs">UPI / Card</p>
                       <p className="text-[10px] text-stone-400">Instant digital payment</p>

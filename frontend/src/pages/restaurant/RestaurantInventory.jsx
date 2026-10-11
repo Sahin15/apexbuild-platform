@@ -766,7 +766,7 @@ export default function RestaurantInventory() {
                         <div className="w-full bg-stone-100 dark:bg-stone-800 h-2 rounded-full overflow-hidden">
                           <div 
                             className={`h-full rounded-full transition-all duration-300 ${
-                              isOutOfStock ? 'bg-red-500 w-0' : isLowStock ? 'bg-amber-500' : isOverstocked ? 'bg-blue-500' : 'bg-emerald-500'
+                              isOutOfStock ? 'bg-red-500 w-0' : isLowStock ? 'bg-amber-500' : isOverstocked ? 'bg-purple-500' : 'bg-emerald-500'
                             }`}
                             style={{ width: `${ratio}%` }}
                           />
@@ -791,7 +791,7 @@ export default function RestaurantInventory() {
                             : isLowStock
                               ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900'
                               : isOverstocked
-                                ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900'
+                                ? 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-900'
                                 : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900'
                         }`}>
                           {isOutOfStock ? 'Out of Stock' : isLowStock ? 'Par Alert' : isOverstocked ? 'Overstocked' : 'Optimal'}
@@ -1476,7 +1476,7 @@ export default function RestaurantInventory() {
                                   ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
                                   : log.type === 'WASTAGE_SPOILAGE'
                                     ? 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400'
-                                    : 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400'
+                                    : 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400'
                             }`}>
                               {log.type}
                             </span>

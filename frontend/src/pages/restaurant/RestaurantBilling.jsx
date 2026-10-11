@@ -259,14 +259,14 @@ export default function RestaurantBilling() {
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">UPI Digital</span>
-            <div className="p-1 rounded-lg bg-blue-50 text-blue-600">
+            <div className="p-1 rounded-lg bg-orange-50 text-orange-600">
               <QrCode className="w-3.5 h-3.5" />
             </div>
           </div>
           <p className="text-xl font-black text-slate-900 mt-2">
             ₹{summary.upiTotal.toLocaleString('en-IN')}
           </p>
-          <span className="text-[10px] text-blue-600 font-medium">Instant QR Transfers</span>
+          <span className="text-[10px] text-orange-600 font-medium">Instant QR Transfers</span>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
@@ -477,7 +477,7 @@ export default function RestaurantBilling() {
                             primaryMethod === 'CASH'
                               ? 'bg-amber-50 text-amber-800 border border-amber-200'
                               : primaryMethod === 'UPI'
-                                ? 'bg-blue-50 text-blue-800 border border-blue-200'
+                                ? 'bg-orange-50 text-orange-800 border border-orange-200'
                                 : 'bg-purple-50 text-purple-800 border border-purple-200'
                           }`}>
                             {primaryMethod}

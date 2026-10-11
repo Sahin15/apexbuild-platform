@@ -16,7 +16,7 @@ const DEPARTMENTS = [
   { id: 'KITCHEN_BOH', label: 'Kitchen (BOH)', icon: ChefHat, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
   { id: 'SERVICE_FOH', label: 'Service & Dining (FOH)', icon: Utensils, color: 'text-orange-400 bg-orange-500/10 border-orange-500/20' },
   { id: 'BAR_BEVERAGE', label: 'Bar & Beverage', icon: Coffee, color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
-  { id: 'MANAGEMENT', label: 'Management', icon: Shield, color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+  { id: 'MANAGEMENT', label: 'Management', icon: Shield, color: 'text-rose-400 bg-rose-500/10 border-rose-500/20' },
   { id: 'HOUSEKEEPING', label: 'Housekeeping', icon: Building2, color: 'text-slate-600 bg-slate-100 border-slate-200' },
 ];
 
@@ -567,7 +567,7 @@ export default function RestaurantStaff() {
         <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
             <span>Today's Roster</span>
-            <Calendar className="w-4 h-4 text-blue-600" />
+            <Calendar className="w-4 h-4 text-orange-600" />
           </div>
           <div className="text-2xl font-black text-slate-900 tracking-tight mt-1">
             {summary.scheduledToday}
@@ -701,7 +701,7 @@ export default function RestaurantStaff() {
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 animate-pulse'
                           : isClockedOut
                           ? 'bg-slate-100 text-slate-600 border border-slate-200'
-                          : 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'bg-orange-50 text-orange-700 border border-orange-200'
                       }`}>
                         {shift.status}
                       </span>

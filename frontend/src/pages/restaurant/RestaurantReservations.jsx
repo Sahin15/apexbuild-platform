@@ -16,7 +16,7 @@ const OCCASIONS = [
   { value: 'NONE', label: 'Standard Dining', icon: Coffee, color: 'text-slate-600 bg-slate-100' },
   { value: 'BIRTHDAY', label: 'Birthday Celebration', icon: Gift, color: 'text-pink-500 bg-pink-500/10' },
   { value: 'ANNIVERSARY', label: 'Anniversary', icon: Heart, color: 'text-rose-500 bg-rose-500/10' },
-  { value: 'BUSINESS_DINNER', label: 'Business Meeting', icon: Briefcase, color: 'text-blue-500 bg-blue-500/10' },
+  { value: 'BUSINESS_DINNER', label: 'Business Meeting', icon: Briefcase, color: 'text-orange-500 bg-orange-500/10' },
   { value: 'DATE_NIGHT', label: 'Date Night', icon: Heart, color: 'text-purple-500 bg-purple-500/10' },
   { value: 'FAMILY_GATHERING', label: 'Family Gathering', icon: Users, color: 'text-emerald-500 bg-emerald-500/10' },
   { value: 'OTHER', label: 'Special Event', icon: Sparkles, color: 'text-amber-500 bg-amber-500/10' },
@@ -496,7 +496,7 @@ export default function RestaurantReservations() {
         <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
             <span>Expected Covers</span>
-            <Users className="w-4 h-4 text-blue-400" />
+            <Users className="w-4 h-4 text-orange-500" />
           </div>
           <div className="text-2xl font-black text-slate-900 tracking-tight mt-1">
             {summary.expectedCovers} <span className="text-xs font-normal text-slate-500">guests</span>
@@ -714,7 +714,7 @@ export default function RestaurantReservations() {
                                 resItem.status === 'CONFIRMED'
                                   ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                                   : resItem.status === 'SEATED'
-                                  ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
+                                  ? 'bg-orange-500/10 text-orange-600 border border-orange-500/20'
                                   : resItem.status === 'COMPLETED'
                                   ? 'bg-slate-100 text-slate-600 border border-slate-200'
                                   : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
@@ -796,7 +796,7 @@ export default function RestaurantReservations() {
                               {resItem.status === 'SEATED' && (
                                 <button
                                   onClick={() => navigate('/restaurant/pos')}
-                                  className="flex-1 py-1.5 px-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center justify-center gap-1 transition-all"
+                                  className="flex-1 py-1.5 px-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs flex items-center justify-center gap-1 transition-all"
                                 >
                                   <Utensils className="w-3.5 h-3.5" />
                                   <span>Open POS</span>
@@ -951,7 +951,7 @@ export default function RestaurantReservations() {
                           resItem.status === 'CONFIRMED'
                             ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                             : resItem.status === 'SEATED'
-                            ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
+                            ? 'bg-orange-500/10 text-orange-600 border border-orange-500/20'
                             : resItem.status === 'COMPLETED'
                             ? 'bg-slate-100 text-slate-600 border border-slate-200'
                             : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'

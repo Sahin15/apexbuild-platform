@@ -37,8 +37,9 @@ export const ThemeProvider = ({ children }) => {
   }, [user?.organizationId?.settings?.branding]);
 
   // Compute active effective theme
-  const activePrimary = customTheme.primaryColor || osConfig.defaultPrimary || '#2563EB';
-  const activeSecondary = customTheme.secondaryColor || osConfig.defaultSecondary || '#0891B2';
+  const isMatchingOrgOS = user?.organizationId?.businessType === osConfig.key;
+  const activePrimary = (isMatchingOrgOS && customTheme.primaryColor) || osConfig.defaultPrimary || '#2563EB';
+  const activeSecondary = (isMatchingOrgOS && customTheme.secondaryColor) || osConfig.defaultSecondary || '#0891B2';
 
   // Inject CSS custom properties on document.documentElement so the whole app updates in real-time
   useEffect(() => {
