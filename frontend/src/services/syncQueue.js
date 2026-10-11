@@ -1,7 +1,8 @@
 /**
  * Offline Background Sync Queue Engine
+ * High-reliability IndexedDB + LocalStorage dual storage engine.
  * Stores offline mutation requests (POST/PUT/PATCH/DELETE) and flushes them
- * sequentially when connectivity is restored.
+ * sequentially or on-demand when connectivity is restored.
  */
 
 import api from './api';
@@ -9,7 +10,39 @@ import { sendLocalNotification } from '../utils/notifications';
 import { invalidateApiCache } from './offlineCache';
 
 const QUEUE_STORAGE_KEY = 'apex_offline_sync_queue';
+const IDB_NAME = 'apex_sync_db';
+const IDB_STORE = 'sync_queue';
+const IDB_VERSION = 1;
+
 let isProcessingQueue = false;
+let idbPromise = null;
+
+// Helper to open IndexedDB with graceful fallback
+function getIndexedDB() {
+  if (typeof window === 'undefined' || !window.indexedDB) return Promise.resolve(null);
+  if (idbPromise) return idbPromise;
+
+  idbPromise = new Promise((resolve) => {
+    try {
+      const request = window.indexedDB.open(IDB_NAME, IDB_VERSION);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          db.createObjectStore(IDB_STORE, { keyPath: 'id' });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => {
+        console.warn('[SyncQueue] IndexedDB open error, falling back to localStorage');
+        resolve(null);
+      };
+    } catch {
+      resolve(null);
+    }
+  });
+
+  return idbPromise;
+}
 
 // Helper to get active tenant scope
 function getTenantScope() {
@@ -33,13 +66,13 @@ export function getSyncQueue() {
     const tenant = getTenantScope();
     return queue.filter(item => item.tenant === tenant);
   } catch (e) {
-    console.warn('Failed to read sync queue:', e);
+    console.warn('[SyncQueue] Failed to read sync queue:', e);
     return [];
   }
 }
 
 /**
- * Save queue to localStorage
+ * Save queue to localStorage and persist to IndexedDB
  */
 function saveSyncQueue(items) {
   try {
@@ -49,8 +82,21 @@ function saveSyncQueue(items) {
         detail: { count: items.length }
       }));
     }
+
+    // Async sync to IndexedDB for large payload durability
+    getIndexedDB().then(db => {
+      if (!db) return;
+      try {
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        const store = tx.objectStore(IDB_STORE);
+        store.clear();
+        items.forEach(item => store.put(item));
+      } catch (err) {
+        console.warn('[SyncQueue] IDB persist error:', err);
+      }
+    });
   } catch (e) {
-    console.error('Failed to save sync queue:', e);
+    console.error('[SyncQueue] Failed to save sync queue:', e);
   }
 }
 
@@ -74,7 +120,9 @@ export function enqueueSyncOperation({
     platform,
     tenant,
     createdAt: Date.now(),
-    attempts: 0
+    attempts: 0,
+    status: 'PENDING',
+    lastError: null
   };
 
   const raw = localStorage.getItem(QUEUE_STORAGE_KEY);
@@ -94,6 +142,64 @@ export function removeSyncItem(id) {
   const queue = JSON.parse(raw);
   const filtered = queue.filter(item => item.id !== id);
   saveSyncQueue(filtered);
+}
+
+/**
+ * Clear all queued items for current tenant
+ */
+export function clearSyncQueue() {
+  const raw = localStorage.getItem(QUEUE_STORAGE_KEY);
+  if (!raw) return;
+  const queue = JSON.parse(raw);
+  const tenant = getTenantScope();
+  const filtered = queue.filter(item => item.tenant !== tenant);
+  saveSyncQueue(filtered);
+}
+
+/**
+ * Sync a single queued item immediately
+ */
+export async function syncSingleItem(id) {
+  const raw = localStorage.getItem(QUEUE_STORAGE_KEY);
+  if (!raw) return { success: false, reason: 'Queue is empty' };
+
+  let queue = JSON.parse(raw);
+  const itemIndex = queue.findIndex(item => item.id === id);
+  if (itemIndex === -1) return { success: false, reason: 'Item not found in queue' };
+
+  const item = queue[itemIndex];
+  item.status = 'SYNCING';
+  item.attempts += 1;
+  saveSyncQueue(queue);
+
+  try {
+    const res = await api.request({
+      url: item.endpoint,
+      method: item.method,
+      data: item.payload
+    });
+
+    invalidateApiCache(item.endpoint);
+
+    // Remove item on success
+    queue = queue.filter(q => q.id !== id);
+    saveSyncQueue(queue);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('apex-sync-completed', {
+        detail: { count: 1, item }
+      }));
+    }
+
+    return { success: true, data: res.data };
+  } catch (error) {
+    const errorMsg = error.response?.data?.message || error.message || 'Network sync error';
+    item.status = 'FAILED';
+    item.lastError = errorMsg;
+    saveSyncQueue(queue);
+
+    return { success: false, error: errorMsg };
+  }
 }
 
 /**
@@ -125,6 +231,7 @@ export async function processSyncQueue() {
   for (const item of tenantItems) {
     try {
       item.attempts += 1;
+      item.status = 'SYNCING';
       await api.request({
         url: item.endpoint,
         method: item.method,
@@ -135,13 +242,17 @@ export async function processSyncQueue() {
       invalidateApiCache(item.endpoint);
       successfulCount += 1;
     } catch (error) {
-      console.warn(`Sync failed for item ${item.id} (${item.title}):`, error);
+      console.warn(`[SyncQueue] Sync failed for item ${item.id} (${item.title}):`, error);
       
-      // If error is 4xx client validation, do not retry forever (poison pill)
+      const errorMsg = error.response?.data?.message || error.message || 'Sync failed';
+      item.status = 'FAILED';
+      item.lastError = errorMsg;
+
+      // If error is 4xx client validation (non-retryable poison pill), discard
       if (error.response && error.response.status >= 400 && error.response.status < 500) {
-        console.error(`Discarding invalid queued item ${item.id}:`, error.response.data);
+        console.error(`[SyncQueue] Discarding invalid queued item ${item.id}:`, error.response.data);
       } else {
-        // Network error: keep item in queue for next retry
+        // Network/Server error: keep item in queue for next retry
         remainingQueue.push(item);
         break; // Stop loop, network is still unstable
       }
@@ -152,7 +263,6 @@ export async function processSyncQueue() {
   isProcessingQueue = false;
 
   if (successfulCount > 0) {
-    // Notify app of completed sync
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('apex-sync-completed', {
         detail: { count: successfulCount }
@@ -166,7 +276,7 @@ export async function processSyncQueue() {
   }
 }
 
-// Auto-sync listeners
+// Auto-sync event listeners
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
     setTimeout(processSyncQueue, 1500);
@@ -180,5 +290,7 @@ export default {
   getSyncQueue,
   enqueueSyncOperation,
   removeSyncItem,
+  clearSyncQueue,
+  syncSingleItem,
   processSyncQueue
 };

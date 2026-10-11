@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../services/api';
+import { enqueueSyncOperation } from '../services/syncQueue';
 import toast from 'react-hot-toast';
 import { 
   Users, 
@@ -253,6 +254,31 @@ export default function Labour({ isProjectView = false }) {
       setAttendanceGps(null);
       fetchData();
     } catch (error) {
+      if (!navigator.onLine || error.code === 'ERR_NETWORK' || error.message?.includes('Network')) {
+        const targetProjId = projectId || routeProjectId;
+        enqueueSyncOperation({
+          endpoint: '/labour/attendance',
+          method: 'POST',
+          payload: {
+            date: selectedDate,
+            projectId: targetProjId,
+            gpsLocation: attendanceGps ? {
+              latitude: attendanceGps.latitude,
+              longitude: attendanceGps.longitude,
+              accuracy: attendanceGps.accuracy,
+              verified: true
+            } : undefined,
+            records: dailyAttendanceRecords
+          },
+          title: `Daily Labour Muster (${dailyAttendanceRecords.length} workers)`,
+          platform: 'CONTRACTOR'
+        });
+        haptics.success();
+        toast.success('Muster saved offline! Will auto-upload when back online.', { icon: '💾' });
+        setIsAttendanceModalOpen(false);
+        setAttendanceGps(null);
+        return;
+      }
       haptics.error();
       toast.error(error.response?.data?.message || 'Failed to record attendance');
     }

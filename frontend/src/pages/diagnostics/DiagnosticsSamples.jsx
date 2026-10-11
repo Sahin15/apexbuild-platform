@@ -18,6 +18,7 @@ import {
   Share2
 } from 'lucide-react';
 import api from '../../services/api';
+import { enqueueSyncOperation } from '../../services/syncQueue';
 import toast from 'react-hot-toast';
 import BarcodePrintModal from '../../components/diagnostics/BarcodePrintModal';
 import { getTubeConfig } from '../../components/diagnostics/BarcodeSticker';
@@ -80,6 +81,28 @@ const DiagnosticsSamples = () => {
         setNewStatus(updatedSample.status);
       }
     } catch (error) {
+      if (!navigator.onLine || error.code === 'ERR_NETWORK' || error.message?.includes('Network')) {
+        const payload = { status: newStatusToSet };
+        if (newStatusToSet === 'Rejected') payload.rejectionReason = reason;
+
+        enqueueSyncOperation({
+          endpoint: `/diagnostics/samples/${sampleId}/status`,
+          method: 'PATCH',
+          payload,
+          title: `Update Sample Status: ${newStatusToSet}`,
+          platform: 'DIAGNOSTICS'
+        });
+
+        // Optimistic UI update
+        setSamples(prev => prev.map(s => s._id === sampleId ? { ...s, ...payload } : s));
+        if (selectedSample && selectedSample._id === sampleId) {
+          setSelectedSample(prev => ({ ...prev, ...payload }));
+          setNewStatus(newStatusToSet);
+        }
+        haptics.success();
+        toast.success(`Marked as ${newStatusToSet} (Saved offline)`, { icon: '💾' });
+        return;
+      }
       haptics.error();
       toast.error(error.response?.data?.message || 'Failed to update sample');
     }
@@ -101,6 +124,22 @@ const DiagnosticsSamples = () => {
         setBarcodeModalSamples([sample]);
       }
     } catch (error) {
+      if (!navigator.onLine || error.code === 'ERR_NETWORK' || error.message?.includes('Network')) {
+        enqueueSyncOperation({
+          endpoint: `/diagnostics/samples/${sample._id}/status`,
+          method: 'PATCH',
+          payload: { status: 'Collected' },
+          title: `Collect Sample (${sample.barcode || 'Barcode'})`,
+          platform: 'DIAGNOSTICS'
+        });
+
+        const updated = { ...sample, status: 'Collected' };
+        setSamples(prev => prev.map(s => s._id === sample._id ? updated : s));
+        haptics.success();
+        toast.success(`Collected offline! Opening barcode label...`, { icon: '💾' });
+        setBarcodeModalSamples([updated]);
+        return;
+      }
       haptics.error();
       toast.error('Failed to mark sample as collected');
     }

@@ -23,6 +23,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import api from '../services/api';
+import { enqueueSyncOperation } from '../services/syncQueue';
 import toast from 'react-hot-toast';
 
 export default function Expenses() {
@@ -130,6 +131,25 @@ export default function Expenses() {
       }));
       fetchData(projectId);
     } catch (error) {
+      if (!navigator.onLine || error.code === 'ERR_NETWORK' || error.message?.includes('Network')) {
+        enqueueSyncOperation({
+          endpoint: '/petty-cash/vouchers',
+          method: 'POST',
+          payload: voucherForm,
+          title: `Petty Cash Voucher (₹${Number(voucherForm.amount || 0).toLocaleString()} - ${voucherForm.category || 'Site Expense'})`,
+          platform: 'CONTRACTOR'
+        });
+        toast.success('Voucher queued offline! Will auto-upload when back online.', { icon: '💾' });
+        setIsVoucherModalOpen(false);
+        setVoucherForm(prev => ({
+          ...prev,
+          amount: '',
+          description: '',
+          vendorName: '',
+          billNumber: ''
+        }));
+        return;
+      }
       toast.error(error.response?.data?.message || 'Failed to submit voucher');
     }
   };
