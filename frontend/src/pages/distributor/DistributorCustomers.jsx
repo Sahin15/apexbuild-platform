@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Edit2, MessageCircle, Eye, Phone, MapPin, X, Users, Store, Share2 } from 'lucide-react';
+import { Plus, Search, Edit2, MessageCircle, Eye, Phone, MapPin, X, Users, Store, Share2, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
 import { shareCustomerLedger } from '../../utils/share';
+import CustomerKhataModal from '../../components/common/CustomerKhataModal';
 
 export default function DistributorCustomers() {
   const [customers, setCustomers] = useState([]);
@@ -12,6 +13,7 @@ export default function DistributorCustomers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [khataCustomerId, setKhataCustomerId] = useState(null);
   const [formData, setFormData] = useState({
     shopName: '',
     ownerName: '',
@@ -191,12 +193,22 @@ export default function DistributorCustomers() {
                     <Share2 className="w-4 h-4" />
                   </button>
                 </div>
-                <button 
-                  onClick={() => handleEdit(customer)}
-                  className="flex items-center gap-2 px-4 h-10 rounded-xl text-xs font-bold text-slate-600 bg-white border border-slate-200 active:bg-slate-50 transition-colors"
-                >
-                  <Edit2 className="w-4 h-4" /> Edit
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button 
+                    onClick={() => setKhataCustomerId(customer._id)}
+                    className="flex items-center gap-1.5 px-3 h-10 rounded-xl text-xs font-black text-amber-800 bg-amber-100 hover:bg-amber-200 active:scale-95 transition-all shadow-2xs"
+                    title="Open Customer Khata Ledger"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Khata</span>
+                  </button>
+                  <button 
+                    onClick={() => handleEdit(customer)}
+                    className="flex items-center gap-1.5 px-3 h-10 rounded-xl text-xs font-bold text-slate-600 bg-white border border-slate-200 active:bg-slate-50 transition-colors"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" /> Edit
+                  </button>
+                </div>
               </div>
             </div>
           ))
@@ -270,6 +282,15 @@ export default function DistributorCustomers() {
           </div>
         </div>
       )}
+
+      {/* Customer Khata & Credit Ledger Modal */}
+      <CustomerKhataModal
+        isOpen={!!khataCustomerId}
+        onClose={() => setKhataCustomerId(null)}
+        customerId={khataCustomerId}
+        platform="CHICKEN_DISTRIBUTOR"
+        onPaymentRecorded={() => fetchCustomers()}
+      />
       </div>
     </PullToRefreshContainer>
   );

@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Phone, MapPin, Store, CreditCard, Box,
-  TrendingUp, FileText, MessageSquare, Plus, CheckCircle, Package
+  TrendingUp, FileText, MessageSquare, Plus, CheckCircle, Package, BookOpen
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import ReceiptModal from '../../components/distributor/ReceiptModal';
+import CustomerKhataModal from '../../components/common/CustomerKhataModal';
 
 export default function DistributorCustomerDetails() {
   const { id } = useParams();
@@ -14,6 +15,7 @@ export default function DistributorCustomerDetails() {
   const [loading, setLoading] = useState(true);
   const [newLog, setNewLog] = useState('');
   const [activeReceipt, setActiveReceipt] = useState(null);
+  const [showKhata, setShowKhata] = useState(false);
 
   const fetchCustomer = async () => {
     try {
@@ -87,11 +89,18 @@ export default function DistributorCustomerDetails() {
             <p className="text-slate-500 font-medium">{customer.ownerName || 'Owner Name N/A'}</p>
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-right flex flex-col items-end">
           <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Live Due Balance</p>
           <h2 className={`text-4xl font-black ${customer.currentDue > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
             ₹{customer.currentDue?.toLocaleString() || 0}
           </h2>
+          <button
+            onClick={() => setShowKhata(true)}
+            className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition-colors shadow-2xs"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+            <span>Customer Khata Ledger</span>
+          </button>
         </div>
       </div>
 
@@ -125,7 +134,13 @@ export default function DistributorCustomerDetails() {
                   <p className="text-sm text-slate-500">{customer.area} {customer.route ? `(${customer.route})` : ''}</p>
                 </div>
               </div>
-              <div className="pt-4 border-t border-slate-100">
+              <div className="pt-4 border-t border-slate-100 space-y-2">
+                <button 
+                  onClick={() => setShowKhata(true)} 
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black py-3 rounded-xl flex justify-center items-center gap-2 shadow-sm transition-all"
+                >
+                  <BookOpen className="w-5 h-5 text-slate-950" /> Customer Khata & Payments
+                </button>
                 <button onClick={handleWhatsAppReminder} className="w-full bg-green-50 hover:bg-green-100 text-green-700 font-bold py-3 rounded-xl flex justify-center items-center gap-2">
                   <MessageSquare className="w-5 h-5" /> Send WhatsApp Reminder
                 </button>
@@ -232,6 +247,16 @@ export default function DistributorCustomerDetails() {
           onClose={() => setActiveReceipt(null)} 
         />
       )}
+
+      {/* Customer Khata & Credit Ledger Modal */}
+      <CustomerKhataModal
+        isOpen={showKhata}
+        onClose={() => setShowKhata(false)}
+        customerId={id}
+        platform="CHICKEN_DISTRIBUTOR"
+        customerName={customer.shopName}
+        onPaymentRecorded={() => fetchCustomer()}
+      />
     </div>
   );
 }

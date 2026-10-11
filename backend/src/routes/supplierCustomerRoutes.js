@@ -4,7 +4,9 @@ import {
   createCustomer, 
   getCustomer, 
   updateCustomer, 
-  deleteCustomer 
+  deleteCustomer,
+  getCustomerLedger,
+  recordCustomerPayment
 } from '../controllers/supplierCustomerController.js';
 import { protect, authorize } from '../middlewares/authMiddleware.js';
 
@@ -17,6 +19,12 @@ router.use(authorize('OWNER', 'ADMIN', 'SALES', 'ACCOUNTANT'));
 router.route('/')
   .get(getCustomers)
   .post(createCustomer);
+
+router.route('/:id/ledger')
+  .get(getCustomerLedger);
+
+router.route('/:id/payments')
+  .post(recordCustomerPayment);
 
 router.route('/:id')
   .get(getCustomer)

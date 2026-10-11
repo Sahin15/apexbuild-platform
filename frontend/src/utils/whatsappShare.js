@@ -262,6 +262,59 @@ export function formatContractorBillWhatsApp({ bill, project, clientName }) {
   return lines.join('\n');
 }
 
+/**
+ * Format Customer Khata & Credit Balance Reminder for WhatsApp
+ */
+export function formatCustomerKhataReminderWhatsApp({ customer, summary, orgName = 'ApexBuild Platform' }) {
+  const shop = customer?.shopName || customer?.name || customer?.businessName || 'Valued Customer';
+  const owner = customer?.ownerName || customer?.contactPerson || '';
+  const due = Number(summary?.currentDue ?? customer?.currentDue ?? 0);
+  const creditLimit = Number(summary?.creditLimit ?? customer?.creditLimit ?? 0);
+  const dateStr = new Date().toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
+  const lines = [
+    `🙏 *PAYMENT REMINDER / KHATA STATEMENT*`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `🏪 *Customer:* ${shop}${owner ? ` (${owner})` : ''}`,
+    `📅 *Statement Date:* ${dateStr}`,
+    ``,
+    `💰 *CURRENT BALANCE DUE: ₹${due.toLocaleString('en-IN')}*`,
+  ];
+
+  if (creditLimit > 0) {
+    const isOver = due > creditLimit;
+    lines.push(`💳 *Credit Limit:* ₹${creditLimit.toLocaleString('en-IN')} ${isOver ? '(⚠️ Limit Exceeded)' : ''}`);
+  }
+
+  if (summary?.totalBilled > 0) {
+    lines.push(`📦 *Lifetime Billed:* ₹${Number(summary.totalBilled).toLocaleString('en-IN')}`);
+  }
+  if (summary?.totalPaid > 0) {
+    lines.push(`🟢 *Total Paid / Received:* ₹${Number(summary.totalPaid).toLocaleString('en-IN')}`);
+  }
+
+  lines.push(
+    ``,
+    `Please arrange to settle the outstanding balance at your earliest convenience to maintain an uninterrupted supply line.`,
+    ``,
+    `🏦 *PAYMENT REMITTANCE DETAILS:*`,
+    `• UPI ID: apexbuild@hdfcbank`,
+    `• Bank: HDFC Bank Ltd`,
+    `• A/C: 50200012345678`,
+    `• IFSC: HDFC0001234`,
+    `• Or handover cash to our dispatch driver upon next delivery.`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `🙏 Thank you for your continued partnership!`,
+    `_${orgName}_`
+  );
+
+  return lines.join('\n');
+}
+
 export default {
   cleanPhoneNumber,
   getWhatsAppUrl,
@@ -269,5 +322,6 @@ export default {
   formatDistributorSaleWhatsApp,
   formatSupplierChallanWhatsApp,
   formatSupplierInvoiceWhatsApp,
-  formatContractorBillWhatsApp
+  formatContractorBillWhatsApp,
+  formatCustomerKhataReminderWhatsApp
 };

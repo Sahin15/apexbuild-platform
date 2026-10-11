@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Phone, Mail, Share2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Phone, Mail, Share2, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import PullToRefreshContainer from '../../components/common/PullToRefreshContainer';
 import { shareSupplierCustomerStatement } from '../../utils/share';
+import CustomerKhataModal from '../../components/common/CustomerKhataModal';
 
 export default function SupplierCustomers() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [khataCustomerId, setKhataCustomerId] = useState(null);
   const [formData, setFormData] = useState({
     name: '', businessName: '', phone: '', email: '', 
     billingAddress: '', creditLimit: 0, openingBalance: 0
@@ -118,15 +120,25 @@ export default function SupplierCustomers() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => shareSupplierCustomerStatement(customer)}
-                        className="text-slate-400 hover:text-indigo-600 mr-3"
-                        title="Share Customer Statement"
-                      >
-                        <Share2 className="w-4 h-4" />
-                      </button>
-                      <button className="text-slate-400 hover:text-emerald-600 mr-3"><Edit className="w-4 h-4" /></button>
-                      <button className="text-slate-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button 
+                          onClick={() => setKhataCustomerId(customer._id)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-black text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-all shadow-2xs"
+                          title="Open Customer Khata & Credit Ledger"
+                        >
+                          <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+                          <span>Khata</span>
+                        </button>
+                        <button 
+                          onClick={() => shareSupplierCustomerStatement(customer)}
+                          className="text-slate-400 hover:text-indigo-600 p-1.5 hover:bg-indigo-50 rounded-lg transition-colors"
+                          title="Share Customer Statement"
+                        >
+                          <Share2 className="w-4 h-4" />
+                        </button>
+                        <button className="text-slate-400 hover:text-emerald-600 p-1.5 hover:bg-emerald-50 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
+                        <button className="text-slate-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -175,6 +187,14 @@ export default function SupplierCustomers() {
           </div>
         </div>
       )}
+      {/* Customer Khata & Credit Ledger Modal */}
+      <CustomerKhataModal
+        isOpen={!!khataCustomerId}
+        onClose={() => setKhataCustomerId(null)}
+        customerId={khataCustomerId}
+        platform="MATERIAL_SUPPLIER"
+        onPaymentRecorded={() => fetchCustomers()}
+      />
       </div>
     </PullToRefreshContainer>
   );
