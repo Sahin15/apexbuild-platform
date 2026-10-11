@@ -7,7 +7,7 @@ import {
   Info, PieChart, Layers, Clock, Check, Utensils,
   FileText, Package, ArrowRightLeft, CreditCard,
   Building, Phone, Mail, MapPin, Receipt, ShieldCheck,
-  ChevronRight, Printer, AlertCircle, ShoppingCart
+  ChevronRight, Printer, AlertCircle, ShoppingCart, History
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
