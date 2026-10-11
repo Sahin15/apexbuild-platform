@@ -20,6 +20,8 @@ const defaultFirebaseConfig = {
   vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY || ''
 };
 
+let activeFirebaseConfig = { ...defaultFirebaseConfig };
+
 /**
  * Initialize Firebase client app and messaging
  */
@@ -27,20 +29,18 @@ export const initFirebase = async () => {
   if (typeof window === 'undefined') return null;
 
   try {
-    let config = defaultFirebaseConfig;
-
     // Attempt to load dynamic public config from backend if available
     try {
       const res = await api.get('/fcm/config');
       if (res.data?.data?.config?.apiKey) {
-        config = { ...defaultFirebaseConfig, ...res.data.data.config };
+        activeFirebaseConfig = { ...defaultFirebaseConfig, ...res.data.data.config };
       }
     } catch (e) {
       // Use default fallback config
     }
 
     if (!getApps().length) {
-      firebaseApp = initializeApp(config);
+      firebaseApp = initializeApp(activeFirebaseConfig);
     } else {
       firebaseApp = getApps()[0];
     }
@@ -81,7 +81,15 @@ export const requestFcmToken = async (platform = 'ALL') => {
     let swRegistration = null;
     if ('serviceWorker' in navigator) {
       try {
-        swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        const swParams = new URLSearchParams({
+          apiKey: activeFirebaseConfig.apiKey || '',
+          projectId: activeFirebaseConfig.projectId || '',
+          messagingSenderId: activeFirebaseConfig.messagingSenderId || '',
+          appId: activeFirebaseConfig.appId || '',
+          authDomain: activeFirebaseConfig.authDomain || ''
+        }).toString();
+        const swUrl = `/firebase-messaging-sw.js${swParams ? `?${swParams}` : ''}`;
+        swRegistration = await navigator.serviceWorker.register(swUrl);
         await navigator.serviceWorker.ready;
       } catch (swErr) {
         try {
@@ -96,8 +104,8 @@ export const requestFcmToken = async (platform = 'ALL') => {
     if (swRegistration) {
       tokenOptions.serviceWorkerRegistration = swRegistration;
     }
-    if (defaultFirebaseConfig.vapidKey) {
-      tokenOptions.vapidKey = defaultFirebaseConfig.vapidKey;
+    if (activeFirebaseConfig.vapidKey) {
+      tokenOptions.vapidKey = activeFirebaseConfig.vapidKey;
     }
 
     const token = await getToken(messagingInstance, tokenOptions);

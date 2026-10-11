@@ -14,7 +14,27 @@ const defaultFirebaseConfig = {
   appId: '1:1029384756:web:abcdef123456'
 };
 
-firebase.initializeApp(defaultFirebaseConfig);
+// Parse dynamic configuration from registration URL query parameters
+let activeConfig = { ...defaultFirebaseConfig };
+try {
+  const params = new URLSearchParams(self.location.search);
+  if (params.get('projectId')) {
+    activeConfig = {
+      apiKey: params.get('apiKey') || defaultFirebaseConfig.apiKey,
+      authDomain: params.get('authDomain') || defaultFirebaseConfig.authDomain,
+      projectId: params.get('projectId') || defaultFirebaseConfig.projectId,
+      storageBucket: params.get('storageBucket') || defaultFirebaseConfig.storageBucket,
+      messagingSenderId: params.get('messagingSenderId') || defaultFirebaseConfig.messagingSenderId,
+      appId: params.get('appId') || defaultFirebaseConfig.appId
+    };
+  }
+} catch (e) {
+  // Use default fallback config
+}
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(activeConfig);
+}
 
 let messaging = null;
 try {
