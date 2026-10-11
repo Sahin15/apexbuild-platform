@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Truck, PackageCheck, AlertCircle, ArrowRight, Radio } from 'lucide-react';
+import { Search, Plus, Truck, PackageCheck, AlertCircle, ArrowRight, Radio, MessageCircle, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import LiveTelematicsMap from '../../components/telematics/LiveTelematicsMap';
+import ShareDocumentModal from '../../components/common/ShareDocumentModal';
+import { formatSupplierChallanWhatsApp } from '../../utils/whatsappShare';
 
 export default function SupplierDeliveries() {
   const [deliveries, setDeliveries] = useState([]);
@@ -14,6 +16,7 @@ export default function SupplierDeliveries() {
   const [drivers, setDrivers] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
+  const [shareModalData, setShareModalData] = useState(null);
 
   const [showVehicleModal, setShowVehicleModal] = useState(false);
   const [showDriverModal, setShowDriverModal] = useState(false);
@@ -119,6 +122,31 @@ export default function SupplierDeliveries() {
       vehicle: '',
       driver: '',
       deliveryNotes: ''
+    });
+  };
+
+  const handleShareChallan = (delivery) => {
+    const order = orders.find(o => o._id === (delivery.order?._id || delivery.order));
+    const vehicle = delivery.vehicle ? vehicles.find(v => v._id === delivery.vehicle) : null;
+    const driver = delivery.driver ? drivers.find(d => d._id === delivery.driver) : null;
+    const text = formatSupplierChallanWhatsApp({
+      challan: delivery,
+      order,
+      customer: delivery.customer,
+      vehicle,
+      driver,
+      products
+    });
+    setShareModalData({
+      title: 'Share Delivery Challan',
+      documentNumber: delivery.challanNumber,
+      recipientName: delivery.customer?.name || 'Customer',
+      phone: delivery.customer?.phone || '',
+      whatsappText: text,
+      onPrint: () => {
+        setSelectedDelivery(delivery);
+        setTimeout(() => window.print(), 350);
+      }
     });
   };
 
@@ -244,9 +272,19 @@ export default function SupplierDeliveries() {
                           </select>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button onClick={() => setSelectedDelivery(delivery)} className="text-slate-400 hover:text-emerald-600 font-medium text-xs bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:border-emerald-200 hover:bg-emerald-50 transition-colors flex items-center gap-1.5 ml-auto">
-                            View Challan
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button 
+                              onClick={() => handleShareChallan(delivery)} 
+                              className="text-emerald-700 hover:text-emerald-800 font-bold text-xs bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-lg shadow-2xs hover:bg-emerald-100 transition-all flex items-center gap-1"
+                              title="Share Challan via WhatsApp"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5 fill-emerald-600 text-transparent" />
+                              <span className="hidden sm:inline">WhatsApp</span>
+                            </button>
+                            <button onClick={() => setSelectedDelivery(delivery)} className="text-slate-600 hover:text-emerald-600 font-medium text-xs bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:border-emerald-200 hover:bg-emerald-50 transition-colors flex items-center gap-1.5">
+                              View Challan
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -434,9 +472,17 @@ export default function SupplierDeliveries() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 print:hidden shrink-0">
               <h2 className="text-xl font-bold text-slate-800">Delivery Challan</h2>
-              <div className="flex gap-2">
-                <button onClick={() => window.print()} className="btn btn-primary bg-slate-800 hover:bg-slate-900">Print / PDF</button>
-                <button onClick={() => setSelectedDelivery(null)} className="btn btn-secondary"><Plus className="w-5 h-5 rotate-45" /></button>
+              <div className="flex gap-2 items-center">
+                <button 
+                  onClick={() => handleShareChallan(selectedDelivery)} 
+                  className="btn btn-primary bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5 text-xs py-2 px-3"
+                  title="Share Challan via WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4 fill-white" />
+                  <span>Share WhatsApp</span>
+                </button>
+                <button onClick={() => window.print()} className="btn btn-primary bg-slate-800 hover:bg-slate-900 text-xs py-2 px-3">Print / PDF</button>
+                <button onClick={() => setSelectedDelivery(null)} className="btn btn-secondary p-2"><Plus className="w-5 h-5 rotate-45" /></button>
               </div>
             </div>
             
@@ -520,6 +566,20 @@ export default function SupplierDeliveries() {
             `}</style>
           </div>
         </div>
+      )}
+
+      {shareModalData && (
+        <ShareDocumentModal
+          isOpen={!!shareModalData}
+          onClose={() => setShareModalData(null)}
+          title={shareModalData.title}
+          documentNumber={shareModalData.documentNumber}
+          recipientName={shareModalData.recipientName}
+          initialPhone={shareModalData.phone}
+          whatsappText={shareModalData.whatsappText}
+          onPrint={shareModalData.onPrint}
+          customBadge="DELIVERY CHALLAN"
+        />
       )}
     </div>
   );

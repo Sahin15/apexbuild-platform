@@ -1,12 +1,14 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { X, Download, MessageCircle, Copy, MapPin } from 'lucide-react';
+import { X, Download, MessageCircle, Copy, Check, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatCoordinates, getGoogleMapsUrl } from '../../utils/geolocation';
+import { formatDistributorSaleWhatsApp, openWhatsAppDirect } from '../../utils/whatsappShare';
 
 export default function ReceiptModal({ sale, onClose }) {
   const receiptRef = useRef(null);
+  const [copied, setCopied] = useState(false);
 
   const generatePDF = () => {
     // Custom receipt format (narrow, like a mobile screen or thermal receipt)
@@ -187,42 +189,48 @@ export default function ReceiptModal({ sale, onClose }) {
   };
 
   const handleWhatsAppShare = async () => {
-    const text = `Hello *${sale.customer?.shopName}*,\n\nHere is your delivery receipt for ${new Date(sale.saleDate).toLocaleDateString()}.\n\nThank you,\nApexSupply.`;
-    let phone = (sale.customer?.whatsapp || sale.customer?.phone || '').replace(/[^0-9]/g, '');
-    if (phone.length === 10) phone = `91${phone}`;
+    const text = formatDistributorSaleWhatsApp(sale, sale.customer);
+    const phone = sale.customer?.whatsapp || sale.customer?.phone || '';
 
     try {
       const doc = generatePDF();
       const pdfBlob = doc.output('blob');
       const file = new File([pdfBlob], `Receipt_${sale.saleNumber}.pdf`, { type: 'application/pdf' });
 
-      // Native Mobile Share
+      // Native Mobile Share (PDF attachment + text)
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
             files: [file],
-            title: 'Delivery Receipt',
+            title: `Receipt - ${sale.customer?.shopName || 'Retail Customer'}`,
             text: text,
           });
           toast.success('Shared successfully!');
           return;
         } catch (shareErr) {
+          if (shareErr.name === 'AbortError') return;
           console.log('Share cancelled:', shareErr);
-          return;
         }
       }
 
-      // Desktop Fallback
-      toast.error('Native sharing not supported here. PDF downloaded instead.');
-      doc.save(`Receipt_${sale.saleNumber}.pdf`);
-      if (phone) {
-        setTimeout(() => {
-          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
-        }, 1500);
-      }
+      // Direct WhatsApp with rich text breakdown
+      openWhatsAppDirect(text, phone);
+      toast.success('Opening WhatsApp...');
     } catch (error) {
       console.error(error);
-      toast.error('Failed to share PDF');
+      openWhatsAppDirect(text, phone);
+    }
+  };
+
+  const handleCopyText = async () => {
+    try {
+      const text = formatDistributorSaleWhatsApp(sale, sale.customer);
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success('Receipt details copied!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Failed to copy to clipboard');
     }
   };
 
@@ -354,12 +362,29 @@ export default function ReceiptModal({ sale, onClose }) {
           </div>
         </div>
 
-        <div className="p-3 sm:p-4 border-t border-slate-200 bg-white rounded-b-2xl shrink-0 flex gap-3 sticky bottom-0">
-          <button onClick={handleDownload} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors touch-manipulation">
-            <Download className="w-5 h-5" /> Save PDF
+        <div className="p-3 sm:p-4 border-t border-slate-200 bg-white rounded-b-2xl shrink-0 flex gap-2 sm:gap-3 sticky bottom-0">
+          <button 
+            type="button"
+            onClick={handleCopyText} 
+            className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors touch-manipulation"
+            title="Copy Slip Text"
+          >
+            {copied ? <Check className="w-5 h-5 text-emerald-600" /> : <Copy className="w-5 h-5" />}
+            <span className="hidden sm:inline">{copied ? 'Copied' : 'Copy'}</span>
           </button>
-          <button onClick={handleWhatsAppShare} className="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-200 transition-colors touch-manipulation">
-            <MessageCircle className="w-5 h-5" /> Send PDF
+          <button 
+            type="button"
+            onClick={handleDownload} 
+            className="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-3 rounded-xl flex items-center justify-center gap-2 transition-colors touch-manipulation text-sm"
+          >
+            <Download className="w-4 h-4" /> Save PDF
+          </button>
+          <button 
+            type="button"
+            onClick={handleWhatsAppShare} 
+            className="flex-[1.5] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-3 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-200 transition-colors touch-manipulation text-sm"
+          >
+            <MessageCircle className="w-4 h-4 fill-white" /> WhatsApp
           </button>
         </div>
 

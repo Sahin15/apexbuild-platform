@@ -43,13 +43,21 @@ export async function shareContent({ title, text, url = window.location.href }) 
   return true;
 }
 
+import { 
+  getWhatsAppUrl, 
+  cleanPhoneNumber, 
+  formatDistributorSaleWhatsApp,
+  formatSupplierChallanWhatsApp, 
+  formatSupplierInvoiceWhatsApp, 
+  formatContractorBillWhatsApp 
+} from './whatsappShare';
+
 /**
- * Open WhatsApp with formatted text
+ * Open WhatsApp with formatted text and optional pre-filled phone number
  */
-export function openWhatsApp(text) {
+export function openWhatsApp(text, phone = '') {
   haptics.selection();
-  const encoded = encodeURIComponent(text);
-  const waUrl = `https://wa.me/?text=${encoded}`;
+  const waUrl = getWhatsAppUrl(text, phone);
   window.open(waUrl, '_blank', 'noopener,noreferrer');
 }
 
@@ -58,20 +66,8 @@ export function openWhatsApp(text) {
  */
 export function shareDistributorDelivery(sale, customer) {
   const shop = customer?.shopName || sale.customer?.shopName || 'Retail Customer';
-  const text = [
-    `🍗 *APEXBUILD - DELIVERY CHALLAN*`,
-    `━━━━━━━━━━━━━━━━━━━`,
-    `📦 Slip: #${sale.saleNumber || 'SALE'}`,
-    `🏪 Shop: ${shop}`,
-    `⚖️ Bird Weight: ${sale.weight} KG`,
-    `💰 Rate: ₹${sale.sellingRate}/KG`,
-    `💵 Total: ₹${Number(sale.netTotal || 0).toLocaleString('en-IN')}`,
-    `💳 Paid: ₹${Number(sale.paidAmount || 0).toLocaleString('en-IN')}`,
-    `⚠️ Due: ₹${Number(sale.dueAmount || 0).toLocaleString('en-IN')}`,
-    `📅 Date: ${new Date(sale.date || Date.now()).toLocaleDateString('en-IN')}`,
-    `━━━━━━━━━━━━━━━━━━━`,
-    `Generated via ApexBuild OS`
-  ].join('\n');
+  const text = formatDistributorSaleWhatsApp(sale, customer);
+  const phone = customer?.phone || customer?.whatsapp || sale.customer?.phone || '';
 
   return shareContent({
     title: `Delivery Challan - ${shop}`,
@@ -245,12 +241,56 @@ export function shareSupplierCustomerStatement(customer) {
   });
 }
 
+/**
+ * Format & Share Material Supplier Delivery Challan
+ */
+export function shareSupplierChallan({ challan, order, customer, vehicle, driver, products }) {
+  const custName = customer?.name || challan?.customer?.name || 'Client';
+  const text = formatSupplierChallanWhatsApp({ challan, order, customer, vehicle, driver, products });
+  const phone = customer?.phone || challan?.customer?.phone || '';
+
+  return shareContent({
+    title: `Delivery Challan #${challan?.challanNumber || ''} - ${custName}`,
+    text
+  });
+}
+
+/**
+ * Format & Share Material Supplier Tax Invoice
+ */
+export function shareSupplierInvoice({ invoice, customer, products }) {
+  const custName = customer?.name || invoice?.customer?.name || 'Client';
+  const text = formatSupplierInvoiceWhatsApp({ invoice, customer, products });
+  const phone = customer?.phone || invoice?.customer?.phone || '';
+
+  return shareContent({
+    title: `Tax Invoice #${invoice?.invoiceNumber || ''} - ${custName}`,
+    text
+  });
+}
+
+/**
+ * Format & Share Contractor Civil RA Bill
+ */
+export function shareContractorBill({ bill, project, clientName }) {
+  const projName = project?.name || bill?.project?.name || 'Civil Project';
+  const text = formatContractorBillWhatsApp({ bill, project, clientName });
+
+  return shareContent({
+    title: `RA Bill #${bill?.billNo || ''} - ${projName}`,
+    text
+  });
+}
+
 export default {
   shareContent,
   openWhatsApp,
   shareDistributorDelivery,
   shareCivilDPR,
   shareSupplierOrder,
+  shareSupplierChallan,
+  shareSupplierInvoice,
+  shareContractorBill,
   shareDiagnosticsOrder,
   shareLabourMusterRoll,
   shareSampleDetails,

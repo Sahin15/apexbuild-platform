@@ -6,8 +6,11 @@ import {
   FileSpreadsheet, IndianRupee, Search, Filter, Plus, 
   Printer, CheckCircle2, Clock, AlertTriangle, XCircle, 
   Building, ChevronRight, Eye, Trash2, ArrowUpRight, 
-  CreditCard, ShieldCheck, FileText, Check, X, Layers
+  CreditCard, ShieldCheck, FileText, Check, X, Layers,
+  MessageCircle, Share2
 } from 'lucide-react';
+import ShareDocumentModal from '../components/common/ShareDocumentModal';
+import { formatContractorBillWhatsApp } from '../utils/whatsappShare';
 
 export default function Billing({ isProjectView = false }) {
   const { id: routeProjectId } = useParams();
@@ -28,6 +31,7 @@ export default function Billing({ isProjectView = false }) {
 
   // View / Print IPC Modal
   const [printBill, setPrintBill] = useState(null);
+  const [shareModalData, setShareModalData] = useState(null);
 
   // Payment Recording Modal
   const [paymentModal, setPaymentModal] = useState({ open: false, bill: null, paidAmount: '', paymentReference: '', paymentDate: new Date().toISOString().split('T')[0] });
@@ -79,6 +83,26 @@ export default function Billing({ isProjectView = false }) {
         console.error('Error loading projects:', error);
       }
     }
+  };
+
+  const handleShareBill = (b) => {
+    const proj = projects.find(p => p._id === (b.projectId?._id || b.projectId)) || b.projectId;
+    const text = formatContractorBillWhatsApp({
+      bill: b,
+      project: proj,
+      clientName: b.clientId?.name || proj?.clientName || ''
+    });
+    setShareModalData({
+      title: 'Share Running Account (RA) Bill',
+      documentNumber: b.billNo,
+      recipientName: proj?.name || 'Civil Project',
+      phone: '',
+      whatsappText: text,
+      onPrint: () => {
+        setPrintBill(b);
+        setTimeout(() => window.print(), 350);
+      }
+    });
   };
 
   useEffect(() => {
@@ -549,6 +573,15 @@ export default function Billing({ isProjectView = false }) {
                     {/* Actions */}
                     <td className="px-5 py-3.5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        {/* Share via WhatsApp */}
+                        <button
+                          onClick={() => handleShareBill(b)}
+                          className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                          title="Share RA Bill via WhatsApp"
+                        >
+                          <MessageCircle className="w-4 h-4 fill-emerald-600 text-transparent" />
+                        </button>
+
                         {/* View / Print IPC Certificate */}
                         <button
                           onClick={() => setPrintBill(b)}
@@ -968,8 +1001,16 @@ export default function Billing({ isProjectView = false }) {
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
+                  onClick={() => handleShareBill(printBill)}
+                  className="btn btn-sm text-xs rounded-lg flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                  title="Share RA Bill Certificate via WhatsApp"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 fill-white" /> Share WhatsApp
+                </button>
+                <button
                   onClick={() => window.print()}
-                  className="btn btn-primary btn-sm text-xs rounded-lg flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700"
+                  className="btn btn-primary btn-sm text-xs rounded-lg flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white"
                 >
                   <Printer className="w-3.5 h-3.5" /> Print Official Certificate
                 </button>
@@ -1112,6 +1153,20 @@ export default function Billing({ isProjectView = false }) {
             </div>
           </div>
         </div>
+      )}
+
+      {shareModalData && (
+        <ShareDocumentModal
+          isOpen={!!shareModalData}
+          onClose={() => setShareModalData(null)}
+          title={shareModalData.title}
+          documentNumber={shareModalData.documentNumber}
+          recipientName={shareModalData.recipientName}
+          initialPhone={shareModalData.phone}
+          whatsappText={shareModalData.whatsappText}
+          onPrint={shareModalData.onPrint}
+          customBadge="RA RUNNING ACCOUNT BILL"
+        />
       )}
     </div>
   );

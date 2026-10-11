@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, FileText, CheckCircle2, Download, Trash2 } from 'lucide-react';
+import { Search, Plus, FileText, CheckCircle2, Download, Trash2, MessageCircle, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import ShareDocumentModal from '../../components/common/ShareDocumentModal';
+import { formatSupplierInvoiceWhatsApp } from '../../utils/whatsappShare';
 
 export default function SupplierInvoices() {
   const [invoices, setInvoices] = useState([]);
@@ -10,6 +12,7 @@ export default function SupplierInvoices() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [shareModalData, setShareModalData] = useState(null);
   
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -131,6 +134,25 @@ export default function SupplierInvoices() {
     }
   };
 
+  const handleShareInvoice = (invoice) => {
+    const text = formatSupplierInvoiceWhatsApp({
+      invoice,
+      customer: invoice.customer,
+      products
+    });
+    setShareModalData({
+      title: 'Share Tax Invoice',
+      documentNumber: invoice.invoiceNumber,
+      recipientName: invoice.customer?.name || 'Customer',
+      phone: invoice.customer?.phone || '',
+      whatsappText: text,
+      onPrint: () => {
+        setSelectedInvoice(invoice);
+        setTimeout(() => window.print(), 350);
+      }
+    });
+  };
+
   const filteredInvoices = invoices.filter(inv => 
     inv.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) || 
     (inv.customer?.name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
@@ -201,7 +223,23 @@ export default function SupplierInvoices() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => setSelectedInvoice(invoice)} className="text-slate-400 hover:text-emerald-600 mr-3"><Download className="w-4 h-4" /></button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button 
+                          onClick={() => handleShareInvoice(invoice)}
+                          className="text-emerald-700 hover:text-emerald-800 font-bold text-xs bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-lg shadow-2xs hover:bg-emerald-100 transition-all flex items-center gap-1"
+                          title="Share Invoice via WhatsApp"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 fill-emerald-600 text-transparent" />
+                          <span className="hidden sm:inline">WhatsApp</span>
+                        </button>
+                        <button 
+                          onClick={() => setSelectedInvoice(invoice)} 
+                          className="text-slate-600 hover:text-emerald-600 font-medium text-xs bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:border-emerald-200 hover:bg-emerald-50 transition-colors flex items-center gap-1"
+                          title="View & Print Invoice"
+                        >
+                          <FileText className="w-3.5 h-3.5" /> View
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -338,9 +376,17 @@ export default function SupplierInvoices() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 print:hidden shrink-0">
               <h2 className="text-xl font-bold text-slate-800">Tax Invoice</h2>
-              <div className="flex gap-2">
-                <button onClick={() => window.print()} className="btn btn-primary bg-slate-800 hover:bg-slate-900">Print / PDF</button>
-                <button onClick={() => setSelectedInvoice(null)} className="btn btn-secondary"><Plus className="w-5 h-5 rotate-45" /></button>
+              <div className="flex gap-2 items-center">
+                <button 
+                  onClick={() => handleShareInvoice(selectedInvoice)} 
+                  className="btn btn-primary bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5 text-xs py-2 px-3"
+                  title="Share Invoice via WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4 fill-white" />
+                  <span>Share WhatsApp</span>
+                </button>
+                <button onClick={() => window.print()} className="btn btn-primary bg-slate-800 hover:bg-slate-900 text-xs py-2 px-3">Print / PDF</button>
+                <button onClick={() => setSelectedInvoice(null)} className="btn btn-secondary p-2"><Plus className="w-5 h-5 rotate-45" /></button>
               </div>
             </div>
             
@@ -448,6 +494,20 @@ export default function SupplierInvoices() {
             `}</style>
           </div>
         </div>
+      )}
+
+      {shareModalData && (
+        <ShareDocumentModal
+          isOpen={!!shareModalData}
+          onClose={() => setShareModalData(null)}
+          title={shareModalData.title}
+          documentNumber={shareModalData.documentNumber}
+          recipientName={shareModalData.recipientName}
+          initialPhone={shareModalData.phone}
+          whatsappText={shareModalData.whatsappText}
+          onPrint={shareModalData.onPrint}
+          customBadge="TAX INVOICE"
+        />
       )}
     </div>
   );
