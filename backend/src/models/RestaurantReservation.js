@@ -54,9 +54,26 @@ const restaurantReservationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['CONFIRMED', 'SEATED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
+    enum: ['PENDING', 'CONFIRMED', 'SEATED', 'COMPLETED', 'CANCELLED', 'REJECTED', 'NO_SHOW'],
     default: 'CONFIRMED',
     index: true
+  },
+  bookingSource: {
+    type: String,
+    enum: ['ONLINE', 'WALK_IN', 'PHONE', 'STAFF_POS', 'AGGREGATOR'],
+    default: 'STAFF_POS',
+    index: true
+  },
+  rejectionReason: {
+    type: String,
+    trim: true
+  },
+  reviewedAt: {
+    type: Date
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
   specialOccasion: {
     type: String,

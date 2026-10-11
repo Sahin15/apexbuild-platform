@@ -113,6 +113,12 @@ export const getDashboardAnalytics = async (req, res, next) => {
       };
     }));
 
+    // 9. Pending Online Bookings (Incoming bookings waiting for staff accept/reject)
+    const pendingOnlineBookings = await RestaurantReservation.find({
+      organizationId,
+      status: 'PENDING'
+    }).populate('tableId', 'tableNumber capacity').sort({ createdAt: -1 });
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -130,7 +136,9 @@ export const getDashboardAnalytics = async (req, res, next) => {
         avgOrderValue: ordersCount > 0 ? Math.round(todaySales / ordersCount) : 0,
         recentOrders,
         weeklyTrend,
-        areaSummaries
+        areaSummaries,
+        pendingOnlineBookings,
+        pendingOnlineBookingsCount: pendingOnlineBookings.length
       }
     });
   } catch (error) {
@@ -5980,6 +5988,295 @@ export const updateTipPayoutStatus = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       data: { pool }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ==========================================
+// 14. ONLINE GUEST BOOKINGS (ACCEPT / REJECT WORKFLOW)
+// ==========================================
+
+export const getPendingOnlineBookings = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const pendingBookings = await RestaurantReservation.find({
+      organizationId,
+      status: 'PENDING'
+    })
+      .populate('tableId', 'tableNumber capacity status areaId')
+      .populate('customerId', 'name phone vipTier loyaltyPoints')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      status: 'success',
+      results: pendingBookings.length,
+      data: { pendingBookings }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createOnlineBooking = async (req, res, next) => {
+  try {
+    let organizationId = req.user?.organizationId;
+    if (!organizationId && (req.body.organizationId || req.query.organizationId || req.query.org)) {
+      organizationId = req.body.organizationId || req.query.organizationId || req.query.org;
+    } else if (!organizationId && req.body.orgSlug) {
+      const org = await Organization.findOne({ slug: req.body.orgSlug });
+      if (org) organizationId = org._id;
+    }
+
+    if (!organizationId) {
+      const defaultOrg = await Organization.findOne({ email: 'restaurant@example.com' })
+        || await Organization.findOne({ businessType: 'RESTAURANT' })
+        || await Organization.findOne();
+      if (defaultOrg) organizationId = defaultOrg._id;
+    }
+
+    if (!organizationId) {
+      return next(new AppError('Organization not identified for online booking', 400));
+    }
+
+    const {
+      customerName,
+      customerPhone,
+      customerEmail,
+      partySize,
+      reservationDate,
+      timeSlot,
+      specialOccasion = 'NONE',
+      dietaryPreferences = [],
+      guestNotes
+    } = req.body;
+
+    if (!customerName || !customerPhone || !partySize || !reservationDate || !timeSlot) {
+      return next(new AppError('Name, phone, party size, date, and time slot are required', 400));
+    }
+
+    const randCode = Math.floor(1000 + Math.random() * 9000);
+    const reservationCode = `WEB-${randCode}`;
+
+    let customer = await RestaurantCustomer.findOne({ organizationId, phone: customerPhone.trim() });
+    if (!customer) {
+      customer = await RestaurantCustomer.create({
+        organizationId,
+        name: customerName.trim(),
+        phone: customerPhone.trim(),
+        email: customerEmail ? customerEmail.trim() : undefined,
+        notes: `Registered via Online Booking ${reservationCode}`
+      });
+    }
+
+    const reservation = await RestaurantReservation.create({
+      organizationId,
+      reservationCode,
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      customerEmail: customerEmail ? customerEmail.trim() : undefined,
+      customerId: customer?._id,
+      partySize: Number(partySize),
+      reservationDate: new Date(reservationDate),
+      timeSlot: timeSlot.trim(),
+      durationMinutes: 90,
+      status: 'PENDING',
+      bookingSource: 'ONLINE',
+      specialOccasion,
+      dietaryPreferences,
+      guestNotes
+    });
+
+    res.status(201).json({
+      status: 'success',
+      message: 'Your table reservation request has been submitted and is awaiting restaurant confirmation!',
+      data: { reservation }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const simulateOnlineBooking = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
+    const presets = [
+      {
+        name: 'Devika Sengupta',
+        phone: '9830112233',
+        email: 'devika.s@gmail.com',
+        partySize: 4,
+        timeSlot: '20:00',
+        occasion: 'BIRTHDAY',
+        dietary: ['VEG', 'GLUTEN_FREE'],
+        notes: 'Requested quiet window booth for 30th birthday dinner with cake.'
+      },
+      {
+        name: 'Rohan Mehra',
+        phone: '9820445566',
+        email: 'rohan.m@techcorp.in',
+        partySize: 6,
+        timeSlot: '19:30',
+        occasion: 'BUSINESS_DINNER',
+        dietary: ['NON_VEG'],
+        notes: 'Client dinner, needs secluded table away from main corridor.'
+      },
+      {
+        name: 'Natasha Kapoor & Aryan',
+        phone: '9819778899',
+        email: 'natasha.k@gmail.com',
+        partySize: 2,
+        timeSlot: '20:30',
+        occasion: 'DATE_NIGHT',
+        dietary: ['VEGAN'],
+        notes: 'Anniversary celebration, candle setup requested if possible.'
+      }
+    ];
+
+    const preset = presets[Math.floor(Math.random() * presets.length)];
+    const randCode = Math.floor(1000 + Math.random() * 9000);
+    const reservationCode = `WEB-${randCode}`;
+
+    let customer = await RestaurantCustomer.findOne({ organizationId, phone: preset.phone });
+    if (!customer) {
+      customer = await RestaurantCustomer.create({
+        organizationId,
+        name: preset.name,
+        phone: preset.phone,
+        email: preset.email,
+        notes: `Created via Online Booking Simulator ${reservationCode}`
+      });
+    }
+
+    const reservation = await RestaurantReservation.create({
+      organizationId,
+      reservationCode,
+      customerName: preset.name,
+      customerPhone: preset.phone,
+      customerEmail: preset.email,
+      customerId: customer?._id,
+      partySize: preset.partySize,
+      reservationDate: new Date(`${todayStr}T${preset.timeSlot}:00.000Z`),
+      timeSlot: preset.timeSlot,
+      durationMinutes: 90,
+      status: 'PENDING',
+      bookingSource: 'ONLINE',
+      specialOccasion: preset.occasion,
+      dietaryPreferences: preset.dietary,
+      guestNotes: preset.notes
+    });
+
+    res.status(201).json({
+      status: 'success',
+      message: `New online booking received from ${preset.name} (${preset.partySize} guests)!`,
+      data: { reservation }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const acceptOnlineBooking = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const reservation = await RestaurantReservation.findOne({
+      _id: req.params.id,
+      organizationId
+    });
+
+    if (!reservation) {
+      return next(new AppError('Reservation not found', 404));
+    }
+
+    const { tableId } = req.body;
+    let allocatedTable = null;
+
+    if (tableId) {
+      allocatedTable = await RestaurantTable.findOne({ _id: tableId, organizationId });
+      if (allocatedTable) {
+        reservation.tableId = allocatedTable._id;
+        allocatedTable.status = 'RESERVED';
+        await allocatedTable.save();
+      }
+    } else if (!reservation.tableId) {
+      const availableTable = await RestaurantTable.findOne({
+        organizationId,
+        isActive: true,
+        status: 'AVAILABLE',
+        capacity: { $gte: reservation.partySize }
+      }).sort({ capacity: 1 });
+
+      if (availableTable) {
+        reservation.tableId = availableTable._id;
+        availableTable.status = 'RESERVED';
+        await availableTable.save();
+        allocatedTable = availableTable;
+      }
+    }
+
+    reservation.status = 'CONFIRMED';
+    reservation.reviewedAt = new Date();
+    reservation.reviewedBy = req.user._id;
+    reservation.confirmationSent = true;
+    reservation.confirmationSentAt = new Date();
+    reservation.confirmationMethod = 'WHATSAPP';
+
+    await reservation.save();
+
+    const populated = await RestaurantReservation.findById(reservation._id)
+      .populate('tableId', 'tableNumber capacity status areaId')
+      .populate('customerId');
+
+    res.status(200).json({
+      status: 'success',
+      message: `Reservation ${reservation.reservationCode} accepted & confirmed!`,
+      data: {
+        reservation: populated,
+        table: allocatedTable
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const rejectOnlineBooking = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const reservation = await RestaurantReservation.findOne({
+      _id: req.params.id,
+      organizationId
+    });
+
+    if (!reservation) {
+      return next(new AppError('Reservation not found', 404));
+    }
+
+    const reason = req.body.reason || req.body.rejectionReason || 'Fully booked during requested dining slot';
+
+    reservation.status = 'REJECTED';
+    reservation.rejectionReason = reason;
+    reservation.reviewedAt = new Date();
+    reservation.reviewedBy = req.user._id;
+
+    if (reservation.tableId) {
+      const table = await RestaurantTable.findOne({ _id: reservation.tableId, organizationId });
+      if (table && table.status === 'RESERVED') {
+        table.status = 'AVAILABLE';
+        await table.save();
+      }
+    }
+
+    await reservation.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: `Online booking ${reservation.reservationCode} rejected`,
+      data: { reservation }
     });
   } catch (error) {
     next(error);

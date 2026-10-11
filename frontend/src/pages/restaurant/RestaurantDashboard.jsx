@@ -4,7 +4,8 @@ import {
   UtensilsCrossed, ChefHat, IndianRupee, ShoppingBag, 
   TrendingUp, Users, Clock, AlertTriangle, CheckCircle2, 
   ArrowRight, Flame, Grid3x3, Plus, Sparkles, Store, 
-  Layers, Package, Coffee, ChevronRight, Eye, RefreshCw, Receipt, Truck
+  Layers, Package, Coffee, ChevronRight, Eye, RefreshCw, Receipt, Truck,
+  Bell, Globe, Check, X, CalendarDays, Phone, Heart, Gift, Briefcase, UserCheck
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
@@ -25,6 +26,14 @@ export default function RestaurantDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [liveData, setLiveData] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+
+  const [tablesList, setTablesList] = useState([]);
+  const [tableSelectionMap, setTableSelectionMap] = useState({});
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [bookingToReject, setBookingToReject] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('Fully booked for this dining slot');
+  const [actionLoading, setActionLoading] = useState(null);
+  const [simulatingBooking, setSimulatingBooking] = useState(false);
 
   const fetchDashboardData = useCallback(async (isSilent = false) => {
     try {
@@ -47,12 +56,74 @@ export default function RestaurantDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-    // Auto-refresh every 30 seconds
+    // Auto-refresh every 8 seconds for real-time online booking alerts
     const interval = setInterval(() => {
       fetchDashboardData(true);
-    }, 30000);
+    }, 8000);
+
+    // Fetch active tables for allocation dropdown
+    api.get('/restaurant/tables').then(res => {
+      if (res.data?.data?.tables) setTablesList(res.data.data.tables);
+    }).catch(err => console.error(err));
+
     return () => clearInterval(interval);
   }, [fetchDashboardData]);
+
+  const handleAcceptOnlineBooking = async (bookingId) => {
+    try {
+      setActionLoading(bookingId);
+      const chosenTable = tableSelectionMap[bookingId];
+      const res = await api.post(`/restaurant/online-booking/${bookingId}/accept`, {
+        tableId: chosenTable || undefined
+      });
+      toast.success(res.data?.message || 'Online booking accepted! Table reserved.');
+      fetchDashboardData(true);
+    } catch (err) {
+      console.error('Accept booking error:', err);
+      toast.error(err.response?.data?.message || 'Failed to accept booking');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleOpenRejectModal = (booking) => {
+    setBookingToReject(booking);
+    setRejectionReason('Fully booked for this dining slot');
+    setIsRejectModalOpen(true);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!bookingToReject) return;
+    try {
+      setActionLoading(bookingToReject._id);
+      await api.post(`/restaurant/online-booking/${bookingToReject._id}/reject`, {
+        reason: rejectionReason
+      });
+      toast.success(`Booking ${bookingToReject.reservationCode} rejected`);
+      setIsRejectModalOpen(false);
+      setBookingToReject(null);
+      fetchDashboardData(true);
+    } catch (err) {
+      console.error('Reject booking error:', err);
+      toast.error('Failed to reject booking');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleSimulateOnlineBooking = async () => {
+    try {
+      setSimulatingBooking(true);
+      const res = await api.post('/restaurant/online-booking/simulate');
+      toast.success(res.data?.message || 'Online guest booking simulated! See alert banner.');
+      fetchDashboardData(true);
+    } catch (err) {
+      console.error('Simulate booking error:', err);
+      toast.error('Failed to simulate online booking');
+    } finally {
+      setSimulatingBooking(false);
+    }
+  };
 
   // Fallback demo metrics if live database is empty
   const metrics = {
@@ -281,8 +352,173 @@ export default function RestaurantDashboard() {
             <Truck className="w-4 h-4 text-amber-400" />
             <span>Delivery Orders (Zomato/Swiggy)</span>
           </Link>
+          <button
+            onClick={handleSimulateOnlineBooking}
+            disabled={simulatingBooking}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 transition-all active:scale-95 cursor-pointer shadow-2xs"
+          >
+            <Globe className={`w-4 h-4 text-amber-700 ${simulatingBooking ? 'animate-spin' : ''}`} />
+            <span>Simulate Online Booking</span>
+          </button>
         </div>
       </div>
+
+      {/* CONSTANT INCOMING ONLINE BOOKING TRAY (Shows constantly until any action is taken) */}
+      {liveData?.pendingOnlineBookings && liveData.pendingOnlineBookings.length > 0 && (
+        <div className="rounded-3xl border-2 border-amber-500/80 bg-gradient-to-r from-amber-950/70 via-stone-900 to-amber-950/60 p-5 shadow-2xl relative overflow-hidden backdrop-blur-md space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/30 pb-3">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-3.5 w-3.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-500"></span>
+              </span>
+              <div>
+                <h3 className="text-base font-black text-white flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-amber-400 animate-bounce" />
+                  Live Online Reservation Requests ({liveData.pendingOnlineBookings.length} Awaiting Decision)
+                </h3>
+                <p className="text-xs text-amber-300/90 font-medium">
+                  Constantly requiring action. These online bookings will remain here until you Accept or Reject each request.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                to="/reserve"
+                target="_blank"
+                className="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-semibold border border-stone-700 flex items-center gap-1.5 transition-colors"
+              >
+                <Globe className="w-3.5 h-3.5 text-orange-400" />
+                <span>Public Booking Portal</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Cards for each pending booking */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
+            {liveData.pendingOnlineBookings.map((booking) => {
+              const isActing = actionLoading === booking._id;
+              const chosenTableId = tableSelectionMap[booking._id] || '';
+
+              return (
+                <div
+                  key={booking._id}
+                  className="rounded-2xl bg-stone-900/90 border border-amber-500/40 p-4 space-y-3 shadow-lg hover:border-amber-400 transition-all flex flex-col justify-between"
+                >
+                  <div className="space-y-2">
+                    {/* Top Row: Ref & Guest Name */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white text-base">
+                            {booking.customerName}
+                          </span>
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            {booking.reservationCode}
+                          </span>
+                        </div>
+                        <div className="text-xs text-stone-400 flex items-center gap-1 mt-0.5">
+                          <Phone className="w-3 h-3 text-stone-500" />
+                          <span>{booking.customerPhone}</span>
+                        </div>
+                      </div>
+
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase bg-amber-500/10 text-amber-400 border border-amber-500/30 animate-pulse">
+                        PENDING
+                      </span>
+                    </div>
+
+                    {/* Booking Details Strip */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs text-stone-300">
+                      <span className="px-2 py-0.5 rounded-md bg-stone-800 text-white font-semibold border border-stone-700 flex items-center gap-1">
+                        <Users className="w-3 h-3 text-orange-400" />
+                        {booking.partySize} Guests
+                      </span>
+
+                      <span className="px-2 py-0.5 rounded-md bg-stone-800 text-white font-semibold border border-stone-700 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-blue-400" />
+                        {booking.timeSlot} • {new Date(booking.reservationDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                      </span>
+
+                      {booking.specialOccasion !== 'NONE' && (
+                        <span className="px-2 py-0.5 rounded-md bg-pink-500/10 text-pink-300 font-semibold border border-pink-500/20 flex items-center gap-1">
+                          <Gift className="w-3 h-3" />
+                          {booking.specialOccasion?.replace('_', ' ')}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Dietary Tags */}
+                    {booking.dietaryPreferences?.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {booking.dietaryPreferences.map(tag => (
+                          <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            {tag.replace('_', ' ')}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Guest Notes */}
+                    {booking.guestNotes && (
+                      <p className="text-xs text-stone-300 italic bg-stone-800/40 p-2 rounded-xl border border-stone-800">
+                        "{booking.guestNotes}"
+                      </p>
+                    )}
+
+                    {/* Table Allocation Dropdown */}
+                    <div className="pt-1">
+                      <label className="block text-[11px] font-semibold text-stone-400 mb-1">
+                        Allocate Table (Optional):
+                      </label>
+                      <select
+                        value={chosenTableId}
+                        onChange={(e) => setTableSelectionMap(prev => ({ ...prev, [booking._id]: e.target.value }))}
+                        className="w-full bg-stone-800 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                      >
+                        <option value="">-- Auto-Allocate Best Available Table --</option>
+                        {tablesList.filter(t => t.status === 'AVAILABLE').map(tbl => (
+                          <option key={tbl._id} value={tbl._id}>
+                            Table {tbl.tableNumber} ({tbl.capacity} Pax, {tbl.areaId?.name || 'Main'})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Accept & Reject Action Buttons */}
+                  <div className="flex items-center gap-2 pt-3 border-t border-stone-800">
+                    <button
+                      onClick={() => handleAcceptOnlineBooking(booking._id)}
+                      disabled={isActing}
+                      className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow transition-all active:scale-95 cursor-pointer"
+                    >
+                      {isActing ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Accept & Confirm</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => handleOpenRejectModal(booking)}
+                      disabled={isActing}
+                      className="py-2 px-3.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-600/40 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Reject</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
@@ -687,6 +923,79 @@ export default function RestaurantDashboard() {
         </div>
 
       </div>
+
+      {/* REJECT BOOKING MODAL */}
+      {isRejectModalOpen && bookingToReject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-stone-900 border border-stone-700 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
+                <X className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Reject Online Booking</h3>
+                <p className="text-xs text-stone-400">Ref: {bookingToReject.reservationCode}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-stone-300">
+              Rejecting table reservation for <b className="text-white">{bookingToReject.customerName}</b> ({bookingToReject.partySize} guests at {bookingToReject.timeSlot}).
+            </p>
+
+            <div>
+              <label className="block text-xs font-semibold text-stone-300 mb-1">
+                Reason for Rejection
+              </label>
+              <select
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 mb-2"
+              >
+                <option value="Fully booked for this dining slot">Fully booked for this dining slot</option>
+                <option value="Private event / hall reserved">Private event / hall reserved</option>
+                <option value="Kitchen at maximum capacity">Kitchen at maximum capacity</option>
+                <option value="Outside operating hours">Outside operating hours</option>
+                <option value="Custom reason">Other reason...</option>
+              </select>
+
+              {rejectionReason === 'Custom reason' && (
+                <input
+                  type="text"
+                  placeholder="Enter specific explanation for guest..."
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                />
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-stone-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRejectModalOpen(false);
+                  setBookingToReject(null);
+                }}
+                className="px-3.5 py-1.5 rounded-xl text-stone-400 hover:text-white text-xs"
+              >
+                Keep Pending
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmReject}
+                disabled={actionLoading === bookingToReject._id}
+                className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition-colors flex items-center gap-1.5"
+              >
+                {actionLoading === bookingToReject._id ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <span>Confirm Reject</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

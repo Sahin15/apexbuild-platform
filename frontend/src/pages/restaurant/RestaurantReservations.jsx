@@ -552,10 +552,12 @@ export default function RestaurantReservations() {
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {[
             { id: 'ALL', label: 'All' },
+            { id: 'PENDING', label: 'Pending Online' },
             { id: 'CONFIRMED', label: 'Confirmed' },
             { id: 'SEATED', label: 'Seated' },
             { id: 'COMPLETED', label: 'Completed' },
-            { id: 'CANCELLED', label: 'Cancelled' }
+            { id: 'CANCELLED', label: 'Cancelled' },
+            { id: 'REJECTED', label: 'Rejected' }
           ].map(s => (
             <button
               key={s.id}

@@ -130,6 +130,7 @@ import RestaurantReports from './pages/restaurant/RestaurantReports';
 import RestaurantAggregators from './pages/restaurant/RestaurantAggregators';
 import RestaurantReservations from './pages/restaurant/RestaurantReservations';
 import RestaurantStaff from './pages/restaurant/RestaurantStaff';
+import OnlineTableBooking from './pages/restaurant/OnlineTableBooking';
 
 const ProtectedRoute = ({ children, allowedBusinessTypes }) => {
   const { isAuthenticated, user } = useAuth();
@@ -212,6 +213,9 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/reserve" element={<OnlineTableBooking />} />
+          <Route path="/book-table" element={<OnlineTableBooking />} />
+          <Route path="/restaurant/book" element={<OnlineTableBooking />} />
           
           {/* Protected Routes for CONTRACTORS wrapped in Layout */}
           <Route element={
@@ -377,6 +381,7 @@ function App() {
             <Route path="menu" element={<RestaurantMenu />} />
             <Route path="tables" element={<RestaurantTables />} />
             <Route path="reservations" element={<RestaurantReservations />} />
+            <Route path="online-booking" element={<OnlineTableBooking />} />
             <Route path="billing" element={<RestaurantBilling />} />
             <Route path="shifts" element={<RestaurantShifts />} />
             <Route path="staff" element={<RestaurantStaff />} />

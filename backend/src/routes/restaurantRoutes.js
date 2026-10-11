@@ -103,10 +103,18 @@ import {
   getTipPools,
   calculateTipPool,
   disburseTipPool,
-  updateTipPayoutStatus
+  updateTipPayoutStatus,
+  getPendingOnlineBookings,
+  createOnlineBooking,
+  simulateOnlineBooking,
+  acceptOnlineBooking,
+  rejectOnlineBooking
 } from '../controllers/restaurantController.js';
 
 const router = express.Router();
+
+// Public guest table reservation endpoint (unauthenticated)
+router.post('/online-booking/public', createOnlineBooking);
 
 // Require authenticated user and organization boundary
 router.use(protect, requireOrganization);
@@ -256,5 +264,11 @@ router.get('/staff-tips', getTipPools);
 router.post('/staff-tips/calculate', calculateTipPool);
 router.post('/staff-tips/:id/disburse', disburseTipPool);
 router.patch('/staff-tips/:id/payout/:payoutId', updateTipPayoutStatus);
+
+// Online Guest Bookings & Real-Time Approval Workflow
+router.get('/online-booking/pending', getPendingOnlineBookings);
+router.post('/online-booking/simulate', simulateOnlineBooking);
+router.post('/online-booking/:id/accept', acceptOnlineBooking);
+router.post('/online-booking/:id/reject', rejectOnlineBooking);
 
 export default router;
