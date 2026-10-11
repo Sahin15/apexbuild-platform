@@ -281,39 +281,39 @@ export default function RestaurantShifts() {
 
       {/* ACTIVE SHIFT HERO CARD (OR EMPTY PROMPT) */}
       {currentShift ? (
-        <div className="bg-gradient-to-br from-stone-900 via-stone-850 to-stone-900 rounded-3xl p-6 text-white border border-stone-800 shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-2xs relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
           
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-stone-800">
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Active Shift Open
                 </span>
-                <span className="text-stone-400 text-xs font-medium">
+                <span className="text-slate-500 text-xs font-semibold">
                   {currentShift.registerNumber} • Cashier: {currentShift.cashierName}
                 </span>
               </div>
 
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                 Current Register Drawer Status
               </h2>
-              <p className="text-xs text-stone-400 mt-1 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-orange-400" />
+              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5 font-medium">
+                <Clock className="w-3.5 h-3.5 text-orange-500" />
                 Opened at {new Date(currentShift.openedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} on {new Date(currentShift.openedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
             </div>
 
             {/* Expected in Drawer Highlight */}
-            <div className="bg-stone-800/80 p-4 rounded-2xl border border-stone-700/80 text-right min-w-[220px]">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block">
+            <div className="bg-gradient-to-br from-orange-50/80 via-amber-50/60 to-orange-50/40 p-4 rounded-2xl border border-orange-200/80 text-right min-w-[240px] shadow-2xs">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-orange-950/70 block">
                 Calculated Drawer Balance
               </span>
-              <p className="text-3xl font-black text-white mt-1">
+              <p className="text-3xl font-black text-slate-900 mt-1">
                 ₹{currentShift.expectedCash.toLocaleString('en-IN')}
               </p>
-              <span className="text-[10px] font-semibold text-orange-400 mt-0.5 block">
+              <span className="text-[10px] font-semibold text-orange-700 mt-0.5 block">
                 Float (₹{currentShift.openingFloat}) + Cash (₹{currentShift.cashSales}) - Drops (₹{currentShift.cashDrops})
               </span>
             </div>
@@ -322,46 +322,46 @@ export default function RestaurantShifts() {
           {/* Breakdown Mini Cards */}
           <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
             
-            <div className="bg-stone-800/40 p-3.5 rounded-2xl border border-stone-800">
-              <span className="text-[10px] uppercase font-bold text-stone-400 block">Opening Float</span>
-              <p className="text-lg font-black text-white mt-1">₹{currentShift.openingFloat}</p>
-              <span className="text-[10px] text-stone-500">Starting cash balance</span>
+            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+              <span className="text-[10px] uppercase font-bold text-slate-500 block">Opening Float</span>
+              <p className="text-lg font-black text-slate-900 mt-1">₹{currentShift.openingFloat}</p>
+              <span className="text-[10px] text-slate-400">Starting cash balance</span>
             </div>
 
-            <div className="bg-stone-800/40 p-3.5 rounded-2xl border border-stone-800">
-              <span className="text-[10px] uppercase font-bold text-stone-400 block">Cash Sales</span>
-              <p className="text-lg font-black text-emerald-400 mt-1">₹{currentShift.cashSales}</p>
-              <span className="text-[10px] text-stone-500">Settled cash tickets</span>
+            <div className="bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-200/70">
+              <span className="text-[10px] uppercase font-bold text-emerald-800 block">Cash Sales</span>
+              <p className="text-lg font-black text-emerald-700 mt-1">₹{currentShift.cashSales}</p>
+              <span className="text-[10px] text-emerald-600/80">Settled cash tickets</span>
             </div>
 
-            <div className="bg-stone-800/40 p-3.5 rounded-2xl border border-stone-800">
-              <span className="text-[10px] uppercase font-bold text-stone-400 block">Safe Cash Drops</span>
-              <p className="text-lg font-black text-amber-400 mt-1">₹{currentShift.cashDrops || 0}</p>
-              <span className="text-[10px] text-stone-500">{currentShift.drops?.length || 0} transfer logs</span>
+            <div className="bg-amber-50/60 p-3.5 rounded-2xl border border-amber-200/70">
+              <span className="text-[10px] uppercase font-bold text-amber-800 block">Safe Cash Drops</span>
+              <p className="text-lg font-black text-amber-700 mt-1">₹{currentShift.cashDrops || 0}</p>
+              <span className="text-[10px] text-amber-600/80">{currentShift.drops?.length || 0} transfer logs</span>
             </div>
 
-            <div className="bg-stone-800/40 p-3.5 rounded-2xl border border-stone-800">
-              <span className="text-[10px] uppercase font-bold text-stone-400 block">Digital Volume</span>
-              <p className="text-lg font-black text-blue-400 mt-1">₹{(currentShift.upiSales || 0) + (currentShift.cardSales || 0)}</p>
-              <span className="text-[10px] text-stone-500">UPI + Card settlements</span>
+            <div className="bg-blue-50/60 p-3.5 rounded-2xl border border-blue-200/70">
+              <span className="text-[10px] uppercase font-bold text-blue-800 block">Digital Volume</span>
+              <p className="text-lg font-black text-blue-700 mt-1">₹{(currentShift.upiSales || 0) + (currentShift.cardSales || 0)}</p>
+              <span className="text-[10px] text-blue-600/80">UPI + Card settlements</span>
             </div>
 
           </div>
 
           {/* Active Shift Mid-Drops Log */}
           {currentShift.drops && currentShift.drops.length > 0 && (
-            <div className="relative z-10 mt-6 pt-4 border-t border-stone-800">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400 mb-2">
+            <div className="relative z-10 mt-6 pt-4 border-t border-slate-100">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                 Shift Safe Drop Log ({currentShift.drops.length} Drops)
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                 {currentShift.drops.map((drop, idx) => (
-                  <div key={idx} className="bg-stone-800/60 p-2.5 rounded-xl border border-stone-700/60 text-xs flex justify-between items-center">
+                  <div key={idx} className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs flex justify-between items-center">
                     <div>
-                      <span className="font-bold text-white block">₹{drop.amount}</span>
-                      <span className="text-[10px] text-stone-400">{drop.reason}</span>
+                      <span className="font-bold text-slate-900 block">₹{drop.amount}</span>
+                      <span className="text-[10px] text-slate-500">{drop.reason}</span>
                     </div>
-                    <span className="text-[10px] text-stone-400">
+                    <span className="text-[10px] text-slate-400">
                       {new Date(drop.droppedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
