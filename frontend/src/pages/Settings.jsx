@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Building, CreditCard, Save, CheckCircle2, Check, Palette, 
   UploadCloud, X, ShieldAlert, Sparkles, Phone, Percent, 
   MapPin, FileText, ArrowUpRight, Crown, AlertCircle, RefreshCw,
-  ShieldCheck, Layers, Bell, Smartphone, Send, Flame, Copy
+  ShieldCheck, Layers, Bell, Smartphone, Send, Flame, Copy,
+  Eye, Printer, Clock, AlertTriangle, Landmark
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useEntitlements } from '../context/EntitlementContext';
@@ -30,12 +32,44 @@ export default function Settings() {
   const { tier: entitlementTier, planName: entitlementPlanName, refreshEntitlements } = useEntitlements();
   const { primaryColor, secondaryColor, setCustomTheme, osConfig } = useBrandTheme();
 
-  const [activeTab, setActiveTab] = useState('profile');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab');
+  const validTabs = ['profile', 'branding', 'billing'];
+  const [activeTab, setActiveTab] = useState(
+    validTabs.includes(initialTab) ? initialTab : 'profile'
+  );
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && validTabs.includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    setSearchParams({ tab: newTab });
+  };
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [billingCycle, setBillingCycle] = useState('annual');
   const [activeSubscription, setActiveSubscription] = useState(null);
   const [availablePlans, setAvailablePlans] = useState([]);
+  const [subscriptionsList, setSubscriptionsList] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+
+  // Submit Payment Modal
+  const [isPayModalOpen, setIsPayModalOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [paymentData, setPaymentData] = useState({
+    amount: '',
+    paymentMethod: 'UPI',
+    transactionReference: ''
+  });
+
+  // View Receipt Modal
+  const [viewInvoice, setViewInvoice] = useState(null);
 
   // Web Push Notifications State
   const {
@@ -157,17 +191,23 @@ export default function Settings() {
   const fetchSettingsData = async () => {
     try {
       setLoading(true);
-      const [orgRes, plansRes] = await Promise.all([
+      const [orgRes, plansRes, subRes, invRes] = await Promise.all([
         api.get('/organization'),
-        api.get('/billing/available-plans')
+        api.get('/billing/available-plans'),
+        api.get('/billing/my-subscriptions').catch(() => ({ data: { data: { subscriptions: [] } } })),
+        api.get('/billing/my-invoices').catch(() => ({ data: { data: { invoices: [] } } }))
       ]);
 
       const data = orgRes.data?.data?.organization || {};
       const sub = orgRes.data?.data?.activeSubscription || null;
       const plansFromDb = plansRes.data?.data?.plans || [];
+      const subsFromDb = subRes.data?.data?.subscriptions || [];
+      const invsFromDb = invRes.data?.data?.invoices || [];
 
       setActiveSubscription(sub);
       setAvailablePlans(plansFromDb);
+      setSubscriptionsList(subsFromDb);
+      setInvoices(invsFromDb);
 
       setOrg(prev => {
         const orgSettings = data.settings || {};
@@ -199,6 +239,54 @@ export default function Settings() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const submitPaymentProof = async (e) => {
+    e.preventDefault();
+    if (!selectedInvoice) return;
+    try {
+      await api.post('/billing/submit-payment', {
+        invoiceId: selectedInvoice._id,
+        subscriptionId: selectedInvoice.subscriptionId,
+        amount: Number(paymentData.amount) || selectedInvoice.dueAmount,
+        paymentMethod: paymentData.paymentMethod,
+        transactionReference: paymentData.transactionReference
+      });
+      toast.success('Payment proof submitted successfully! Superadmin HQ will verify shortly.');
+      setIsPayModalOpen(false);
+      setPaymentData({ amount: '', paymentMethod: 'UPI', transactionReference: '' });
+      fetchSettingsData();
+    } catch (error) {
+      toast.error('Failed to submit payment proof');
+    }
+  };
+
+  const openPayModal = (inv) => {
+    setSelectedInvoice(inv);
+    setPaymentData({
+      amount: String(inv.dueAmount || inv.total),
+      paymentMethod: 'UPI',
+      transactionReference: ''
+    });
+    setIsPayModalOpen(true);
+  };
+
+  const InvoiceStatusBadge = ({ status }) => {
+    const map = {
+      'PAID': { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', label: 'Paid', icon: CheckCircle2 },
+      'ISSUED': { bg: 'bg-amber-50 text-amber-700 border-amber-200', label: 'Pending Payment', icon: Clock },
+      'PENDING': { bg: 'bg-amber-50 text-amber-700 border-amber-200', label: 'Pending Payment', icon: Clock },
+      'PARTIALLY_PAID': { bg: 'bg-indigo-50 text-indigo-700 border-indigo-200', label: 'Partially Paid', icon: Clock },
+      'OVERDUE': { bg: 'bg-rose-50 text-rose-700 border-rose-200', label: 'Overdue', icon: AlertTriangle },
+    };
+    const s = map[status] || { bg: 'bg-slate-50 text-slate-600 border-slate-200', label: status, icon: Clock };
+    const Icon = s.icon;
+    return (
+      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${s.bg}`}>
+        <Icon className="w-3 h-3" />
+        <span>{s.label}</span>
+      </span>
+    );
   };
 
   const handleSaveProfile = async (e) => {
@@ -411,7 +499,7 @@ export default function Settings() {
         
         {/* Tab 1: Business Profile */}
         <button 
-          onClick={() => setActiveTab('profile')}
+          onClick={() => handleTabChange('profile')}
           style={activeTab === 'profile' ? {
             backgroundColor: `${primaryColor}12`,
             borderColor: `${primaryColor}35`
@@ -450,7 +538,7 @@ export default function Settings() {
 
         {/* Tab 2: Branding & UI */}
         <button 
-          onClick={() => setActiveTab('branding')}
+          onClick={() => handleTabChange('branding')}
           style={activeTab === 'branding' ? {
             backgroundColor: `${primaryColor}12`,
             borderColor: `${primaryColor}35`
@@ -489,7 +577,7 @@ export default function Settings() {
 
         {/* Tab 3: Subscription & Plans */}
         <button 
-          onClick={() => setActiveTab('billing')}
+          onClick={() => handleTabChange('billing')}
           style={activeTab === 'billing' ? {
             backgroundColor: `${primaryColor}12`,
             borderColor: `${primaryColor}35`
@@ -1311,61 +1399,175 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Active Workspace Plan Card */}
-          <div 
-            style={{ borderColor: `${primaryColor}30` }}
-            className="bg-white border-2 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden"
-          >
-            <div 
-              style={{ backgroundColor: `${primaryColor}08` }}
-              className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -z-10 pointer-events-none" 
-            />
-            
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                Active Subscription
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <h3 className="text-2xl md:text-3xl font-black text-slate-900">
-                  {activeSubscription?.osPlanId?.name || org.subscription || (isCurrentTierEnterprise ? 'Enterprise Suite' : 'Growth Plan')}
-                </h3>
-                {isCurrentTierEnterprise && <Crown className="w-6 h-6 text-amber-500" />}
-              </div>
-
-              <p className="text-sm font-medium text-slate-500">
-                Billed {billingCycle === 'annual' ? 'yearly' : 'monthly'}. Renews on{' '}
-                <strong className="text-slate-700">
-                  {activeSubscription?.nextBillingDate 
-                    ? new Date(activeSubscription.nextBillingDate).toLocaleDateString()
-                    : '3/27/2027'}
-                </strong>
-              </p>
+          {/* Active Operating System Licenses */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5" style={{ color: primaryColor }} />
+                <span>Active Operating System Licenses</span>
+              </h3>
+              <span className="text-[11px] font-bold text-slate-500">
+                Workspace Tenant: {user?.organizationId?.name || org.name || 'Active Tenant'}
+              </span>
             </div>
 
-            <div className="text-left md:text-right w-full md:w-auto border-t border-slate-100 md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0 flex flex-col md:items-end gap-3">
-              <p className="text-3xl md:text-4xl font-black text-slate-900 leading-none">
-                ₹{billingCycle === 'annual' 
-                  ? Math.round((activeSubscription?.basePrice || (isCurrentTierEnterprise ? 34990 : 14990)) / 12).toLocaleString() 
-                  : ((isCurrentTierEnterprise ? 3499 : 1499)).toLocaleString()} 
-                <span className="text-sm font-medium text-slate-400 ml-1">/month</span>
-              </p>
-              
-              <button 
-                type="button"
-                onClick={() => openUpgradeModal({
-                  name: activeSubscription?.osPlanId?.name || (isCurrentTierEnterprise ? 'Enterprise Suite' : 'Growth Plan'),
-                  tier: isCurrentTierEnterprise ? 'ENTERPRISE' : 'STARTER',
-                  monthlyPrice: isCurrentTierEnterprise ? 3499 : 1499,
-                  yearlyPrice: isCurrentTierEnterprise ? 34990 : 14990
+            {subscriptionsList.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {subscriptionsList.map(sub => {
+                  const isCustomAgreed = sub.discount > 0 || (sub.customPrice && sub.customPrice !== sub.basePrice);
+                  return (
+                    <div 
+                      key={sub._id} 
+                      style={{ borderColor: `${primaryColor}40` }}
+                      className="bg-white rounded-3xl border-2 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden"
+                    >
+                      <div 
+                        style={{ backgroundColor: `${primaryColor}08` }}
+                        className="absolute top-0 right-0 w-48 h-48 rounded-full blur-2xl -z-10 pointer-events-none" 
+                      />
+
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-extrabold text-lg text-slate-900">
+                              {sub.osProductId?.name || user?.organizationId?.businessType?.replace('_', ' ') || osConfig.name}
+                            </h4>
+                            {isCustomAgreed && (
+                              <span 
+                                style={{ color: primaryColor, backgroundColor: `${primaryColor}14`, borderColor: `${primaryColor}30` }}
+                                className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border"
+                              >
+                                Custom Contract
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 font-semibold">
+                            Plan: {sub.osPlanId?.name || 'Standard'} • <span className="capitalize">{sub.billingCycle} billing</span>
+                          </p>
+                        </div>
+
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          sub.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                          sub.status === 'RESTRICTED' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                          'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}>
+                          {sub.status}
+                        </span>
+                      </div>
+
+                      {/* Pricing Details */}
+                      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 mb-4 text-xs">
+                        <div className="flex justify-between items-center text-slate-500">
+                          <span>Standard Base Rate:</span>
+                          <span className="line-through">₹{sub.basePrice?.toFixed(2)}</span>
+                        </div>
+
+                        {sub.customPrice && sub.customPrice !== sub.basePrice && (
+                          <div className="flex justify-between items-center font-bold" style={{ color: primaryColor }}>
+                            <span>Agreed Custom Price:</span>
+                            <span>₹{sub.customPrice?.toFixed(2)}</span>
+                          </div>
+                        )}
+
+                        {sub.discount > 0 && (
+                          <div className="flex justify-between items-center text-emerald-600 font-bold">
+                            <span>Superadmin Special Discount:</span>
+                            <span>-₹{sub.discount?.toFixed(2)}</span>
+                          </div>
+                        )}
+
+                        <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
+                          <span className="font-bold text-slate-700">Net Recurring Rate:</span>
+                          <span className="text-base font-black text-slate-900">
+                            ₹{sub.finalAmount?.toFixed(2)}
+                            <span className="text-xs font-normal text-slate-500">/{sub.billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center text-xs text-slate-500 pt-2 border-t border-slate-100">
+                        <div>
+                          <span className="block text-[11px] text-slate-400">Next Renewal Date</span>
+                          <span className="font-bold text-slate-800">
+                            {sub.nextBillingDate ? new Date(sub.nextBillingDate).toLocaleDateString() : 'Active'}
+                          </span>
+                        </div>
+
+                        <button 
+                          type="button"
+                          onClick={() => openUpgradeModal({
+                            name: sub.osPlanId?.name || (isCurrentTierEnterprise ? 'Enterprise Suite' : 'Growth Plan'),
+                            tier: isCurrentTierEnterprise ? 'ENTERPRISE' : 'STARTER',
+                            monthlyPrice: isCurrentTierEnterprise ? 3499 : 1499,
+                            yearlyPrice: isCurrentTierEnterprise ? 34990 : 14990
+                          })}
+                          style={{ backgroundColor: primaryColor }}
+                          className="hover:opacity-90 text-white font-bold py-2 px-4 rounded-xl transition-all shadow-sm text-xs cursor-pointer"
+                        >
+                          Modify Terms
+                        </button>
+                      </div>
+                    </div>
+                  );
                 })}
-                style={{ backgroundColor: primaryColor }}
-                className="w-full md:w-auto hover:opacity-90 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-md text-xs cursor-pointer"
+              </div>
+            ) : (
+              <div 
+                style={{ borderColor: `${primaryColor}30` }}
+                className="bg-white border-2 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden"
               >
-                Manage Subscription
-              </button>
-            </div>
+                <div 
+                  style={{ backgroundColor: `${primaryColor}08` }}
+                  className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -z-10 pointer-events-none" 
+                />
+                
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    Active Subscription
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-2xl md:text-3xl font-black text-slate-900">
+                      {activeSubscription?.osPlanId?.name || org.subscription || (isCurrentTierEnterprise ? 'Enterprise Suite' : 'Growth Plan')}
+                    </h3>
+                    {isCurrentTierEnterprise && <Crown className="w-6 h-6 text-amber-500" />}
+                  </div>
+
+                  <p className="text-sm font-medium text-slate-500">
+                    Billed {billingCycle === 'annual' ? 'yearly' : 'monthly'}. Renews on{' '}
+                    <strong className="text-slate-700">
+                      {activeSubscription?.nextBillingDate 
+                        ? new Date(activeSubscription.nextBillingDate).toLocaleDateString()
+                        : '3/27/2027'}
+                    </strong>
+                  </p>
+                </div>
+
+                <div className="text-left md:text-right w-full md:w-auto border-t border-slate-100 md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0 flex flex-col md:items-end gap-3">
+                  <p className="text-3xl md:text-4xl font-black text-slate-900 leading-none">
+                    ₹{billingCycle === 'annual' 
+                      ? Math.round((activeSubscription?.basePrice || (isCurrentTierEnterprise ? 34990 : 14990)) / 12).toLocaleString() 
+                      : ((isCurrentTierEnterprise ? 3499 : 1499)).toLocaleString()} 
+                    <span className="text-sm font-medium text-slate-400 ml-1">/month</span>
+                  </p>
+                  
+                  <button 
+                    type="button"
+                    onClick={() => openUpgradeModal({
+                      name: activeSubscription?.osPlanId?.name || (isCurrentTierEnterprise ? 'Enterprise Suite' : 'Growth Plan'),
+                      tier: isCurrentTierEnterprise ? 'ENTERPRISE' : 'STARTER',
+                      monthlyPrice: isCurrentTierEnterprise ? 3499 : 1499,
+                      yearlyPrice: isCurrentTierEnterprise ? 34990 : 14990
+                    })}
+                    style={{ backgroundColor: primaryColor }}
+                    className="w-full md:w-auto hover:opacity-90 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-md text-xs cursor-pointer"
+                  >
+                    Manage Subscription
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* EXACTLY 2 Available Plans Grid */}
@@ -1522,6 +1724,104 @@ export default function Settings() {
             </div>
           </div>
 
+          {/* Invoices & Implementation Fee Ledger */}
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-0">
+            <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50/70">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <FileText className="w-4 h-4" style={{ color: primaryColor }} />
+                  <span>Invoices & Implementation Setup Fees</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  View itemized receipts, setup charges, and submit offline payment verification proofs
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left whitespace-nowrap text-sm">
+                <thead className="bg-white text-slate-500 font-semibold border-b border-slate-100">
+                  <tr>
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">Invoice #</th>
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">Billing Type</th>
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">Issue Date</th>
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">Due Date</th>
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">Total Amount</th>
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {invoices.length > 0 ? invoices.map(inv => (
+                    <tr key={inv._id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 font-mono font-bold" style={{ color: primaryColor }}>
+                        {inv.invoiceNumber}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${
+                          inv.type === 'IMPLEMENTATION'
+                            ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200'
+                            : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                        }`}>
+                          {inv.type === 'IMPLEMENTATION' ? 'One-Time Setup Fee' : 'OS Subscription'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-slate-600 text-xs">
+                        {new Date(inv.issueDate || inv.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-slate-600 text-xs font-medium">
+                        {new Date(inv.dueDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-extrabold text-slate-900">₹{inv.total?.toFixed(2)}</div>
+                        {inv.dueAmount > 0 && inv.dueAmount < inv.total && (
+                          <div className="text-xs text-amber-600 font-medium">Due: ₹{inv.dueAmount.toFixed(2)}</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <InvoiceStatusBadge status={inv.status} />
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setViewInvoice(inv)}
+                            className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold border border-slate-200 transition-colors flex items-center gap-1 cursor-pointer"
+                            title="View Receipt"
+                          >
+                            <Eye className="w-3.5 h-3.5" /> Receipt
+                          </button>
+
+                          {inv.status !== 'PAID' ? (
+                            <button 
+                              type="button"
+                              onClick={() => openPayModal(inv)}
+                              style={{ backgroundColor: primaryColor }}
+                              className="hover:opacity-90 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                            >
+                              Submit Proof
+                            </button>
+                          ) : (
+                            <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                              <CheckCircle2 className="w-4 h-4" /> Settled
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-12 text-center text-slate-400">
+                        <FileText className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                        No invoices issued for your account yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           {/* Superadmin HQ Governance Notice */}
           <div className="p-6 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex flex-col sm:flex-row items-start gap-4">
             <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
@@ -1642,7 +1942,189 @@ export default function Settings() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
 
+      {/* ========================================================================= */}
+      {/* MODAL: VIEW RECEIPT MODAL                                                 */}
+      {/* ========================================================================= */}
+      {viewInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5" style={{ color: primaryColor }} />
+                <h3 className="font-bold text-slate-900">Invoice {viewInvoice.invoiceNumber}</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  type="button"
+                  onClick={() => window.print()} 
+                  className="px-3 py-1 bg-white border border-slate-200 text-xs font-bold rounded-lg flex items-center gap-1 cursor-pointer hover:bg-slate-50"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Print
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setViewInvoice(null)} 
+                  className="text-slate-400 hover:text-slate-600 cursor-pointer p-1"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4 text-xs text-slate-700">
+              <div className="flex justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <div className="font-bold text-sm" style={{ color: primaryColor }}>ApexBuild Software Ltd</div>
+                  <div className="text-slate-400">GSTIN: 27AABCA1234F1Z5</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-mono font-bold text-slate-900">{viewInvoice.invoiceNumber}</div>
+                  <div className="text-slate-400">Due: {new Date(viewInvoice.dueDate).toLocaleDateString()}</div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {viewInvoice.subscriptionFee > 0 && (
+                  <div className="flex justify-between">
+                    <span>OS Platform Subscription Fee</span>
+                    <span className="font-bold">₹{viewInvoice.subscriptionFee?.toFixed(2)}</span>
+                  </div>
+                )}
+                {viewInvoice.implementationFee > 0 && (
+                  <div className="flex justify-between">
+                    <span>One-Time Onboarding & Implementation</span>
+                    <span className="font-bold">₹{viewInvoice.implementationFee?.toFixed(2)}</span>
+                  </div>
+                )}
+                {viewInvoice.discount > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span>Contract Discount</span>
+                    <span>-₹{viewInvoice.discount?.toFixed(2)}</span>
+                  </div>
+                )}
+                {viewInvoice.tax > 0 && (
+                  <div className="flex justify-between text-slate-500">
+                    <span>GST (18%)</span>
+                    <span>₹{viewInvoice.tax?.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="pt-2 border-t-2 border-slate-900 flex justify-between font-bold text-sm text-slate-900">
+                  <span>Total Amount:</span>
+                  <span className="font-mono" style={{ color: primaryColor }}>₹{viewInvoice.total?.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button 
+                type="button"
+                onClick={() => setViewInvoice(null)} 
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: SUBMIT PAYMENT PROOF MODAL                                         */}
+      {/* ========================================================================= */}
+      {isPayModalOpen && selectedInvoice && (
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <CreditCard className="w-5 h-5" style={{ color: primaryColor }} />
+                <span>Submit Payment Confirmation</span>
+              </h2>
+              <button 
+                type="button"
+                onClick={() => setIsPayModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 cursor-pointer p-1"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={submitPaymentProof} className="p-6 space-y-4 text-xs">
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Invoice:</span>
+                  <strong className="font-mono" style={{ color: primaryColor }}>{selectedInvoice.invoiceNumber}</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Amount Due:</span>
+                  <strong className="text-slate-900 text-sm">₹{selectedInvoice.dueAmount || selectedInvoice.total}</strong>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Amount Paid (₹) <span className="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  required 
+                  value={paymentData.amount}
+                  onChange={e => setPaymentData({...paymentData, amount: e.target.value})}
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 font-bold text-sm text-slate-900 focus:ring-2 focus:ring-slate-400 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Payment Method <span className="text-rose-500">*</span>
+                </label>
+                <select 
+                  value={paymentData.paymentMethod}
+                  onChange={e => setPaymentData({...paymentData, paymentMethod: e.target.value})}
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 focus:ring-2 focus:ring-slate-400 outline-none font-medium"
+                >
+                  <option value="UPI">UPI (Google Pay, PhonePe, Paytm)</option>
+                  <option value="BANK_TRANSFER">Bank Transfer (NEFT / RTGS / IMPS / Wire)</option>
+                  <option value="CARD">Corporate Credit / Debit Card</option>
+                  <option value="CHEQUE">Corporate Cheque</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  Transaction Reference / UTR Number <span className="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  required 
+                  placeholder="e.g. UPI Ref # 321876451299 or Bank UTR"
+                  value={paymentData.transactionReference}
+                  onChange={e => setPaymentData({...paymentData, transactionReference: e.target.value})} 
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 focus:ring-2 focus:ring-slate-400 outline-none font-mono"
+                />
+              </div>
+
+              <div className="pt-3 flex justify-end gap-3 border-t border-slate-100">
+                <button 
+                  type="button" 
+                  onClick={() => setIsPayModalOpen(false)} 
+                  className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  style={{ backgroundColor: primaryColor }}
+                  className="px-5 py-2 hover:opacity-90 text-white font-bold rounded-xl shadow-sm cursor-pointer"
+                >
+                  Submit Verification Proof
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

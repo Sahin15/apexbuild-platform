@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, UtensilsCrossed, ChefHat, Grid3x3, BookOpen, 
   FileSpreadsheet, Package, Truck, Users, Coins, Receipt, 
-  BarChart3, Settings, CreditCard, Menu, X, Plus, Clock,
+  BarChart3, Settings, Menu, X, Plus, Clock,
   User as UserIcon, HelpCircle, LogOut, Lock, Sparkles, ChevronRight,
   Flame, ShoppingBag, Store, CalendarCheck
 } from 'lucide-react';
@@ -173,12 +173,6 @@ export default function RestaurantLayout() {
       name: 'Restaurant Settings', 
       path: '/restaurant/settings', 
       icon: Settings,
-      status: 'active'
-    },
-    { 
-      name: 'Plan & Billing', 
-      path: '/restaurant/subscription', 
-      icon: CreditCard,
       status: 'active'
     },
   ];

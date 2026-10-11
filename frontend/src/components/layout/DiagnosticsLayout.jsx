@@ -85,7 +85,6 @@ const DiagnosticsLayout = () => {
     { name: 'Payments', path: '/diagnostics/payments', icon: IndianRupee },
     { name: 'Inventory', path: '/diagnostics/inventory', icon: Package },
     { name: 'Settings', path: '/diagnostics/settings', icon: Settings },
-    { name: 'Subscription', path: '/diagnostics/subscription', icon: CreditCard },
   ];
 
   const isActive = (path) => location.pathname.startsWith(path);

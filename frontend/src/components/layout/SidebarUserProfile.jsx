@@ -42,7 +42,7 @@ export default function SidebarUserProfile({ customSubtitle }) {
 
   const getProfilePath = () => `${osConfig.baseRoute}/profile`;
   const getSettingsPath = () => `${osConfig.baseRoute}/settings`;
-  const getSubscriptionPath = () => isSuperAdmin ? '/superadmin/subscriptions' : `${osConfig.baseRoute}/subscription`;
+  const getSubscriptionPath = () => isSuperAdmin ? '/superadmin/subscriptions' : `${osConfig.baseRoute}/settings?tab=billing`;
   const getSupportPath = () => `${osConfig.baseRoute}/support`;
 
   const initials = user?.name ? user.name.charAt(0) : (isSuperAdmin ? 'SA' : 'U');

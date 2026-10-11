@@ -110,7 +110,6 @@ import DiagnosticsInventory from './pages/diagnostics/DiagnosticsInventory';
 import DiagnosticsSettings from './pages/diagnostics/DiagnosticsSettings';
 import DiagnosticsPayments from './pages/diagnostics/DiagnosticsPayments';
 import DiagnosticsQC from './pages/diagnostics/DiagnosticsQC';
-import PlatformBilling from './pages/PlatformBilling';
 
 // Restaurant OS
 import RestaurantLayout from './components/layout/RestaurantLayout';
@@ -249,7 +248,7 @@ function App() {
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
             <Route path="profile" element={<Profile />} />
-            <Route path="subscription" element={<PlatformBilling />} />
+            <Route path="subscription" element={<Navigate to="/settings?tab=billing" replace />} />
             <Route path="support" element={<HelpSupport />} />
           </Route>
 
@@ -277,7 +276,7 @@ function App() {
             <Route path="team" element={<SupplierTeam />} />
             <Route path="settings" element={<Settings />} />
             <Route path="profile" element={<Profile />} />
-            <Route path="subscription" element={<PlatformBilling />} />
+            <Route path="subscription" element={<Navigate to="/supplier/settings?tab=billing" replace />} />
             <Route path="support" element={<HelpSupport />} />
           </Route>
 
@@ -345,7 +344,7 @@ function App() {
             <Route path="driver" element={<DistributorDriver />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="subscription" element={<PlatformBilling />} />
+            <Route path="subscription" element={<Navigate to="/distributor/settings?tab=billing" replace />} />
             <Route path="support" element={<HelpSupport />} />
           </Route>
 
@@ -371,7 +370,7 @@ function App() {
             <Route path="qc" element={<DiagnosticsQC />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="subscription" element={<PlatformBilling />} />
+            <Route path="subscription" element={<Navigate to="/diagnostics/settings?tab=billing" replace />} />
             <Route path="support" element={<HelpSupport />} />
           </Route>
 
@@ -404,7 +403,7 @@ function App() {
             <Route path="online-orders" element={<RestaurantAggregators />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="subscription" element={<PlatformBilling />} />
+            <Route path="subscription" element={<Navigate to="/restaurant/settings?tab=billing" replace />} />
             <Route path="support" element={<HelpSupport />} />
           </Route>
 
