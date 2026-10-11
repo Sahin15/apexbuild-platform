@@ -13,6 +13,7 @@ import RestaurantPurchaseOrder from '../models/RestaurantPurchaseOrder.js';
 import RestaurantCustomer from '../models/RestaurantCustomer.js';
 import RestaurantExpense from '../models/RestaurantExpense.js';
 import RestaurantAggregatorConfig from '../models/RestaurantAggregatorConfig.js';
+import RestaurantReservation from '../models/RestaurantReservation.js';
 import Organization from '../models/Organization.js';
 import AppError from '../utils/AppError.js';
 
@@ -4364,6 +4365,771 @@ export const updateAggregatorConfig = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       data: { config }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ==========================================
+// 12. TABLE RESERVATIONS & GUEST BOOKINGS
+// ==========================================
+
+const seedReservationsIfEmpty = async (organizationId) => {
+  const count = await RestaurantReservation.countDocuments({ organizationId });
+  if (count > 0) return;
+
+  const tables = await RestaurantTable.find({ organizationId, isActive: true }).sort({ tableNumber: 1 }).limit(8);
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+
+  const sampleBookings = [
+    {
+      reservationCode: 'RES-1011',
+      customerName: 'Aditi Sharma',
+      customerPhone: '9876543210',
+      customerEmail: 'aditi.sharma@example.com',
+      partySize: 4,
+      reservationDate: new Date(`${todayStr}T19:30:00.000Z`),
+      timeSlot: '19:30',
+      durationMinutes: 90,
+      tableId: tables[0]?._id,
+      status: 'CONFIRMED',
+      specialOccasion: 'BIRTHDAY',
+      dietaryPreferences: ['VEG', 'GLUTEN_FREE'],
+      depositAmount: 500,
+      depositStatus: 'PAID',
+      depositPaymentMethod: 'UPI',
+      guestNotes: 'Celebrating 30th birthday, window booth requested with candle setting.',
+      confirmationSent: true,
+      confirmationMethod: 'WHATSAPP',
+      confirmationSentAt: new Date(Date.now() - 3600000)
+    },
+    {
+      reservationCode: 'RES-1012',
+      customerName: 'Rajesh Verma',
+      customerPhone: '9811223344',
+      customerEmail: 'rajesh.v@corp.in',
+      partySize: 6,
+      reservationDate: new Date(`${todayStr}T20:00:00.000Z`),
+      timeSlot: '20:00',
+      durationMinutes: 120,
+      tableId: tables[1]?._id,
+      status: 'CONFIRMED',
+      specialOccasion: 'BUSINESS_DINNER',
+      dietaryPreferences: ['NON_VEG'],
+      depositAmount: 1000,
+      depositStatus: 'PAID',
+      depositPaymentMethod: 'CARD',
+      guestNotes: 'Quiet corner table needed for corporate client meeting.',
+      confirmationSent: true,
+      confirmationMethod: 'SMS',
+      confirmationSentAt: new Date(Date.now() - 7200000)
+    },
+    {
+      reservationCode: 'RES-1013',
+      customerName: 'Priya & Vikram Malhotra',
+      customerPhone: '9822334455',
+      customerEmail: 'priya.m@gmail.com',
+      partySize: 2,
+      reservationDate: new Date(`${todayStr}T20:30:00.000Z`),
+      timeSlot: '20:30',
+      durationMinutes: 90,
+      tableId: tables[2]?._id,
+      status: 'CONFIRMED',
+      specialOccasion: 'ANNIVERSARY',
+      dietaryPreferences: ['VEGAN'],
+      depositAmount: 500,
+      depositStatus: 'PAID',
+      depositPaymentMethod: 'UPI',
+      guestNotes: 'Romantic anniversary dinner with complimentary dessert surprise.',
+      confirmationSent: true,
+      confirmationMethod: 'WHATSAPP',
+      confirmationSentAt: new Date(Date.now() - 1800000)
+    },
+    {
+      reservationCode: 'RES-1014',
+      customerName: 'Kunal Singhal',
+      customerPhone: '9833445566',
+      customerEmail: 'kunal.s@tech.io',
+      partySize: 3,
+      reservationDate: new Date(`${todayStr}T13:30:00.000Z`),
+      timeSlot: '13:30',
+      durationMinutes: 60,
+      tableId: tables[3]?._id,
+      status: 'SEATED',
+      specialOccasion: 'NONE',
+      dietaryPreferences: ['LESS_OIL'],
+      depositAmount: 0,
+      depositStatus: 'NOT_REQUIRED',
+      guestNotes: 'Quick lunch meeting.',
+      seatedAt: new Date(Date.now() - 25 * 60000),
+      confirmationSent: true,
+      confirmationMethod: 'WHATSAPP'
+    },
+    {
+      reservationCode: 'RES-1015',
+      customerName: 'Dr. Sameer Patel',
+      customerPhone: '9844556677',
+      partySize: 5,
+      reservationDate: new Date(`${todayStr}T12:30:00.000Z`),
+      timeSlot: '12:30',
+      durationMinutes: 90,
+      tableId: tables[4]?._id,
+      status: 'COMPLETED',
+      specialOccasion: 'FAMILY_GATHERING',
+      dietaryPreferences: ['JAIN'],
+      depositAmount: 0,
+      depositStatus: 'NOT_REQUIRED',
+      completedAt: new Date(Date.now() - 60 * 60000),
+      confirmationSent: true,
+      confirmationMethod: 'SMS'
+    }
+  ];
+
+  await RestaurantReservation.insertMany(
+    sampleBookings.map(b => ({ ...b, organizationId }))
+  );
+};
+
+export const getReservationsAnalytics = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    await seedReservationsIfEmpty(organizationId);
+
+    const { date } = req.query;
+    const targetDate = date ? new Date(date) : new Date();
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const reservations = await RestaurantReservation.find({
+      organizationId,
+      reservationDate: { $gte: startOfDay, $lte: endOfDay }
+    }).populate('tableId', 'tableNumber capacity status');
+
+    const totalBookings = reservations.length;
+    const confirmedCount = reservations.filter(r => r.status === 'CONFIRMED').length;
+    const seatedCount = reservations.filter(r => r.status === 'SEATED').length;
+    const completedCount = reservations.filter(r => r.status === 'COMPLETED').length;
+    const cancelledCount = reservations.filter(r => r.status === 'CANCELLED').length;
+    const noShowCount = reservations.filter(r => r.status === 'NO_SHOW').length;
+
+    // Expected covers (active bookings)
+    const expectedCovers = reservations
+      .filter(r => ['CONFIRMED', 'SEATED'].includes(r.status))
+      .reduce((sum, r) => sum + (r.partySize || 0), 0);
+
+    const totalCoversAll = reservations
+      .filter(r => r.status !== 'CANCELLED')
+      .reduce((sum, r) => sum + (r.partySize || 0), 0);
+
+    // Deposits collected
+    const depositsCollected = reservations
+      .filter(r => r.depositStatus === 'PAID')
+      .reduce((sum, r) => sum + (r.depositAmount || 0), 0);
+
+    // Total active tables in restaurant
+    const totalTablesCount = await RestaurantTable.countDocuments({ organizationId, isActive: true });
+    const reservedTablesCount = new Set(
+      reservations.filter(r => ['CONFIRMED', 'SEATED'].includes(r.status) && r.tableId).map(r => r.tableId._id?.toString() || r.tableId?.toString())
+    ).size;
+
+    // Time slot distribution
+    const slotMap = {};
+    reservations.forEach(r => {
+      if (r.status !== 'CANCELLED') {
+        const slot = r.timeSlot || '19:00';
+        if (!slotMap[slot]) slotMap[slot] = { slot, bookings: 0, covers: 0 };
+        slotMap[slot].bookings += 1;
+        slotMap[slot].covers += (r.partySize || 0);
+      }
+    });
+    const slotBreakdown = Object.values(slotMap).sort((a, b) => a.slot.localeCompare(b.slot));
+
+    // Occasion breakdown
+    const occasionMap = {};
+    reservations.forEach(r => {
+      const occ = r.specialOccasion || 'NONE';
+      occasionMap[occ] = (occasionMap[occ] || 0) + 1;
+    });
+    const occasionBreakdown = Object.entries(occasionMap).map(([occasion, count]) => ({
+      occasion,
+      count
+    }));
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        summary: {
+          totalBookings,
+          confirmedCount,
+          seatedCount,
+          completedCount,
+          cancelledCount,
+          noShowCount,
+          expectedCovers,
+          totalCoversAll,
+          depositsCollected,
+          totalTablesCount,
+          reservedTablesCount,
+          tableOccupancyRate: totalTablesCount > 0 ? Math.round((reservedTablesCount / totalTablesCount) * 100) : 0
+        },
+        slotBreakdown,
+        occasionBreakdown
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getReservations = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    await seedReservationsIfEmpty(organizationId);
+
+    const { date, status, search, tableId } = req.query;
+    const filter = { organizationId };
+
+    if (date && date !== 'ALL') {
+      const targetDate = new Date(date);
+      const startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      filter.reservationDate = { $gte: startOfDay, $lte: endOfDay };
+    }
+
+    if (status && status !== 'ALL') {
+      filter.status = status;
+    }
+
+    if (tableId) {
+      filter.tableId = tableId;
+    }
+
+    if (search) {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      filter.$or = [
+        { customerName: searchRegex },
+        { customerPhone: searchRegex },
+        { reservationCode: searchRegex }
+      ];
+    }
+
+    const reservations = await RestaurantReservation.find(filter)
+      .populate({
+        path: 'tableId',
+        select: 'tableNumber capacity status areaId',
+        populate: { path: 'areaId', select: 'name' }
+      })
+      .populate('customerId', 'name phone vipTier loyaltyPoints')
+      .populate('createdOrderId', 'orderNumber orderType grandTotal status')
+      .sort({ reservationDate: 1, timeSlot: 1, createdAt: -1 });
+
+    res.status(200).json({
+      status: 'success',
+      results: reservations.length,
+      data: { reservations }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAvailableTablesForReservation = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const { date, timeSlot, durationMinutes = 90, partySize = 2 } = req.query;
+
+    const partyNum = Number(partySize) || 2;
+    const durationNum = Number(durationMinutes) || 90;
+
+    const tables = await RestaurantTable.find({ organizationId, isActive: true })
+      .populate('areaId', 'name')
+      .sort({ capacity: 1, tableNumber: 1 });
+
+    let conflictingTableIds = new Set();
+
+    if (date && timeSlot) {
+      const targetDate = new Date(date);
+      const startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const toMins = (slot) => {
+        if (!slot) return 0;
+        const [h, m] = slot.split(':').map(Number);
+        return (h || 0) * 60 + (m || 0);
+      };
+
+      const reqStart = toMins(timeSlot);
+      const reqEnd = reqStart + durationNum;
+
+      const activeReservations = await RestaurantReservation.find({
+        organizationId,
+        reservationDate: { $gte: startOfDay, $lte: endOfDay },
+        status: { $in: ['CONFIRMED', 'SEATED'] },
+        tableId: { $ne: null }
+      });
+
+      activeReservations.forEach(resItem => {
+        const resStart = toMins(resItem.timeSlot);
+        const resEnd = resStart + (resItem.durationMinutes || 90);
+        // Overlap condition
+        if (reqStart < resEnd && reqEnd > resStart) {
+          conflictingTableIds.add(resItem.tableId.toString());
+        }
+      });
+    }
+
+    const evaluatedTables = tables.map(tbl => {
+      const isConflicted = conflictingTableIds.has(tbl._id.toString());
+      const fitsParty = tbl.capacity >= partyNum;
+      const capacityDiff = tbl.capacity - partyNum;
+
+      return {
+        _id: tbl._id,
+        tableNumber: tbl.tableNumber,
+        capacity: tbl.capacity,
+        currentStatus: tbl.status,
+        areaName: tbl.areaId?.name || 'Main Hall',
+        isAvailable: !isConflicted,
+        fitsParty,
+        capacityDiff
+      };
+    });
+
+    // Best recommendation: available & fitsParty with smallest positive capacityDiff
+    const candidates = evaluatedTables.filter(t => t.isAvailable && t.fitsParty)
+      .sort((a, b) => a.capacityDiff - b.capacityDiff);
+    const recommendedTableId = candidates.length > 0 ? candidates[0]._id : null;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tables: evaluatedTables,
+        recommendedTableId
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getReservationById = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const reservation = await RestaurantReservation.findOne({
+      _id: req.params.id,
+      organizationId
+    })
+      .populate({
+        path: 'tableId',
+        select: 'tableNumber capacity status areaId',
+        populate: { path: 'areaId', select: 'name' }
+      })
+      .populate('customerId')
+      .populate('createdOrderId');
+
+    if (!reservation) {
+      return next(new AppError('Reservation not found', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: { reservation }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createReservation = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const {
+      customerName,
+      customerPhone,
+      customerEmail,
+      partySize,
+      reservationDate,
+      timeSlot,
+      durationMinutes = 90,
+      tableId,
+      specialOccasion = 'NONE',
+      dietaryPreferences = [],
+      depositAmount = 0,
+      depositStatus = 'NOT_REQUIRED',
+      depositPaymentMethod = 'NONE',
+      guestNotes,
+      internalNotes
+    } = req.body;
+
+    if (!customerName || !customerPhone || !partySize || !reservationDate || !timeSlot) {
+      return next(new AppError('Customer name, phone, party size, reservation date, and time slot are required', 400));
+    }
+
+    // Auto-generate unique reservationCode
+    const randCode = Math.floor(1000 + Math.random() * 9000);
+    const reservationCode = `RES-${randCode}`;
+
+    // Link or auto-create RestaurantCustomer
+    let customer = await RestaurantCustomer.findOne({ organizationId, phone: customerPhone.trim() });
+    if (!customer) {
+      customer = await RestaurantCustomer.create({
+        organizationId,
+        name: customerName.trim(),
+        phone: customerPhone.trim(),
+        email: customerEmail ? customerEmail.trim() : undefined,
+        notes: `Created via reservation ${reservationCode}`
+      });
+    }
+
+    // Verify table conflict if tableId assigned
+    if (tableId) {
+      const targetDate = new Date(reservationDate);
+      const startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const toMins = (slot) => {
+        if (!slot) return 0;
+        const [h, m] = slot.split(':').map(Number);
+        return (h || 0) * 60 + (m || 0);
+      };
+
+      const reqStart = toMins(timeSlot);
+      const reqEnd = reqStart + Number(durationMinutes || 90);
+
+      const conflicts = await RestaurantReservation.find({
+        organizationId,
+        tableId,
+        reservationDate: { $gte: startOfDay, $lte: endOfDay },
+        status: { $in: ['CONFIRMED', 'SEATED'] }
+      });
+
+      for (const c of conflicts) {
+        const cStart = toMins(c.timeSlot);
+        const cEnd = cStart + (c.durationMinutes || 90);
+        if (reqStart < cEnd && reqEnd > cStart) {
+          return next(new AppError(`Selected table is already booked by ${c.customerName} at ${c.timeSlot}`, 400));
+        }
+      }
+    }
+
+    const reservation = await RestaurantReservation.create({
+      organizationId,
+      reservationCode,
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      customerEmail: customerEmail ? customerEmail.trim() : undefined,
+      customerId: customer?._id,
+      partySize: Number(partySize),
+      reservationDate: new Date(reservationDate),
+      timeSlot: timeSlot.trim(),
+      durationMinutes: Number(durationMinutes) || 90,
+      tableId: tableId || undefined,
+      status: 'CONFIRMED',
+      specialOccasion,
+      dietaryPreferences,
+      depositAmount: Number(depositAmount) || 0,
+      depositStatus: Number(depositAmount) > 0 ? (depositStatus || 'PAID') : 'NOT_REQUIRED',
+      depositPaymentMethod: Number(depositAmount) > 0 ? (depositPaymentMethod || 'UPI') : 'NONE',
+      guestNotes,
+      internalNotes,
+      createdBy: req.user._id
+    });
+
+    const populatedReservation = await RestaurantReservation.findById(reservation._id)
+      .populate({
+        path: 'tableId',
+        select: 'tableNumber capacity status areaId',
+        populate: { path: 'areaId', select: 'name' }
+      })
+      .populate('customerId');
+
+    res.status(201).json({
+      status: 'success',
+      data: { reservation: populatedReservation }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateReservation = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const reservation = await RestaurantReservation.findOne({
+      _id: req.params.id,
+      organizationId
+    });
+
+    if (!reservation) {
+      return next(new AppError('Reservation not found', 404));
+    }
+
+    const {
+      customerName,
+      customerPhone,
+      customerEmail,
+      partySize,
+      reservationDate,
+      timeSlot,
+      durationMinutes,
+      tableId,
+      status,
+      specialOccasion,
+      dietaryPreferences,
+      depositAmount,
+      depositStatus,
+      depositPaymentMethod,
+      guestNotes,
+      internalNotes,
+      cancellationReason
+    } = req.body;
+
+    if (customerName) reservation.customerName = customerName.trim();
+    if (customerPhone) reservation.customerPhone = customerPhone.trim();
+    if (customerEmail !== undefined) reservation.customerEmail = customerEmail ? customerEmail.trim() : '';
+    if (partySize) reservation.partySize = Number(partySize);
+    if (reservationDate) reservation.reservationDate = new Date(reservationDate);
+    if (timeSlot) reservation.timeSlot = timeSlot.trim();
+    if (durationMinutes !== undefined) reservation.durationMinutes = Number(durationMinutes);
+    if (tableId !== undefined) reservation.tableId = tableId || null;
+    if (specialOccasion) reservation.specialOccasion = specialOccasion;
+    if (dietaryPreferences) reservation.dietaryPreferences = dietaryPreferences;
+    if (depositAmount !== undefined) reservation.depositAmount = Number(depositAmount);
+    if (depositStatus) reservation.depositStatus = depositStatus;
+    if (depositPaymentMethod) reservation.depositPaymentMethod = depositPaymentMethod;
+    if (guestNotes !== undefined) reservation.guestNotes = guestNotes;
+    if (internalNotes !== undefined) reservation.internalNotes = internalNotes;
+
+    if (status && status !== reservation.status) {
+      reservation.status = status;
+      if (status === 'SEATED') {
+        reservation.seatedAt = new Date();
+      } else if (status === 'COMPLETED') {
+        reservation.completedAt = new Date();
+      } else if (status === 'CANCELLED') {
+        reservation.cancelledAt = new Date();
+        reservation.cancellationReason = cancellationReason || 'Cancelled by staff/guest';
+      }
+    }
+
+    await reservation.save();
+
+    const populated = await RestaurantReservation.findById(reservation._id)
+      .populate({
+        path: 'tableId',
+        select: 'tableNumber capacity status areaId',
+        populate: { path: 'areaId', select: 'name' }
+      })
+      .populate('customerId')
+      .populate('createdOrderId');
+
+    res.status(200).json({
+      status: 'success',
+      data: { reservation: populated }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const seatReservation = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const reservation = await RestaurantReservation.findOne({
+      _id: req.params.id,
+      organizationId
+    });
+
+    if (!reservation) {
+      return next(new AppError('Reservation not found', 404));
+    }
+
+    const tableId = req.body.tableId || reservation.tableId;
+    if (!tableId) {
+      return next(new AppError('A table must be assigned to seat this reservation', 400));
+    }
+
+    const table = await RestaurantTable.findOne({ _id: tableId, organizationId });
+    if (!table) {
+      return next(new AppError('Assigned table not found', 404));
+    }
+
+    // Mark reservation as SEATED
+    reservation.status = 'SEATED';
+    reservation.seatedAt = new Date();
+    reservation.tableId = tableId;
+
+    // Check if table already has an active order; if not, create one!
+    let activeOrder = null;
+    if (table.activeOrderId) {
+      activeOrder = await RestaurantOrder.findOne({ _id: table.activeOrderId, organizationId, status: { $in: ['DRAFT', 'CONFIRMED'] } });
+    }
+
+    if (!activeOrder && req.body.createOrder !== false) {
+      const orderCount = await RestaurantOrder.countDocuments({ organizationId });
+      const orderNumber = `ORD-${1000 + orderCount + 1}`;
+
+      activeOrder = await RestaurantOrder.create({
+        organizationId,
+        orderNumber,
+        tableId: table._id,
+        orderType: 'DINE_IN',
+        guestCount: reservation.partySize,
+        customerName: reservation.customerName,
+        customerPhone: reservation.customerPhone,
+        status: 'CONFIRMED',
+        notes: `Reservation: ${reservation.reservationCode} - ${reservation.guestNotes || ''}`,
+        createdBy: req.user._id
+      });
+
+      table.activeOrderId = activeOrder._id;
+      reservation.createdOrderId = activeOrder._id;
+    }
+
+    // Update table status
+    table.status = 'OCCUPIED';
+    table.currentGuests = reservation.partySize;
+    table.lastOccupiedAt = new Date();
+    await table.save();
+
+    await reservation.save();
+
+    const populated = await RestaurantReservation.findById(reservation._id)
+      .populate({
+        path: 'tableId',
+        select: 'tableNumber capacity status areaId',
+        populate: { path: 'areaId', select: 'name' }
+      })
+      .populate('customerId')
+      .populate('createdOrderId');
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        reservation: populated,
+        table,
+        order: activeOrder
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const sendReservationConfirmation = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const reservation = await RestaurantReservation.findOne({
+      _id: req.params.id,
+      organizationId
+    }).populate('tableId', 'tableNumber');
+
+    if (!reservation) {
+      return next(new AppError('Reservation not found', 404));
+    }
+
+    const { method = 'WHATSAPP' } = req.body;
+    const org = await Organization.findById(organizationId);
+    const restaurantName = org?.name || 'Apex Gourmet Bistro';
+
+    const formattedDate = new Date(reservation.reservationDate).toLocaleDateString('en-IN', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+
+    const occasionLine = reservation.specialOccasion !== 'NONE'
+      ? `\n🎉 *Special Occasion:* ${reservation.specialOccasion.replace('_', ' ')}`
+      : '';
+    const dietaryLine = reservation.dietaryPreferences?.length
+      ? `\n🥗 *Dietary Notes:* ${reservation.dietaryPreferences.join(', ')}`
+      : '';
+    const tableLine = reservation.tableId?.tableNumber
+      ? `\n🏷️ *Table Allocated:* ${reservation.tableId.tableNumber}`
+      : '\n🏷️ *Table:* Allocated upon arrival';
+    const depositLine = reservation.depositAmount > 0
+      ? `\n💳 *Deposit Confirmed:* ₹${reservation.depositAmount} (${reservation.depositPaymentMethod})`
+      : '';
+
+    const messageBody = `🍽️ *Reservation Confirmed at ${restaurantName}*
+----------------------------------------
+Dear *${reservation.customerName}*,
+
+We are delighted to confirm your dining reservation:
+📅 *Date:* ${formattedDate}
+⏰ *Time:* ${reservation.timeSlot}
+👥 *Guests:* ${reservation.partySize} Pax${tableLine}
+🔖 *Booking Ref:* ${reservation.reservationCode}${occasionLine}${dietaryLine}${depositLine}
+
+📍 *Location:* ${org?.address || 'Main Dining Hall, Apex Plaza'}
+📞 *Contact:* ${reservation.customerPhone}
+
+To modify or request special arrangements, please reply directly. We look forward to hosting you!
+----------------------------------------
+*ApexBuild Restaurant OS*`;
+
+    reservation.confirmationSent = true;
+    reservation.confirmationSentAt = new Date();
+    reservation.confirmationMethod = method;
+    await reservation.save();
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        recipient: reservation.customerPhone,
+        customerName: reservation.customerName,
+        method,
+        sentAt: reservation.confirmationSentAt,
+        messageBody
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const cancelReservation = async (req, res, next) => {
+  try {
+    const organizationId = req.user.organizationId;
+    const reservation = await RestaurantReservation.findOne({
+      _id: req.params.id,
+      organizationId
+    });
+
+    if (!reservation) {
+      return next(new AppError('Reservation not found', 404));
+    }
+
+    reservation.status = 'CANCELLED';
+    reservation.cancelledAt = new Date();
+    reservation.cancellationReason = req.body.reason || 'Cancelled by guest or front desk';
+
+    // If table was marked RESERVED, free it back to AVAILABLE
+    if (reservation.tableId) {
+      const table = await RestaurantTable.findOne({ _id: reservation.tableId, organizationId });
+      if (table && table.status === 'RESERVED') {
+        table.status = 'AVAILABLE';
+        await table.save();
+      }
+    }
+
+    await reservation.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Reservation cancelled successfully',
+      data: { reservation }
     });
   } catch (error) {
     next(error);

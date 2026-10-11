@@ -5,7 +5,7 @@ import {
   FileSpreadsheet, Package, Truck, Users, Coins, Receipt, 
   BarChart3, Settings, CreditCard, Menu, X, Plus, Clock,
   User as UserIcon, HelpCircle, LogOut, Lock, Sparkles, ChevronRight,
-  Flame, ShoppingBag, Store
+  Flame, ShoppingBag, Store, CalendarCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useEntitlements } from '../../context/EntitlementContext';
@@ -89,6 +89,13 @@ export default function RestaurantLayout() {
       name: 'Tables & Floor', 
       path: '/restaurant/tables', 
       icon: Grid3x3,
+      status: 'active',
+      badge: 'Live'
+    },
+    { 
+      name: 'Reservations', 
+      path: '/restaurant/reservations', 
+      icon: CalendarCheck,
       status: 'active',
       badge: 'Live'
     },

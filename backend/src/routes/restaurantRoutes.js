@@ -77,7 +77,16 @@ import {
   simulateAggregatorOrder,
   updateRiderStatus,
   toggleAggregatorStoreStatus,
-  updateAggregatorConfig
+  updateAggregatorConfig,
+  getReservationsAnalytics,
+  getReservations,
+  getAvailableTablesForReservation,
+  getReservationById,
+  createReservation,
+  updateReservation,
+  seatReservation,
+  sendReservationConfirmation,
+  cancelReservation
 } from '../controllers/restaurantController.js';
 
 const router = express.Router();
@@ -196,5 +205,16 @@ router.post('/aggregators/simulate', simulateAggregatorOrder);
 router.patch('/aggregators/rider/:orderId', updateRiderStatus);
 router.post('/aggregators/toggle', toggleAggregatorStoreStatus);
 router.put('/aggregators/config', updateAggregatorConfig);
+
+// Table Reservations & Advance Guest Bookings
+router.get('/reservations/analytics', getReservationsAnalytics);
+router.get('/reservations/available-tables', getAvailableTablesForReservation);
+router.get('/reservations', getReservations);
+router.get('/reservations/:id', getReservationById);
+router.post('/reservations', createReservation);
+router.put('/reservations/:id', updateReservation);
+router.post('/reservations/:id/seat', seatReservation);
+router.post('/reservations/:id/send-confirmation', sendReservationConfirmation);
+router.delete('/reservations/:id', cancelReservation);
 
 export default router;
