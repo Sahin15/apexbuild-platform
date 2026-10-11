@@ -139,6 +139,8 @@ export default function SABusinessAccounts() {
         window.location.href = '/diagnostics/dashboard';
       } else if (bType === 'CHICKEN_DISTRIBUTOR') {
         window.location.href = '/distributor/dashboard';
+      } else if (bType === 'RESTAURANT') {
+        window.location.href = '/restaurant/dashboard';
       } else {
         window.location.href = '/dashboard';
       }
@@ -903,6 +905,13 @@ export default function SABusinessAccounts() {
                   icon: '🐔', 
                   desc: 'Broiler chicken wholesale dispatch, farm crates logistics & customer billing ledgers',
                   color: 'from-amber-600/10 to-orange-600/5'
+                },
+                { 
+                  key: 'RESTAURANT', 
+                  title: 'Restaurant OS Engine', 
+                  icon: '🍽️', 
+                  desc: 'F&B dining establishments, touch POS billing, live KDS kitchen routing & recipe inventory',
+                  color: 'from-orange-600/10 to-red-600/5'
                 }
               ].map(osGroup => {
                 const list = workspacesData.groupedByOS?.[osGroup.key] || [];

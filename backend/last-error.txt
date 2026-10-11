@@ -1,2 +1,6 @@
-Error: Incorrect email or password
-    at login (file:///C:/Users/Sahin%20Mondal/OneDrive/Desktop/apexbuild-platform/backend/src/controllers/authController.js:104:19)
+ValidationError: RestaurantOrder validation failed: items.0.status: `CONFIRMED` is not a valid enum value for path `status`., items.1.status: `CONFIRMED` is not a valid enum value for path `status`.
+    at Document.invalidate (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-platform\backend\node_modules\mongoose\lib\document.js:3387:32)
+    at Subdocument.invalidate (C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-platform\backend\node_modules\mongoose\lib\types\subdocument.js:257:12)
+    at C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-platform\backend\node_modules\mongoose\lib\document.js:3148:17
+    at C:\Users\Sahin Mondal\OneDrive\Desktop\apexbuild-platform\backend\node_modules\mongoose\lib\schemaType.js:1443:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)

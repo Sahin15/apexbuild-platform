@@ -112,6 +112,23 @@ import DiagnosticsPayments from './pages/diagnostics/DiagnosticsPayments';
 import DiagnosticsQC from './pages/diagnostics/DiagnosticsQC';
 import PlatformBilling from './pages/PlatformBilling';
 
+// Restaurant OS
+import RestaurantLayout from './components/layout/RestaurantLayout';
+import RestaurantDashboard from './pages/restaurant/RestaurantDashboard';
+import RestaurantPOS from './pages/restaurant/RestaurantPOS';
+import RestaurantKDS from './pages/restaurant/RestaurantKDS';
+import RestaurantMenu from './pages/restaurant/RestaurantMenu';
+import RestaurantTables from './pages/restaurant/RestaurantTables';
+import RestaurantBilling from './pages/restaurant/RestaurantBilling';
+import RestaurantShifts from './pages/restaurant/RestaurantShifts';
+import RestaurantRecipes from './pages/restaurant/RestaurantRecipes';
+import RestaurantInventory from './pages/restaurant/RestaurantInventory';
+import RestaurantPurchases from './pages/restaurant/RestaurantPurchases';
+import RestaurantCustomers from './pages/restaurant/RestaurantCustomers';
+import RestaurantExpenses from './pages/restaurant/RestaurantExpenses';
+import RestaurantReports from './pages/restaurant/RestaurantReports';
+import RestaurantAggregators from './pages/restaurant/RestaurantAggregators';
+
 const ProtectedRoute = ({ children, allowedBusinessTypes }) => {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
@@ -126,6 +143,7 @@ const ProtectedRoute = ({ children, allowedBusinessTypes }) => {
     if (businessType === 'MATERIAL_SUPPLIER') return <Navigate to="/supplier/dashboard" replace />;
     if (businessType === 'CHICKEN_DISTRIBUTOR') return <Navigate to="/distributor/dashboard" replace />;
     if (businessType === 'DIAGNOSTICS') return <Navigate to="/diagnostics/dashboard" replace />;
+    if (businessType === 'RESTAURANT') return <Navigate to="/restaurant/dashboard" replace />;
     if (businessType === 'SUPERADMIN') return <Navigate to="/superadmin/dashboard" replace />;
     return <Navigate to="/dashboard" replace />;
   }
@@ -338,6 +356,34 @@ function App() {
             <Route path="tests" element={<DiagnosticsTests />} />
             <Route path="doctors" element={<DiagnosticsDoctors />} />
             <Route path="qc" element={<DiagnosticsQC />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="subscription" element={<PlatformBilling />} />
+            <Route path="support" element={<HelpSupport />} />
+          </Route>
+
+          {/* Protected Routes for RESTAURANT */}
+          <Route path="/restaurant" element={
+            <ProtectedRoute allowedBusinessTypes={['RESTAURANT']}>
+              <RestaurantLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="/restaurant/dashboard" replace />} />
+            <Route path="dashboard" element={<RestaurantDashboard />} />
+            <Route path="pos" element={<RestaurantPOS />} />
+            <Route path="kitchen" element={<RestaurantKDS />} />
+            <Route path="menu" element={<RestaurantMenu />} />
+            <Route path="tables" element={<RestaurantTables />} />
+            <Route path="billing" element={<RestaurantBilling />} />
+            <Route path="shifts" element={<RestaurantShifts />} />
+            <Route path="recipes" element={<RestaurantRecipes />} />
+            <Route path="inventory" element={<RestaurantInventory />} />
+            <Route path="purchases" element={<RestaurantPurchases />} />
+            <Route path="customers" element={<RestaurantCustomers />} />
+            <Route path="expenses" element={<RestaurantExpenses />} />
+            <Route path="reports" element={<RestaurantReports />} />
+            <Route path="aggregators" element={<RestaurantAggregators />} />
+            <Route path="online-orders" element={<RestaurantAggregators />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
             <Route path="subscription" element={<PlatformBilling />} />

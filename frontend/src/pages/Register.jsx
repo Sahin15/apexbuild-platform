@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   Building2, Package, Egg, Activity, CheckCircle2, Clock, ShieldCheck, 
-  ArrowRight, ArrowLeft, Copy, Check, Sparkles, AlertCircle, Phone, Mail, MapPin
+  ArrowRight, ArrowLeft, Copy, Check, Sparkles, AlertCircle, Phone, Mail, MapPin, UtensilsCrossed
 } from 'lucide-react';
 
 export default function Register() {
@@ -65,6 +65,16 @@ export default function Register() {
       color: 'border-amber-500 bg-amber-50/50 text-amber-600',
       badge: 'Agri & Distribution',
       highlight: 'from-amber-600 to-orange-600'
+    },
+    {
+      id: 'RESTAURANT',
+      title: 'Restaurant OS',
+      tagline: 'F&B, Dine-in & Cloud Kitchen',
+      desc: 'Touch POS billing, live kitchen display (KDS), floor table management, recipe costing & inventory.',
+      icon: UtensilsCrossed,
+      color: 'border-orange-500 bg-orange-50/50 text-orange-600',
+      badge: 'Hospitality & F&B',
+      highlight: 'from-orange-600 to-red-600'
     }
   ];
 

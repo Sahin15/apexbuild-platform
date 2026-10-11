@@ -193,6 +193,45 @@ export const OS_CONFIG = {
       accentDot: 'bg-indigo-500',
       tierBadge: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     }
+  },
+  RESTAURANT: {
+    key: 'RESTAURANT',
+    name: 'Restaurant OS',
+    parentBrand: 'ApexBuild',
+    fullTitle: 'ApexBuild | Restaurant OS',
+    shortCode: 'RT',
+    roleTag: 'RESTAURANT',
+    baseRoute: '/restaurant',
+    defaultPrimary: '#EA580C',
+    defaultSecondary: '#DC2626',
+    searchPlaceholder: 'Search orders, tables, menu items, recipes, ingredients...',
+    theme: {
+      colorName: 'orange',
+      logoBg: 'bg-orange-600',
+      logoText: 'text-white',
+      badgeBg: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
+      pillBg: 'bg-orange-50 text-orange-700 border-orange-200',
+      avatarBg: 'bg-orange-100 text-orange-700 border-orange-200',
+      avatarRing: 'hover:ring-orange-500',
+      focusRing: 'focus:border-orange-500 focus:ring-orange-500',
+      activeNav: 'bg-orange-600 text-white',
+      hoverNav: 'hover:bg-stone-800 hover:text-white',
+      sidebarBg: 'bg-stone-900',
+      sidebarBorder: 'border-stone-800',
+      sidebarCardBg: 'bg-stone-950/95',
+      sidebarCardBorder: 'border-stone-700/80',
+      sidebarBtnBg: 'bg-stone-800/80 hover:bg-stone-800 border-stone-700/60',
+      upgradeBtnBg: 'bg-orange-600 hover:bg-orange-500 text-white',
+      planPillBg: 'bg-orange-500/10 border-orange-500/20 text-orange-400',
+      accentText: 'text-orange-400',
+      roleColor: 'text-orange-600',
+      menuHoverBg: 'hover:bg-orange-50/80',
+      menuHoverText: 'group-hover:text-orange-600',
+      menuActiveText: 'text-orange-700',
+      iconBg: 'bg-orange-50 text-orange-600 group-hover:bg-orange-100 group-hover:text-orange-700',
+      accentDot: 'bg-orange-500',
+      tierBadge: 'bg-orange-50 text-orange-700 border-orange-200',
+    }
   }
 };
 
@@ -209,6 +248,7 @@ export const getOSConfig = (businessType, pathname = '') => {
   if (pathname.startsWith('/supplier')) return OS_CONFIG.MATERIAL_SUPPLIER;
   if (pathname.startsWith('/diagnostics')) return OS_CONFIG.DIAGNOSTICS;
   if (pathname.startsWith('/distributor')) return OS_CONFIG.CHICKEN_DISTRIBUTOR;
+  if (pathname.startsWith('/restaurant')) return OS_CONFIG.RESTAURANT;
 
   return OS_CONFIG.CONTRACTOR;
 };

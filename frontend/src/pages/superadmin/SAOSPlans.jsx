@@ -51,6 +51,16 @@ const OS_FEATURE_OPTIONS = {
     { key: 'automatedDispatch', label: 'Automated WhatsApp Dispatch' },
     { key: 'qualityControl', label: 'Levey-Jennings QC Calibration' },
     { key: 'customBranding', label: 'White-Label Custom Letterhead' },
+  ],
+  RESTAURANT: [
+    { key: 'posBasic', label: 'Touch POS & Counter Billing' },
+    { key: 'dineInTables', label: 'Table Layout & Floor Management' },
+    { key: 'kitchenDisplay', label: 'Live Kitchen Display System (KDS)' },
+    { key: 'recipeCosting', label: 'Recipe BOM & Food Cost Margin Analysis' },
+    { key: 'inventoryLedger', label: 'Ingredient Stock & Auto Order Deduction' },
+    { key: 'cashierShifts', label: 'Cash Drawer Float & Blind Drop Close' },
+    { key: 'multiStationKDS', label: 'Multi-Station KDS Routing (3+ Stations)' },
+    { key: 'customBranding', label: 'White-Label Receipt & Bill Branding' },
   ]
 };
 

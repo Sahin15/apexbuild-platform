@@ -25,6 +25,8 @@ export default function Login() {
          navigate('/distributor/dashboard', { replace: true });
       } else if (bType === 'DIAGNOSTICS') {
          navigate('/diagnostics/dashboard', { replace: true });
+      } else if (bType === 'RESTAURANT') {
+         navigate('/restaurant/dashboard', { replace: true });
       } else {
          navigate('/dashboard', { replace: true }); // Default Contractor
       }

@@ -66,6 +66,8 @@ export default function SABusinessAccountDetails() {
         window.location.href = '/diagnostics/dashboard';
       } else if (bType === 'CHICKEN_DISTRIBUTOR') {
         window.location.href = '/distributor/dashboard';
+      } else if (bType === 'RESTAURANT') {
+        window.location.href = '/restaurant/dashboard';
       } else {
         window.location.href = '/dashboard';
       }

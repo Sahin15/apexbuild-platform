@@ -52,6 +52,15 @@ import Result from '../models/Result.js';
 import LabPaymentReceipt from '../models/LabPaymentReceipt.js';
 import QualityControl from '../models/QualityControl.js';
 
+// Restaurant Models
+import RestaurantArea from '../models/RestaurantArea.js';
+import RestaurantTable from '../models/RestaurantTable.js';
+import RestaurantMenuCategory from '../models/RestaurantMenuCategory.js';
+import RestaurantMenuItem from '../models/RestaurantMenuItem.js';
+import RestaurantOrder from '../models/RestaurantOrder.js';
+import RestaurantBill from '../models/RestaurantBill.js';
+import RestaurantShift from '../models/RestaurantShift.js';
+
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/apexbuild';
 
 async function ensureEnterpriseSubscription(org, businessType) {
@@ -100,7 +109,15 @@ async function ensureEnterpriseSubscription(org, businessType) {
           analyzerInterfacing: true,
           verifiedReporting: true,
           qualityControlLJ: true,
-          doctorIncentives: true
+          doctorIncentives: true,
+          posBasic: true,
+          dineInTables: true,
+          kitchenDisplay: true,
+          recipeCosting: true,
+          inventoryLedger: true,
+          cashierShifts: true,
+          multiStationKDS: true,
+          whiteLabelReceipts: true
         }
       });
     }
@@ -1202,7 +1219,228 @@ async function seedAll() {
       console.log('✅ Diagnostics OS: Seeded Patients, Doctors, Orders, Barcoded Samples, Verified Lab Results & QC Logs!');
     }
 
-    console.log('\n🎉 ALL 4 OS VERTICALS FULLY SEEDED WITH ENTERPRISE OPERATIONAL DEMO DATA!');
+    // =========================================================================
+    // 5. RESTAURANT OS (Restaurant Demo)
+    // =========================================================================
+    console.log('\n--- 5. Seeding Restaurant OS (Restaurant Demo) ---');
+    let restOrg = await Organization.findOne({ email: 'restaurant@example.com' });
+    let restUser = await User.findOne({ email: 'restaurant@example.com' });
+
+    if (!restOrg) {
+      restOrg = await Organization.create({
+        name: 'Restaurant Demo',
+        email: 'restaurant@example.com',
+        businessType: 'RESTAURANT',
+        status: 'active',
+        ownerName: 'Chef & Owner',
+        address: '14 Park Street, Kolkata, West Bengal'
+      });
+    }
+
+    if (!restUser) {
+      restUser = await User.create({
+        organizationId: restOrg._id,
+        name: 'Restaurant Manager',
+        email: 'restaurant@example.com',
+        passwordHash: '123456',
+        role: 'ADMIN',
+        status: 'active'
+      });
+    }
+
+    if (restOrg && restUser) {
+      const orgId = restOrg._id;
+      const userId = restUser._id;
+
+      await ensureEnterpriseSubscription(restOrg, 'RESTAURANT');
+
+      await RestaurantArea.deleteMany({ organizationId: orgId });
+      await RestaurantTable.deleteMany({ organizationId: orgId });
+      await RestaurantMenuCategory.deleteMany({ organizationId: orgId });
+      await RestaurantMenuItem.deleteMany({ organizationId: orgId });
+      await RestaurantOrder.deleteMany({ organizationId: orgId });
+      await RestaurantBill.deleteMany({ organizationId: orgId });
+      await RestaurantShift.deleteMany({ organizationId: orgId });
+
+      // Areas
+      const a1 = await RestaurantArea.create({ organizationId: orgId, name: 'Main Dining Hall', displayOrder: 1 });
+      const a2 = await RestaurantArea.create({ organizationId: orgId, name: 'Outdoor Patio', displayOrder: 2 });
+      const a3 = await RestaurantArea.create({ organizationId: orgId, name: 'AC Family Lounge', displayOrder: 3 });
+
+      // Categories
+      const cStarters = await RestaurantMenuCategory.create({ organizationId: orgId, name: 'Starters & Tandoor', defaultStation: 'Tandoor', displayOrder: 1 });
+      const cMains = await RestaurantMenuCategory.create({ organizationId: orgId, name: 'Main Course', defaultStation: 'Curry Range', displayOrder: 2 });
+      const cBreads = await RestaurantMenuCategory.create({ organizationId: orgId, name: 'Breads & Rice', defaultStation: 'Tandoor', displayOrder: 3 });
+      const cBeverages = await RestaurantMenuCategory.create({ organizationId: orgId, name: 'Beverages', defaultStation: 'Beverage Bar', displayOrder: 4 });
+      const cDesserts = await RestaurantMenuCategory.create({ organizationId: orgId, name: 'Desserts', defaultStation: 'Dessert', displayOrder: 5 });
+
+      // Menu Items
+      await RestaurantMenuItem.create([
+        { organizationId: orgId, categoryId: cStarters._id, name: 'Paneer Tikka Angara', code: 'APP-01', price: 280, veg: true, dietaryType: 'VEG', station: 'Tandoor' },
+        { organizationId: orgId, categoryId: cStarters._id, name: 'Chicken Malai Tikka', code: 'APP-02', price: 340, veg: false, dietaryType: 'NON_VEG', station: 'Tandoor' },
+        { organizationId: orgId, categoryId: cStarters._id, name: 'Crispy Corn Salt & Pepper', code: 'APP-03', price: 220, veg: true, dietaryType: 'VEG', station: 'Pantry' },
+        { organizationId: orgId, categoryId: cMains._id, name: 'Butter Chicken Masala', code: 'MAIN-01', price: 380, veg: false, dietaryType: 'NON_VEG', station: 'Curry Range' },
+        { organizationId: orgId, categoryId: cMains._id, name: 'Dal Makhani Royal', code: 'MAIN-02', price: 290, veg: true, dietaryType: 'VEG', station: 'Curry Range' },
+        { organizationId: orgId, categoryId: cMains._id, name: 'Paneer Butter Masala', code: 'MAIN-03', price: 320, veg: true, dietaryType: 'VEG', station: 'Curry Range' },
+        { organizationId: orgId, categoryId: cMains._id, name: 'Mutton Rogan Josh', code: 'MAIN-04', price: 460, veg: false, dietaryType: 'NON_VEG', station: 'Curry Range' },
+        { organizationId: orgId, categoryId: cBreads._id, name: 'Butter Garlic Naan', code: 'BRD-01', price: 65, veg: true, dietaryType: 'VEG', station: 'Tandoor' },
+        { organizationId: orgId, categoryId: cBreads._id, name: 'Tandoori Roti Butter', code: 'BRD-02', price: 35, veg: true, dietaryType: 'VEG', station: 'Tandoor' },
+        { organizationId: orgId, categoryId: cBreads._id, name: 'Chicken Dum Biryani (Pot)', code: 'BRD-03', price: 360, veg: false, dietaryType: 'NON_VEG', station: 'Curry Range' },
+        { organizationId: orgId, categoryId: cBreads._id, name: 'Steamed Basmati Rice', code: 'BRD-04', price: 160, veg: true, dietaryType: 'VEG', station: 'Curry Range' },
+        { organizationId: orgId, categoryId: cBeverages._id, name: 'Virgin Mint Mojito', code: 'BEV-01', price: 140, veg: true, dietaryType: 'VEG', station: 'Beverage Bar' },
+        { organizationId: orgId, categoryId: cBeverages._id, name: 'Cold Coffee with Ice Cream', code: 'BEV-02', price: 160, veg: true, dietaryType: 'VEG', station: 'Beverage Bar' },
+        { organizationId: orgId, categoryId: cBeverages._id, name: 'Sweet Punjabi Lassi', code: 'BEV-03', price: 110, veg: true, dietaryType: 'VEG', station: 'Beverage Bar' },
+        { organizationId: orgId, categoryId: cDesserts._id, name: 'Gulab Jamun with Rabri', code: 'DES-01', price: 130, veg: true, dietaryType: 'VEG', station: 'Dessert' },
+        { organizationId: orgId, categoryId: cDesserts._id, name: 'Sizzling Brownie with Ice Cream', code: 'DES-02', price: 190, veg: true, dietaryType: 'VEG', station: 'Dessert' },
+        { organizationId: orgId, categoryId: cStarters._id, name: 'Fish Amritsari Fry', code: 'APP-04', price: 390, veg: false, dietaryType: 'NON_VEG', station: 'Hot Fryer', is86ed: true }
+      ]);
+
+      // Tables
+      await RestaurantTable.create({ organizationId: orgId, areaId: a1._id, tableNumber: 'T-01', capacity: 2, status: 'AVAILABLE', displayOrder: 1 });
+      await RestaurantTable.create({ organizationId: orgId, areaId: a1._id, tableNumber: 'T-02', capacity: 4, status: 'AVAILABLE', displayOrder: 2 });
+      await RestaurantTable.create({ organizationId: orgId, areaId: a1._id, tableNumber: 'T-03', capacity: 4, status: 'AVAILABLE', displayOrder: 3 });
+      const t4 = await RestaurantTable.create({ organizationId: orgId, areaId: a1._id, tableNumber: 'T-04', capacity: 4, status: 'OCCUPIED', displayOrder: 4, currentGuests: 3, assignedSteward: 'Rahul S.' });
+      await RestaurantTable.create({ organizationId: orgId, areaId: a1._id, tableNumber: 'T-05', capacity: 6, status: 'AVAILABLE', displayOrder: 5 });
+      await RestaurantTable.create({ organizationId: orgId, areaId: a1._id, tableNumber: 'T-06', capacity: 6, status: 'AVAILABLE', displayOrder: 6 });
+      await RestaurantTable.create({ organizationId: orgId, areaId: a1._id, tableNumber: 'T-07', capacity: 2, status: 'AVAILABLE', displayOrder: 7 });
+      const t8 = await RestaurantTable.create({ organizationId: orgId, areaId: a1._id, tableNumber: 'T-08', capacity: 4, status: 'BILLED', displayOrder: 8, currentGuests: 2, assignedSteward: 'Deepak V.' });
+      await RestaurantTable.create({ organizationId: orgId, areaId: a2._id, tableNumber: 'T-09 (Patio)', capacity: 4, status: 'AVAILABLE', displayOrder: 9 });
+      await RestaurantTable.create({ organizationId: orgId, areaId: a2._id, tableNumber: 'T-10 (Patio)', capacity: 4, status: 'AVAILABLE', displayOrder: 10 });
+      const t11 = await RestaurantTable.create({ organizationId: orgId, areaId: a2._id, tableNumber: 'T-11 (Patio)', capacity: 6, status: 'OCCUPIED', displayOrder: 11, currentGuests: 4, assignedSteward: 'Amit K.' });
+      await RestaurantTable.create({ organizationId: orgId, areaId: a3._id, tableNumber: 'T-12 (Lounge)', capacity: 8, status: 'AVAILABLE', displayOrder: 12 });
+
+      // Orders
+      const ord1 = await RestaurantOrder.create({
+        organizationId: orgId,
+        orderNumber: 'ORD-9042',
+        orderType: 'DINE_IN',
+        tableId: t4._id,
+        tableName: 'Table 04',
+        guestCount: 3,
+        stewardId: userId,
+        stewardName: 'Rahul S.',
+        status: 'PREPARING',
+        paymentStatus: 'PAID',
+        subTotal: 655,
+        serviceCharge: 33,
+        taxTotal: 33,
+        grandTotal: 721,
+        items: [
+          { name: 'Butter Chicken Masala', price: 380, quantity: 1, station: 'Curry Range', notes: 'Medium spicy, extra butter', veg: false, status: 'PREPARING', ready: false },
+          { name: 'Butter Garlic Naan', price: 65, quantity: 3, station: 'Tandoor', notes: 'Crispy well-done', veg: true, status: 'PREPARING', ready: false },
+          { name: 'Sweet Punjabi Lassi', price: 110, quantity: 2, station: 'Beverage Bar', notes: 'Chilled', veg: true, status: 'READY', ready: true }
+        ],
+        createdBy: userId
+      });
+      t4.activeOrderId = ord1._id;
+      await t4.save();
+
+      await RestaurantOrder.create({
+        organizationId: orgId,
+        orderNumber: 'ORD-9041',
+        orderType: 'TAKEAWAY',
+        tokenNumber: 'Token #28',
+        guestCount: 1,
+        stewardName: 'Counter 1',
+        status: 'PREPARING',
+        paymentStatus: 'PAID',
+        subTotal: 380,
+        serviceCharge: 0,
+        taxTotal: 19,
+        grandTotal: 399,
+        items: [
+          { name: 'Paneer Tikka Angara', price: 280, quantity: 1, station: 'Tandoor', notes: 'Mint chutney extra', veg: true, status: 'PREPARING', ready: false },
+          { name: 'Cold Coffee with Ice Cream', price: 160, quantity: 1, station: 'Beverage Bar', notes: '', veg: true, status: 'READY', ready: true }
+        ],
+        createdBy: userId
+      });
+
+      const ord3 = await RestaurantOrder.create({
+        organizationId: orgId,
+        orderNumber: 'ORD-9040',
+        orderType: 'DINE_IN',
+        tableId: t11._id,
+        tableName: 'T-11 (Patio)',
+        guestCount: 4,
+        stewardId: userId,
+        stewardName: 'Amit K.',
+        status: 'PREPARING',
+        paymentStatus: 'PENDING',
+        subTotal: 760,
+        serviceCharge: 38,
+        taxTotal: 38,
+        grandTotal: 836,
+        items: [
+          { name: 'Mutton Rogan Josh', price: 460, quantity: 1, station: 'Curry Range', notes: 'Boneless cuts', veg: false, status: 'PREPARING', ready: false },
+          { name: 'Steamed Basmati Rice', price: 160, quantity: 2, station: 'Curry Range', notes: '', veg: true, status: 'READY', ready: true }
+        ],
+        createdBy: userId
+      });
+      t11.activeOrderId = ord3._id;
+      await t11.save();
+
+      await RestaurantOrder.create({
+        organizationId: orgId,
+        orderNumber: 'ORD-9039',
+        orderType: 'DELIVERY',
+        customerName: 'Sanjay Verma',
+        customerPhone: '9830129988',
+        deliveryAddress: 'Flat 4B, Silver Heights, Park Street',
+        stewardName: 'Dispatch',
+        status: 'READY',
+        paymentStatus: 'PAID',
+        subTotal: 490,
+        serviceCharge: 0,
+        taxTotal: 25,
+        grandTotal: 515,
+        items: [
+          { name: 'Chicken Dum Biryani (Pot)', price: 360, quantity: 1, station: 'Curry Range', notes: 'Extra salan pouch', veg: false, status: 'READY', ready: true },
+          { name: 'Gulab Jamun with Rabri', price: 130, quantity: 1, station: 'Dessert', notes: 'Warm', veg: true, status: 'READY', ready: true }
+        ],
+        createdBy: userId
+      });
+
+      const ord5 = await RestaurantOrder.create({
+        organizationId: orgId,
+        orderNumber: 'ORD-9038',
+        orderType: 'DINE_IN',
+        tableId: t8._id,
+        tableName: 'T-08',
+        guestCount: 2,
+        stewardId: userId,
+        stewardName: 'Deepak V.',
+        status: 'SERVED',
+        paymentStatus: 'PAID',
+        subTotal: 540,
+        serviceCharge: 27,
+        taxTotal: 27,
+        grandTotal: 594,
+        items: [
+          { name: 'Paneer Butter Masala', price: 320, quantity: 1, station: 'Curry Range', notes: '', veg: true, status: 'SERVED', ready: true },
+          { name: 'Crispy Corn Salt & Pepper', price: 220, quantity: 1, station: 'Pantry', notes: 'Extra spicy', veg: true, status: 'SERVED', ready: true }
+        ],
+        createdBy: userId
+      });
+      t8.activeOrderId = ord5._id;
+      await t8.save();
+
+      // Register shift
+      await RestaurantShift.create({
+        organizationId: orgId,
+        cashierId: userId,
+        cashierName: restUser.name,
+        registerNumber: 'Register #1',
+        openedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+        openingFloat: 5000,
+        cashSales: 9200,
+        expectedCash: 14200,
+        status: 'OPEN'
+      });
+
+      console.log('✅ Restaurant OS: Seeded Areas, Tables, Categories, Menu Items, Active Orders, KDS Tickets & Register Shift!');
+    }
+
+    console.log('\n🎉 ALL 5 OS VERTICALS FULLY SEEDED WITH ENTERPRISE OPERATIONAL DEMO DATA!');
     process.exit(0);
   } catch (error) {
     console.error('❌ Error during master seeding:', error);
