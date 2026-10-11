@@ -4,6 +4,7 @@ import Sample from '../models/Sample.js';
 import Patient from '../models/Patient.js';
 import Doctor from '../models/Doctor.js';
 import LabPaymentReceipt from '../models/LabPaymentReceipt.js';
+import PushNotificationService from '../services/PushNotificationService.js';
 import AppError from '../utils/AppError.js';
 
 export const getOrders = async (req, res, next) => {
@@ -113,6 +114,17 @@ export const createOrder = async (req, res, next) => {
       .populate('patient', 'firstName lastName patientId phone age gender')
       .populate('referringDoctor', 'name')
       .populate('tests.test', 'name testId price');
+
+    // Dispatch Web Push notification to lab technicians and phlebotomists
+    PushNotificationService.sendNotification({
+      organizationId: orgId,
+      platform: 'DIAGNOSTICS',
+      title: order.isHomeCollection ? '🩸 Home Sample Collection Booked' : '🔬 New Diagnostic Order Registered',
+      body: `Order #${order.orderId} for ${populatedOrder.patient?.firstName || 'Patient'} (${populatedOrder.tests?.length || 0} tests)`,
+      url: '/diagnostics/orders',
+      tag: `diag-order-${order._id}`,
+      data: { orderId: order._id }
+    }).catch(() => {});
 
     res.status(201).json({
       status: 'success',

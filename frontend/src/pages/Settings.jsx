@@ -3,11 +3,12 @@ import {
   Building, CreditCard, Save, CheckCircle2, Check, Palette, 
   UploadCloud, X, ShieldAlert, Sparkles, Phone, Percent, 
   MapPin, FileText, ArrowUpRight, Crown, AlertCircle, RefreshCw,
-  ShieldCheck, Layers
+  ShieldCheck, Layers, Bell, Smartphone, Send
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useEntitlements } from '../context/EntitlementContext';
 import { useBrandTheme } from '../context/ThemeContext';
+import useNotifications from '../hooks/useNotifications';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -34,6 +35,46 @@ export default function Settings() {
   const [billingCycle, setBillingCycle] = useState('annual');
   const [activeSubscription, setActiveSubscription] = useState(null);
   const [availablePlans, setAvailablePlans] = useState([]);
+
+  // Web Push Notifications State
+  const {
+    supported: pushSupported,
+    pushSupported: isBrowserPushSupported,
+    permission: pushPermission,
+    subscribeToWebPush,
+    unsubscribeFromWebPush,
+    triggerTestPush,
+    isSubscribing: isPushSubscribing
+  } = useNotifications();
+  const [testingPush, setTestingPush] = useState(false);
+
+  const handleTogglePush = async () => {
+    if (pushPermission === 'granted') {
+      await unsubscribeFromWebPush();
+      toast.success('Push alerts paused on this device');
+    } else {
+      const res = await subscribeToWebPush(osConfig.key || 'ALL');
+      if (res.success) {
+        toast.success('Real-time push alerts enabled on this device!');
+      } else if (res.reason === 'permission_denied') {
+        toast.error('Permission blocked in browser settings. Please allow notifications.');
+      } else {
+        toast.error('Failed to register push subscription');
+      }
+    }
+  };
+
+  const handleTestPush = async () => {
+    setTestingPush(true);
+    try {
+      await triggerTestPush();
+      toast.success('Test push alert dispatched via server VAPID pipeline!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to dispatch test notification');
+    } finally {
+      setTestingPush(false);
+    }
+  };
 
   // Upgrade Request Modal State
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
@@ -597,6 +638,95 @@ export default function Settings() {
               </button>
             </div>
           </form>
+
+          {/* ========================================================================= */}
+          {/* Real-Time Web Push Notifications & Alerts Control Card                    */}
+          {/* ========================================================================= */}
+          <div className="mt-8 pt-8 border-t border-slate-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                  style={{ backgroundColor: `${primaryColor}18`, color: primaryColor }}
+                >
+                  <Bell className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Real-Time Web Push Notifications
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Receive operational alerts for orders, sample dispatches, and daily muster submissions.
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Badge */}
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+                  pushPermission === 'granted'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : pushPermission === 'denied'
+                    ? 'bg-rose-50 text-rose-700 border-rose-200'
+                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${
+                    pushPermission === 'granted' ? 'bg-emerald-500' : pushPermission === 'denied' ? 'bg-rose-500' : 'bg-amber-500'
+                  }`} />
+                  {pushPermission === 'granted' ? 'Push Alerts Active' : pushPermission === 'denied' ? 'Permission Blocked' : 'Not Enabled'}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4 text-slate-400" />
+                  <span>Device Channel: {isBrowserPushSupported ? 'Web Push & Service Worker Ready' : 'Local Browser Only'}</span>
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  {pushPermission === 'granted'
+                    ? 'This browser is subscribed to your organization\'s live VAPID push channel. You will receive alerts even when the tab is backgrounded.'
+                    : 'Enable push alerts to receive critical field updates across your team.'}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                {pushPermission === 'granted' && (
+                  <button
+                    type="button"
+                    onClick={handleTestPush}
+                    disabled={testingPush}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold rounded-xl text-xs transition-all shadow-2xs active:scale-95 touch-manipulation disabled:opacity-50"
+                  >
+                    <Send className={`w-3.5 h-3.5 ${testingPush ? 'animate-pulse' : ''}`} />
+                    <span>{testingPush ? 'Dispatching...' : 'Send Test Alert'}</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleTogglePush}
+                  disabled={isPushSubscribing}
+                  style={pushPermission !== 'granted' ? { backgroundColor: primaryColor } : {}}
+                  className={`inline-flex items-center gap-1.5 px-4 py-2 font-bold rounded-xl text-xs transition-all shadow-sm active:scale-95 touch-manipulation disabled:opacity-50 ${
+                    pushPermission === 'granted'
+                      ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
+                      : 'text-white hover:opacity-90'
+                  }`}
+                >
+                  <Bell className="w-3.5 h-3.5" />
+                  <span>
+                    {isPushSubscribing
+                      ? 'Updating...'
+                      : pushPermission === 'granted'
+                      ? 'Pause Push Alerts'
+                      : 'Enable Push Alerts'}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

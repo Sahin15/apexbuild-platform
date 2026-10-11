@@ -1,6 +1,7 @@
 import Worker from '../models/Worker.js';
 import Attendance from '../models/Attendance.js';
 import LabourWageSheet from '../models/LabourWageSheet.js';
+import PushNotificationService from '../services/PushNotificationService.js';
 import AppError from '../utils/AppError.js';
 
 // ==================== WORKER MANAGEMENT ====================
@@ -106,6 +107,17 @@ export const markAttendance = async (req, res, next) => {
     });
 
     await Promise.all(attendancePromises);
+
+    // Dispatch Web Push notification to contractor project managers / engineers
+    PushNotificationService.sendNotification({
+      organizationId: req.user.organizationId,
+      platform: 'CONTRACTOR',
+      title: '📋 Daily Labour Muster Submitted',
+      body: `Site muster recorded for ${records.length} worker(s) with geofence stamp.`,
+      url: '/labour',
+      tag: `attendance-${finalProjectId}-${new Date(targetDate).toISOString().split('T')[0]}`
+    }).catch(() => {});
+
     res.status(200).json({ status: 'success', message: 'Attendance & Overtime recorded successfully' });
   } catch (error) {
     next(error);

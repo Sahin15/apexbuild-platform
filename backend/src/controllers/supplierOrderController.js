@@ -5,6 +5,7 @@ import SupplierCustomer from '../models/SupplierCustomer.js';
 import SupplierInventoryLedger from '../models/SupplierInventoryLedger.js';
 import SupplierInvoice from '../models/SupplierInvoice.js';
 import SupplierDelivery from '../models/SupplierDelivery.js';
+import PushNotificationService from '../services/PushNotificationService.js';
 import AppError from '../utils/AppError.js';
 
 export const getOrders = async (req, res, next) => {
@@ -105,6 +106,17 @@ export const createOrder = async (req, res, next) => {
       dueAmount,
       status: dueAmount === 0 ? 'PAID' : (paidAmount > 0 ? 'PARTIAL' : 'ISSUED')
     }]);
+
+    // Dispatch Web Push notification to supplier dispatch/sales team
+    PushNotificationService.sendNotification({
+      organizationId: orgId,
+      platform: 'MATERIAL_SUPPLIER',
+      title: '📦 New Dispatch Order Logged',
+      body: `Order #${orderNumber} logged (Total: ₹${grandTotal.toLocaleString()})`,
+      url: '/supplier/orders',
+      tag: `order-${order._id}`,
+      data: { orderId: order._id }
+    }).catch(() => {});
 
     res.status(201).json({ status: 'success', data: { order } });
   } catch (error) {

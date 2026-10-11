@@ -4,6 +4,7 @@ import DistributorCustomer from '../models/DistributorCustomer.js';
 import DistributorStock from '../models/DistributorStock.js';
 import DistributorStockMovement from '../models/DistributorStockMovement.js';
 import DistributorPayment from '../models/DistributorPayment.js';
+import PushNotificationService from '../services/PushNotificationService.js';
 
 export const getSales = async (req, res, next) => {
   try {
@@ -94,7 +95,16 @@ export const createSale = async (req, res, next) => {
       notes: `Delivered to ${customer.shopName}`
     }]);
 
-    
+    // Dispatch Web Push notification to distributor managers/dispatch
+    PushNotificationService.sendNotification({
+      organizationId: orgId,
+      platform: 'CHICKEN_DISTRIBUTOR',
+      title: '🚚 Chicken Delivery Dispatched',
+      body: `Delivery recorded for ${customer.shopName}: ${Number(weight)} KG (₹${netAmount.toLocaleString()})`,
+      url: '/distributor/deliveries',
+      tag: `sale-${newSale[0]._id}`,
+      data: { saleId: newSale[0]._id }
+    }).catch(() => {});
 
     res.status(201).json({ status: 'success', data: { sale: newSale[0] } });
   } catch (error) {

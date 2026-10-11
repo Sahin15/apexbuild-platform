@@ -6,7 +6,7 @@ import useNotifications from '../../hooks/useNotifications';
 const STORAGE_KEY = 'apex_notification_prompt_dismissed';
 
 export const NotificationPermissionBanner = () => {
-  const { supported, permission, requestPermission, sendNotification } = useNotifications();
+  const { supported, permission, subscribeToWebPush, isSubscribing, sendNotification } = useNotifications();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -22,16 +22,22 @@ export const NotificationPermissionBanner = () => {
   }, [supported, permission]);
 
   const handleEnable = async () => {
-    const res = await requestPermission();
-    setIsVisible(false);
-    if (res === 'granted') {
-      toast.success('Mobile push alerts enabled!');
-      sendNotification('🔔 ApexBuild Notifications Active', {
-        body: 'You will receive real-time operational alerts for orders, deliveries, and stock updates.',
-        tag: 'welcome-notification'
-      });
-    } else if (res === 'denied') {
-      toast('Notification permission was blocked in browser settings', { icon: 'ℹ️' });
+    try {
+      const res = await subscribeToWebPush();
+      setIsVisible(false);
+      if (res.success) {
+        toast.success('Real-time mobile push alerts enabled!');
+        sendNotification('🔔 ApexBuild Notifications Active', {
+          body: 'You will receive real-time operational alerts for orders, deliveries, and stock updates.',
+          tag: 'welcome-notification'
+        });
+      } else if (res.reason === 'permission_denied') {
+        toast('Notification permission was blocked in browser settings', { icon: 'ℹ️' });
+      } else {
+        toast.success('Notification permission granted!');
+      }
+    } catch (err) {
+      toast.error('Failed to enable push alerts');
     }
   };
 
@@ -57,9 +63,10 @@ export const NotificationPermissionBanner = () => {
             <button
               type="button"
               onClick={handleEnable}
-              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold rounded-xl text-xs transition-all shadow-md touch-manipulation"
+              disabled={isSubscribing}
+              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold rounded-xl text-xs transition-all shadow-md touch-manipulation disabled:opacity-50"
             >
-              Enable Alerts
+              {isSubscribing ? 'Subscribing...' : 'Enable Alerts'}
             </button>
             <button
               type="button"
