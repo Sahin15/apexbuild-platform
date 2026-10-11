@@ -17,7 +17,7 @@ const DEPARTMENTS = [
   { id: 'SERVICE_FOH', label: 'Service & Dining (FOH)', icon: Utensils, color: 'text-orange-400 bg-orange-500/10 border-orange-500/20' },
   { id: 'BAR_BEVERAGE', label: 'Bar & Beverage', icon: Coffee, color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
   { id: 'MANAGEMENT', label: 'Management', icon: Shield, color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
-  { id: 'HOUSEKEEPING', label: 'Housekeeping', icon: Building2, color: 'text-slate-500 bg-stone-500/10 border-stone-500/20' },
+  { id: 'HOUSEKEEPING', label: 'Housekeeping', icon: Building2, color: 'text-slate-600 bg-slate-100 border-slate-200' },
 ];
 
 const ROLES = [
@@ -467,7 +467,7 @@ export default function RestaurantStaff() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedDate === todayStr 
                   ? 'bg-orange-600 text-white shadow-sm' 
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-stone-700/50'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
               }`}
             >
               Today
@@ -477,7 +477,7 @@ export default function RestaurantStaff() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedDate === tomorrowStr 
                   ? 'bg-orange-600 text-white shadow-sm' 
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-stone-700/50'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
               }`}
             >
               Tomorrow
@@ -647,7 +647,7 @@ export default function RestaurantStaff() {
 
           {rosterList.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-slate-200 p-12 text-center bg-white">
-              <Calendar className="w-10 h-10 text-stone-500 mx-auto mb-3" />
+              <Calendar className="w-10 h-10 text-slate-400 mx-auto mb-3" />
               <h3 className="text-base font-bold text-slate-900 mb-1">No Shifts Scheduled for {selectedDate}</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4">
                 Assign shifts to your kitchen and service staff to enable clock-in attendance tracking.
@@ -690,7 +690,7 @@ export default function RestaurantStaff() {
                             {staff.employeeCode || 'EMP'}
                           </span>
                         </div>
-                        <div className="text-xs text-orange-400 font-semibold mt-0.5">
+                        <div className="text-xs text-orange-500 font-semibold mt-0.5">
                           {staff.role?.replace('_', ' ') || 'STEWARD'}
                         </div>
                       </div>
@@ -698,10 +698,10 @@ export default function RestaurantStaff() {
                       {/* Status Pill */}
                       <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
                         isClockedIn
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 animate-pulse'
+                          ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 animate-pulse'
                           : isClockedOut
-                          ? 'bg-stone-700 text-slate-600'
-                          : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                          ? 'bg-slate-100 text-slate-600 border border-slate-200'
+                          : 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
                       }`}>
                         {shift.status}
                       </span>
@@ -767,14 +767,14 @@ export default function RestaurantStaff() {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => handleOpenRosterModal(shift)}
-                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-stone-700 text-slate-600 border border-slate-300 transition-colors"
+                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors"
                           title="Edit Shift"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeleteShift(shift._id)}
-                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-900/40 text-rose-400 border border-slate-300 hover:border-rose-700/50 transition-colors"
+                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-rose-500 border border-slate-300 hover:border-rose-300 transition-colors"
                           title="Remove Shift"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -810,17 +810,17 @@ export default function RestaurantStaff() {
           </div>
 
           {/* Today's Pool Status Banner */}
-          <div className="p-5 rounded-3xl bg-gradient-to-r from-stone-800 to-stone-900 border border-slate-300 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="p-5 rounded-3xl bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50/50 border border-purple-200/80 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600">
                 <Wallet className="w-6 h-6" />
               </div>
               <div>
-                <div className="text-xs text-slate-500">Auto-Detected Bill Service Charge Today</div>
+                <div className="text-xs text-slate-500 font-medium">Auto-Detected Bill Service Charge Today</div>
                 <div className="text-2xl font-bold text-slate-900">
                   ₹{(tipsAnalytics?.autoServiceChargeToday || 0).toLocaleString()}
                 </div>
-                <div className="text-xs text-purple-400 mt-0.5">
+                <div className="text-xs text-purple-700 font-medium mt-0.5">
                   Available to distribute among {staffList.filter(s => s.status === 'ACTIVE').length} eligible staff members
                 </div>
               </div>
@@ -836,7 +836,7 @@ export default function RestaurantStaff() {
                 }));
                 setIsTipCalcModalOpen(true);
               }}
-              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-slate-900 font-semibold text-xs transition-colors shadow flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition-colors shadow flex items-center gap-1.5"
             >
               <Sparkles className="w-4 h-4" />
               <span>Split Today's Tips</span>
@@ -915,17 +915,17 @@ export default function RestaurantStaff() {
                       <th className="py-2.5 px-3">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-800/60">
+                  <tbody className="divide-y divide-slate-100">
                     {activeTipPoolView.payouts?.map(p => (
                       <tr key={p._id || p.staffId} className="hover:bg-white">
                         <td className="py-2.5 px-3 font-bold text-slate-900">{p.staffName}</td>
                         <td className="py-2.5 px-3 text-slate-500">{p.role?.replace('_', ' ')}</td>
                         <td className="py-2.5 px-3 font-mono font-semibold">{p.points}</td>
-                        <td className="py-2.5 px-3 font-bold text-emerald-400 text-sm">₹{p.calculatedTipAmount?.toLocaleString()}</td>
+                        <td className="py-2.5 px-3 font-bold text-emerald-600 text-sm">₹{p.calculatedTipAmount?.toLocaleString()}</td>
                         <td className="py-2.5 px-3 text-slate-600">
                           {p.upiId ? (
-                            <span className="font-mono text-purple-300 flex items-center gap-1">
-                              <Smartphone className="w-3 h-3 text-purple-400" />
+                            <span className="font-mono text-purple-700 flex items-center gap-1 font-semibold">
+                              <Smartphone className="w-3 h-3 text-purple-600" />
                               {p.upiId}
                             </span>
                           ) : (
@@ -935,8 +935,8 @@ export default function RestaurantStaff() {
                         <td className="py-2.5 px-3">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                             p.payoutStatus === 'PAID'
-                              ? 'bg-emerald-500/10 text-emerald-400'
-                              : 'bg-amber-500/10 text-amber-400'
+                              ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                              : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
                           }`}>
                             {p.payoutStatus}
                           </span>
@@ -953,8 +953,8 @@ export default function RestaurantStaff() {
           <div className="space-y-3">
             <h3 className="text-sm font-bold text-slate-600 uppercase tracking-wider">Past Tip Pool Runs</h3>
             {tipPools.length === 0 ? (
-              <div className="text-xs text-stone-500 py-6 text-center border border-dashed border-slate-200 rounded-2xl">
-                No tip pool distributions recorded yet. Click "Calculate Tip Pool" above.
+              <div className="text-xs text-slate-400 py-6 text-center border border-dashed border-slate-200 rounded-2xl bg-white">
+                No tip pool distributions recorded yet. Click "Create New Tip Pool" above.
               </div>
             ) : (
               <div className="space-y-2">
@@ -962,11 +962,11 @@ export default function RestaurantStaff() {
                   <div
                     key={pool._id}
                     onClick={() => setActiveTipPoolView(pool)}
-                    className="p-3.5 rounded-2xl bg-slate-50 border border-slate-300/60 hover:border-orange-500/50 cursor-pointer transition-all flex items-center justify-between"
+                    className="p-3.5 rounded-2xl bg-white border border-slate-200 hover:border-orange-400 cursor-pointer transition-all flex items-center justify-between shadow-2xs"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-stone-700/60 text-slate-600">
-                        <Wallet className="w-4 h-4 text-orange-400" />
+                      <div className="p-2 rounded-xl bg-orange-50 text-orange-600 border border-orange-200">
+                        <Wallet className="w-4 h-4 text-orange-600" />
                       </div>
                       <div>
                         <div className="font-bold text-slate-900 text-sm">
@@ -980,18 +980,18 @@ export default function RestaurantStaff() {
 
                     <div className="flex items-center gap-4 text-right">
                       <div>
-                        <div className="text-base font-bold text-emerald-400">
+                        <div className="text-base font-bold text-emerald-600">
                           ₹{pool.totalTipsCollected?.toLocaleString()}
                         </div>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                           pool.status === 'DISBURSED'
-                            ? 'bg-emerald-500/10 text-emerald-400'
-                            : 'bg-amber-500/10 text-amber-400'
+                            ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                            : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
                         }`}>
                           {pool.status}
                         </span>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-stone-500" />
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
                     </div>
                   </div>
                 ))}
@@ -1014,8 +1014,8 @@ export default function RestaurantStaff() {
                   onClick={() => setSelectedDept(d.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                     selectedDept === d.id
-                      ? 'bg-stone-700 text-slate-900 font-semibold shadow'
-                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                      ? 'bg-orange-600 text-white font-semibold shadow'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
                   {d.label}
@@ -1025,18 +1025,18 @@ export default function RestaurantStaff() {
 
             {/* Search */}
             <div className="relative sm:w-64">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search staff, code, role..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-slate-200/80 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder-stone-500 focus:outline-none focus:border-orange-500"
+                className="w-full bg-white border border-slate-200/80 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-slate-600"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -1052,18 +1052,18 @@ export default function RestaurantStaff() {
               return (
                 <div
                   key={staff._id}
-                  className="rounded-2xl border border-slate-300/70 bg-slate-50 hover:border-orange-500/50 p-4 space-y-3 transition-all flex flex-col justify-between"
+                  className="rounded-2xl border border-slate-200 bg-white hover:border-orange-400 p-4 space-y-3 transition-all flex flex-col justify-between shadow-2xs"
                 >
                   <div>
                     {/* Top line: Code & Status */}
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-mono font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-lg border border-orange-500/20">
+                      <span className="font-mono font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg border border-orange-200">
                         {staff.employeeCode}
                       </span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                         staff.status === 'ACTIVE'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-stone-700 text-slate-600'
+                          ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                          : 'bg-slate-100 text-slate-500 border border-slate-200'
                       }`}>
                         {staff.status}
                       </span>
@@ -1081,33 +1081,33 @@ export default function RestaurantStaff() {
                     </div>
 
                     {/* Contact & Compensation Details */}
-                    <div className="space-y-1.5 text-xs text-slate-500 bg-white p-2.5 rounded-xl border border-slate-200/80 mt-3">
+                    <div className="space-y-1.5 text-xs text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 mt-3">
                       <div className="flex items-center justify-between">
                         <span>Phone:</span>
                         <span className="text-slate-900 font-mono">{staff.phone}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span>Monthly Wage:</span>
-                        <span className="text-amber-400 font-semibold">₹{staff.monthlySalary?.toLocaleString() || 0}</span>
+                        <span className="text-amber-600 font-semibold">₹{staff.monthlySalary?.toLocaleString() || 0}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span>Tip Pool Weight:</span>
-                        <span className="text-purple-400 font-bold">{staff.tipShareWeight || 1.0}x Points</span>
+                        <span className="text-purple-600 font-bold">{staff.tipShareWeight || 1.0}x Points</span>
                       </div>
                       {staff.bankDetails?.upiId && (
                         <div className="flex items-center justify-between pt-1 border-t border-slate-200 text-[11px]">
                           <span>UPI ID:</span>
-                          <span className="text-purple-300 font-mono truncate max-w-[120px]">{staff.bankDetails.upiId}</span>
+                          <span className="text-purple-700 font-mono font-medium truncate max-w-[120px]">{staff.bankDetails.upiId}</span>
                         </div>
                       )}
                     </div>
                   </div>
 
                   {/* Footer Actions */}
-                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                     <button
                       onClick={() => handleOpenStaffModal(staff)}
-                      className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-stone-700 text-slate-600 text-xs font-semibold flex items-center gap-1 transition-colors"
+                      className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                       <span>Edit Details</span>

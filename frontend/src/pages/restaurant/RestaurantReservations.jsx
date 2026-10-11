@@ -13,7 +13,7 @@ import { useBrandTheme } from '../../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 
 const OCCASIONS = [
-  { value: 'NONE', label: 'Standard Dining', icon: Coffee, color: 'text-slate-500 bg-stone-500/10' },
+  { value: 'NONE', label: 'Standard Dining', icon: Coffee, color: 'text-slate-600 bg-slate-100' },
   { value: 'BIRTHDAY', label: 'Birthday Celebration', icon: Gift, color: 'text-pink-500 bg-pink-500/10' },
   { value: 'ANNIVERSARY', label: 'Anniversary', icon: Heart, color: 'text-rose-500 bg-rose-500/10' },
   { value: 'BUSINESS_DINNER', label: 'Business Meeting', icon: Briefcase, color: 'text-blue-500 bg-blue-500/10' },
@@ -429,7 +429,7 @@ export default function RestaurantReservations() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedDate === todayStr 
                   ? 'bg-orange-600 text-white shadow-sm' 
-                  : 'text-slate-700 hover:text-white hover:bg-stone-700/50'
+                  : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'
               }`}
             >
               Today
@@ -439,7 +439,7 @@ export default function RestaurantReservations() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedDate === tomorrowStr 
                   ? 'bg-orange-600 text-white shadow-sm' 
-                  : 'text-slate-700 hover:text-white hover:bg-stone-700/50'
+                  : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'
               }`}
             >
               Tomorrow
@@ -564,7 +564,7 @@ export default function RestaurantReservations() {
               onClick={() => setStatusFilter(s.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                 statusFilter === s.id
-                  ? 'bg-stone-700 text-white font-semibold shadow'
+                  ? 'bg-orange-600 text-white font-semibold shadow'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
@@ -587,7 +587,7 @@ export default function RestaurantReservations() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-slate-700"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -677,7 +677,7 @@ export default function RestaurantReservations() {
 
                   {/* Bookings in Slot */}
                   {slotBookings.length === 0 ? (
-                    <div className="py-6 text-center text-xs text-stone-500">
+                    <div className="py-6 text-center text-xs text-slate-400">
                       No bookings for this slot
                     </div>
                   ) : (
@@ -698,13 +698,13 @@ export default function RestaurantReservations() {
                                     {resItem.customerName}
                                   </span>
                                   {resItem.customerId?.vipTier && resItem.customerId.vipTier !== 'STANDARD' && (
-                                    <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-amber-500/20 text-amber-500 border border-amber-500/30">
                                       {resItem.customerId.vipTier}
                                     </span>
                                   )}
                                 </div>
                                 <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5 font-medium">
-                                  <Phone className="w-3 h-3 text-stone-500" />
+                                  <Phone className="w-3 h-3 text-slate-400" />
                                   <span>{resItem.customerPhone}</span>
                                 </div>
                               </div>
@@ -712,12 +712,12 @@ export default function RestaurantReservations() {
                               {/* Status Badge */}
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                                 resItem.status === 'CONFIRMED'
-                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                  ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                                   : resItem.status === 'SEATED'
-                                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                  ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
                                   : resItem.status === 'COMPLETED'
-                                  ? 'bg-stone-500/10 text-slate-500 border border-stone-600'
-                                  : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                  ? 'bg-slate-100 text-slate-600 border border-slate-200'
+                                  : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
                               }`}>
                                 {resItem.status}
                               </span>
@@ -878,7 +878,7 @@ export default function RestaurantReservations() {
 
                       {/* Guest Details */}
                       <td className="py-3.5 px-4">
-                        <div className="font-bold text-white text-sm">
+                        <div className="font-bold text-slate-900 text-sm">
                           {resItem.customerName}
                         </div>
                         <div className="text-slate-500 flex items-center gap-1 mt-0.5">
@@ -886,7 +886,7 @@ export default function RestaurantReservations() {
                           {resItem.customerPhone}
                         </div>
                         {resItem.customerEmail && (
-                          <div className="text-stone-500 text-[11px]">
+                          <div className="text-slate-400 text-[11px]">
                             {resItem.customerEmail}
                           </div>
                         )}
@@ -900,11 +900,11 @@ export default function RestaurantReservations() {
                         </div>
                         <div className="mt-1">
                           {resItem.tableId ? (
-                            <span className="px-2 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20 font-semibold text-[11px]">
+                            <span className="px-2 py-0.5 rounded bg-orange-500/10 text-orange-600 border border-orange-500/20 font-semibold text-[11px]">
                               Table {resItem.tableId.tableNumber} ({resItem.tableId.areaId?.name || 'Main'})
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium text-[11px]">
+                            <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/20 font-medium text-[11px]">
                               Unassigned
                             </span>
                           )}
@@ -937,11 +937,11 @@ export default function RestaurantReservations() {
                       <td className="py-3.5 px-4">
                         {resItem.depositAmount > 0 ? (
                           <div>
-                            <span className="font-bold text-emerald-400">₹{resItem.depositAmount}</span>
+                            <span className="font-bold text-emerald-600">₹{resItem.depositAmount}</span>
                             <div className="text-[10px] text-slate-500">{resItem.depositPaymentMethod}</div>
                           </div>
                         ) : (
-                          <span className="text-stone-500">—</span>
+                          <span className="text-slate-400">—</span>
                         )}
                       </td>
 
@@ -949,12 +949,12 @@ export default function RestaurantReservations() {
                       <td className="py-3.5 px-4">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                           resItem.status === 'CONFIRMED'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                             : resItem.status === 'SEATED'
-                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                            ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
                             : resItem.status === 'COMPLETED'
-                            ? 'bg-stone-500/10 text-slate-500 border border-stone-600'
-                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                            ? 'bg-slate-100 text-slate-600 border border-slate-200'
+                            : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
                         }`}>
                           {resItem.status}
                         </span>
@@ -1012,7 +1012,7 @@ export default function RestaurantReservations() {
           <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-5 my-8">
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                   {editingReservation ? 'Edit Reservation' : 'New Table Reservation'}
                   {editingReservation && (
                     <span className="text-xs px-2 py-0.5 rounded font-mono bg-orange-500/10 text-orange-400 border border-orange-500/20">
@@ -1360,8 +1360,8 @@ export default function RestaurantReservations() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-emerald-400" />
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-emerald-500" />
                 Seat Guest at Floor Table
               </h3>
               <button
@@ -1373,12 +1373,12 @@ export default function RestaurantReservations() {
             </div>
 
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-              <div className="font-bold text-white text-base">
+              <div className="font-bold text-slate-900 text-base">
                 {reservationToSeat.customerName}
               </div>
               <div className="text-xs text-slate-700 flex items-center justify-between">
-                <span>Party Size: <b className="text-white">{reservationToSeat.partySize} Guests</b></span>
-                <span className="font-mono text-orange-400">{reservationToSeat.reservationCode}</span>
+                <span>Party Size: <b className="text-slate-900">{reservationToSeat.partySize} Guests</b></span>
+                <span className="font-mono text-orange-600 font-bold">{reservationToSeat.reservationCode}</span>
               </div>
               {reservationToSeat.guestNotes && (
                 <p className="text-xs text-slate-500 italic pt-1">
@@ -1459,7 +1459,7 @@ export default function RestaurantReservations() {
                   <MessageSquare className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">WhatsApp Confirmation</h3>
+                  <h3 className="text-base font-bold text-slate-900">WhatsApp Confirmation</h3>
                   <p className="text-xs text-slate-500">Dispatched to {confirmationData.recipient}</p>
                 </div>
               </div>
@@ -1514,18 +1514,18 @@ export default function RestaurantReservations() {
       {isCancelModalOpen && reservationToCancel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-rose-400">
+            <div className="flex items-center gap-3 text-rose-500">
               <div className="p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Cancel Reservation</h3>
+                <h3 className="text-base font-bold text-slate-900">Cancel Reservation</h3>
                 <p className="text-xs text-slate-500">Booking {reservationToCancel.reservationCode}</p>
               </div>
             </div>
 
             <p className="text-xs text-slate-700">
-              Are you sure you want to cancel the reservation for <b className="text-white">{reservationToCancel.customerName}</b>? Any assigned table will be released back to AVAILABLE.
+              Are you sure you want to cancel the reservation for <b className="text-slate-900">{reservationToCancel.customerName}</b>? Any assigned table will be released back to AVAILABLE.
             </p>
 
             <div>
@@ -1537,7 +1537,7 @@ export default function RestaurantReservations() {
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 placeholder="e.g. Guest called to cancel, flight delayed"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-rose-500"
               />
             </div>
 
