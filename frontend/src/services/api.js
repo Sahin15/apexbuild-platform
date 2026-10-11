@@ -1,12 +1,16 @@
 import axios from 'axios';
 import { saveApiCache, getApiCache, invalidateApiCache, clearAllApiCache } from './offlineCache';
 
+const defaultBaseURL = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+  ? '/api/v1'
+  : 'http://localhost:5000/api/v1';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
+  baseURL: import.meta.env.VITE_API_URL || defaultBaseURL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000 // 10 second timeout for mobile network resilience
+  timeout: 15000 // 15 second timeout for mobile network resilience
 });
 
 // Request interceptor to add the auth token

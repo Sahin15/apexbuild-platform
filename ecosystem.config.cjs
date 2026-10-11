@@ -7,7 +7,7 @@ module.exports = {
     {
       name: 'apexbuild-backend',
       cwd: './backend',
-      script: 'server.js',
+      script: 'src/server.js',
       instances: 2, // 1 process per vCPU core on KVM 2
       exec_mode: 'cluster',
       env_production: {
