@@ -13,7 +13,7 @@ import { useBrandTheme } from '../../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 
 const OCCASIONS = [
-  { value: 'NONE', label: 'Standard Dining', icon: Coffee, color: 'text-stone-400 bg-stone-500/10' },
+  { value: 'NONE', label: 'Standard Dining', icon: Coffee, color: 'text-slate-500 bg-stone-500/10' },
   { value: 'BIRTHDAY', label: 'Birthday Celebration', icon: Gift, color: 'text-pink-500 bg-pink-500/10' },
   { value: 'ANNIVERSARY', label: 'Anniversary', icon: Heart, color: 'text-rose-500 bg-rose-500/10' },
   { value: 'BUSINESS_DINNER', label: 'Business Meeting', icon: Briefcase, color: 'text-blue-500 bg-blue-500/10' },
@@ -398,22 +398,22 @@ export default function RestaurantReservations() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-900 text-stone-100 p-4 md:p-6 space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fade-in">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-800 pb-5">
+      <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20">
+            <span className="p-2 rounded-xl bg-orange-50 text-orange-600 border border-orange-200">
               <Calendar className="w-6 h-6" />
             </span>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                 Table Reservations & Advance Bookings
-                <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                   Live Sync
                 </span>
               </h1>
-              <p className="text-sm text-stone-400">
+              <p className="text-xs text-slate-500 mt-0.5 font-medium">
                 Front-of-house guest bookings, timeline occupancy, VIP table allocation, and deposit tracking.
               </p>
             </div>
@@ -423,13 +423,13 @@ export default function RestaurantReservations() {
         {/* Date Selector & Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Quick Date Pills */}
-          <div className="flex bg-stone-800/80 p-1 rounded-xl border border-stone-700/60">
+          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
               onClick={() => setSelectedDate(todayStr)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedDate === todayStr 
                   ? 'bg-orange-600 text-white shadow-sm' 
-                  : 'text-stone-300 hover:text-white hover:bg-stone-700/50'
+                  : 'text-slate-700 hover:text-white hover:bg-stone-700/50'
               }`}
             >
               Today
@@ -439,17 +439,17 @@ export default function RestaurantReservations() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedDate === tomorrowStr 
                   ? 'bg-orange-600 text-white shadow-sm' 
-                  : 'text-stone-300 hover:text-white hover:bg-stone-700/50'
+                  : 'text-slate-700 hover:text-white hover:bg-stone-700/50'
               }`}
             >
               Tomorrow
             </button>
-            <div className="relative flex items-center pl-1 border-l border-stone-700">
+            <div className="relative flex items-center pl-1 border-l border-slate-300">
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="bg-transparent text-xs text-stone-300 px-2 py-1 focus:outline-none cursor-pointer"
+                className="bg-transparent text-xs text-slate-700 px-2 py-1 focus:outline-none cursor-pointer font-medium"
               />
             </div>
           </div>
@@ -458,16 +458,16 @@ export default function RestaurantReservations() {
           <button
             onClick={() => fetchData(true)}
             disabled={refreshing}
-            className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-700/60 transition-colors"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
             title="Refresh bookings"
           >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-orange-400' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-orange-600' : ''}`} />
           </button>
 
           {/* New Reservation Button */}
           <button
             onClick={handleOpenNewModal}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold text-sm shadow-lg shadow-orange-900/30 hover:brightness-110 active:scale-95 transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold text-sm shadow-md shadow-orange-500/20 hover:brightness-105 active:scale-95 transition-all"
             style={{ backgroundColor: effectivePrimary }}
           >
             <Plus className="w-4 h-4" />
@@ -478,76 +478,76 @@ export default function RestaurantReservations() {
 
       {/* KPI Cards Strip */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
-        <div className="p-4 rounded-2xl bg-stone-800/40 border border-stone-700/50 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-stone-400 text-xs font-medium mb-1">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
             <span>Total Bookings</span>
             <CalendarDays className="w-4 h-4 text-orange-400" />
           </div>
-          <div className="text-2xl font-bold text-white tracking-tight">
+          <div className="text-2xl font-black text-slate-900 tracking-tight mt-1">
             {summary.totalBookings}
           </div>
-          <div className="text-xs text-stone-400 mt-1 flex items-center gap-1.5">
+          <div className="text-xs text-slate-500 mt-1 font-medium flex items-center gap-1.5">
             <span className="text-emerald-400 font-medium">{summary.confirmedCount} Confirmed</span>
             <span>•</span>
             <span className="text-amber-400 font-medium">{summary.seatedCount} Seated</span>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-stone-800/40 border border-stone-700/50 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-stone-400 text-xs font-medium mb-1">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
             <span>Expected Covers</span>
             <Users className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-2xl font-bold text-white tracking-tight">
-            {summary.expectedCovers} <span className="text-xs font-normal text-stone-400">guests</span>
+          <div className="text-2xl font-black text-slate-900 tracking-tight mt-1">
+            {summary.expectedCovers} <span className="text-xs font-normal text-slate-500">guests</span>
           </div>
-          <div className="text-xs text-stone-400 mt-1">
+          <div className="text-xs text-slate-500 mt-1 font-medium">
             Active dining covers scheduled
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-stone-800/40 border border-stone-700/50 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-stone-400 text-xs font-medium mb-1">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
             <span>Table Occupancy</span>
             <Layers className="w-4 h-4 text-purple-400" />
           </div>
-          <div className="text-2xl font-bold text-white tracking-tight">
+          <div className="text-2xl font-black text-slate-900 tracking-tight mt-1">
             {summary.tableOccupancyRate}%
           </div>
-          <div className="text-xs text-stone-400 mt-1">
+          <div className="text-xs text-slate-500 mt-1 font-medium">
             {summary.reservedTablesCount} of {summary.totalTablesCount} tables reserved
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-stone-800/40 border border-stone-700/50 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-stone-400 text-xs font-medium mb-1">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
             <span>Advance Deposits</span>
             <DollarSign className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-2xl font-bold text-emerald-400 tracking-tight">
             ₹{summary.depositsCollected.toLocaleString()}
           </div>
-          <div className="text-xs text-stone-400 mt-1">
+          <div className="text-xs text-slate-500 mt-1 font-medium">
             Held guarantee covers
           </div>
         </div>
 
-        <div className="col-span-2 md:col-span-1 p-4 rounded-2xl bg-stone-800/40 border border-stone-700/50 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-stone-400 text-xs font-medium mb-1">
+        <div className="col-span-2 md:col-span-1 p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
             <span>Completed / Turned</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-bold text-white tracking-tight">
+          <div className="text-2xl font-black text-slate-900 tracking-tight mt-1">
             {summary.completedCount}
           </div>
-          <div className="text-xs text-stone-400 mt-1">
+          <div className="text-xs text-slate-500 mt-1 font-medium">
             Turnover finished today
           </div>
         </div>
       </div>
 
       {/* Control Bar: Filters, Search, and View Switcher */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-stone-800/30 p-2.5 rounded-2xl border border-stone-800">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs">
         {/* Status Filters */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {[
@@ -565,7 +565,7 @@ export default function RestaurantReservations() {
               className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                 statusFilter === s.id
                   ? 'bg-stone-700 text-white font-semibold shadow'
-                  : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               {s.label}
@@ -576,29 +576,29 @@ export default function RestaurantReservations() {
         {/* Search & View Switcher */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1 sm:w-64">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               type="text"
               placeholder="Search guest, phone, table..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-stone-900 border border-stone-700/80 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-orange-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-slate-700"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          <div className="flex bg-stone-900 p-1 rounded-xl border border-stone-700/80">
+          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
               onClick={() => setViewMode('timeline')}
               className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                viewMode === 'timeline' ? 'bg-stone-700 text-white' : 'text-stone-400 hover:text-white'
+                viewMode === 'timeline' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'
               }`}
             >
               Timeline
@@ -606,7 +606,7 @@ export default function RestaurantReservations() {
             <button
               onClick={() => setViewMode('list')}
               className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                viewMode === 'list' ? 'bg-stone-700 text-white' : 'text-stone-400 hover:text-white'
+                viewMode === 'list' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'
               }`}
             >
               List
@@ -617,17 +617,17 @@ export default function RestaurantReservations() {
 
       {/* Loading Skeleton or Empty State */}
       {loading ? (
-        <div className="h-64 flex flex-col items-center justify-center text-stone-400 gap-3">
+        <div className="h-64 flex flex-col items-center justify-center text-slate-500 gap-3">
           <RefreshCw className="w-8 h-8 animate-spin text-orange-500" />
           <p className="text-sm">Fetching reservation roster & floor tables...</p>
         </div>
       ) : filteredReservations.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-stone-700/70 p-12 text-center bg-stone-800/20">
+        <div className="rounded-3xl border border-dashed border-slate-300 p-12 text-center bg-white shadow-2xs">
           <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
             <Calendar className="w-7 h-7" />
           </div>
-          <h3 className="text-lg font-bold text-white mb-1">No Reservations Found</h3>
-          <p className="text-sm text-stone-400 max-w-sm mx-auto mb-5">
+          <h3 className="text-lg font-bold text-slate-900 mb-1">No Reservations Found</h3>
+          <p className="text-sm text-slate-500 max-w-sm mx-auto mb-5">
             {searchQuery || statusFilter !== 'ALL'
               ? 'No bookings match your current search or filter criteria.'
               : `There are no reservations scheduled for ${selectedDate}. Create an advance booking to get started.`}
@@ -657,20 +657,20 @@ export default function RestaurantReservations() {
                   key={slot}
                   className={`rounded-2xl border transition-all ${
                     slotBookings.length > 0 
-                      ? 'bg-stone-800/50 border-stone-700/80 shadow-md' 
-                      : 'bg-stone-900/40 border-stone-800/60 opacity-60'
+                      ? 'bg-white border-slate-200/90 shadow-2xs' 
+                      : 'bg-slate-50/70 border-slate-200/60 opacity-70'
                   } p-4 flex flex-col justify-between`}
                 >
                   {/* Slot Header */}
-                  <div className="flex items-center justify-between pb-3 border-b border-stone-700/60 mb-3">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-orange-400" />
-                      <span className="font-bold text-white text-base">{slot}</span>
-                      <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-stone-700/60 text-stone-300">
+                      <span className="font-bold text-slate-900 text-base">{slot}</span>
+                      <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
                         {isLunch ? 'Lunch' : 'Dinner'}
                       </span>
                     </div>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-stone-800 text-stone-300 border border-stone-700">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">
                       {slotBookings.length} {slotBookings.length === 1 ? 'booking' : 'bookings'} ({totalCoversInSlot}p)
                     </span>
                   </div>
@@ -689,12 +689,12 @@ export default function RestaurantReservations() {
                         return (
                           <div
                             key={resItem._id}
-                            className="p-3 rounded-xl bg-stone-900/80 border border-stone-700/70 hover:border-orange-500/50 transition-all space-y-2.5"
+                            className="p-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-orange-400 transition-all space-y-2.5"
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <div className="flex items-center gap-1.5">
-                                  <span className="font-bold text-white text-sm">
+                                  <span className="font-bold text-slate-900 text-sm">
                                     {resItem.customerName}
                                   </span>
                                   {resItem.customerId?.vipTier && resItem.customerId.vipTier !== 'STANDARD' && (
@@ -703,7 +703,7 @@ export default function RestaurantReservations() {
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-xs text-stone-400 flex items-center gap-1.5 mt-0.5">
+                                <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5 font-medium">
                                   <Phone className="w-3 h-3 text-stone-500" />
                                   <span>{resItem.customerPhone}</span>
                                 </div>
@@ -716,7 +716,7 @@ export default function RestaurantReservations() {
                                   : resItem.status === 'SEATED'
                                   ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                                   : resItem.status === 'COMPLETED'
-                                  ? 'bg-stone-500/10 text-stone-400 border border-stone-600'
+                                  ? 'bg-stone-500/10 text-slate-500 border border-stone-600'
                                   : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                               }`}>
                                 {resItem.status}
@@ -725,15 +725,15 @@ export default function RestaurantReservations() {
 
                             {/* Table & Party Details */}
                             <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                              <span className="px-2 py-0.5 rounded-md bg-stone-800 text-stone-300 font-semibold border border-stone-700 flex items-center gap-1">
+                              <span className="px-2 py-0.5 rounded-md bg-white text-slate-700 font-semibold border border-slate-200 flex items-center gap-1">
                                 <Users className="w-3 h-3 text-orange-400" />
                                 {resItem.partySize} Guests
                               </span>
 
                               <span className={`px-2 py-0.5 rounded-md font-semibold border flex items-center gap-1 ${
                                 resItem.tableId 
-                                  ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' 
-                                  : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                  ? 'bg-orange-50 text-orange-700 border-orange-200' 
+                                  : 'bg-amber-50 text-amber-800 border-amber-200'
                               }`}>
                                 <Utensils className="w-3 h-3" />
                                 {resItem.tableId ? `Table ${resItem.tableId.tableNumber}` : 'Unassigned'}
@@ -753,7 +753,7 @@ export default function RestaurantReservations() {
                                 {resItem.dietaryPreferences.map(tag => (
                                   <span
                                     key={tag}
-                                    className="text-[10px] px-1.5 py-0.5 rounded bg-stone-800 text-stone-300 border border-stone-700 font-medium"
+                                    className="text-[10px] px-1.5 py-0.5 rounded bg-white text-slate-700 font-semibold border border-slate-200 font-medium"
                                   >
                                     {tag.replace('_', ' ')}
                                   </span>
@@ -763,15 +763,15 @@ export default function RestaurantReservations() {
 
                             {/* Guest Notes */}
                             {resItem.guestNotes && (
-                              <p className="text-xs text-stone-400 italic bg-stone-800/40 p-1.5 rounded-lg border border-stone-800">
+                              <p className="text-xs text-slate-500 italic bg-slate-50 p-1.5 rounded-lg border border-slate-200">
                                 "{resItem.guestNotes}"
                               </p>
                             )}
 
                             {/* Deposit Indicator */}
                             {resItem.depositAmount > 0 && (
-                              <div className="flex items-center justify-between text-xs text-stone-300 pt-1 border-t border-stone-800">
-                                <span className="text-stone-400 flex items-center gap-1">
+                              <div className="flex items-center justify-between text-xs text-slate-700 pt-1 border-t border-slate-200">
+                                <span className="text-slate-500 flex items-center gap-1">
                                   <DollarSign className="w-3 h-3 text-emerald-400" />
                                   Deposit:
                                 </span>
@@ -782,7 +782,7 @@ export default function RestaurantReservations() {
                             )}
 
                             {/* Action Buttons */}
-                            <div className="flex items-center justify-between pt-2 border-t border-stone-800 gap-1.5">
+                            <div className="flex items-center justify-between pt-2 border-t border-slate-200 gap-1.5">
                               {resItem.status === 'CONFIRMED' && (
                                 <button
                                   onClick={() => handleOpenSeatModal(resItem)}
@@ -806,7 +806,7 @@ export default function RestaurantReservations() {
                               {/* WhatsApp Reminder Simulator */}
                               <button
                                 onClick={() => handleSendConfirmation(resItem, 'WHATSAPP')}
-                                className="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-emerald-400 border border-stone-700 transition-colors"
+                                className="p-1.5 rounded-lg bg-white hover:bg-slate-100 text-emerald-600 border border-slate-200 transition-colors"
                                 title="Send WhatsApp Confirmation"
                               >
                                 <MessageSquare className="w-3.5 h-3.5" />
@@ -815,7 +815,7 @@ export default function RestaurantReservations() {
                               {/* Edit */}
                               <button
                                 onClick={() => handleOpenEditModal(resItem)}
-                                className="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-700 transition-colors"
+                                className="p-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors"
                                 title="Edit Reservation"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
@@ -825,7 +825,7 @@ export default function RestaurantReservations() {
                               {['CONFIRMED', 'SEATED'].includes(resItem.status) && (
                                 <button
                                   onClick={() => handleOpenCancelModal(resItem)}
-                                  className="p-1.5 rounded-lg bg-stone-800 hover:bg-rose-900/40 text-rose-400 border border-stone-700 hover:border-rose-700/50 transition-colors"
+                                  className="p-1.5 rounded-lg bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 transition-colors"
                                   title="Cancel Booking"
                                 >
                                   <X className="w-3.5 h-3.5" />
@@ -844,10 +844,10 @@ export default function RestaurantReservations() {
         </div>
       ) : (
         /* TABLE / LIST VIEW */
-        <div className="rounded-2xl border border-stone-800 bg-stone-900/60 overflow-hidden shadow-xl">
+        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-stone-300">
-              <thead className="bg-stone-800/80 text-stone-400 font-semibold uppercase tracking-wider text-[11px] border-b border-stone-800">
+            <table className="w-full text-left text-xs text-slate-700">
+              <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
                 <tr>
                   <th className="py-3.5 px-4">Code / Time</th>
                   <th className="py-3.5 px-4">Guest Details</th>
@@ -858,20 +858,20 @@ export default function RestaurantReservations() {
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-800/60">
+              <tbody className="divide-y divide-slate-100">
                 {filteredReservations.map(resItem => {
                   const occasionObj = OCCASIONS.find(o => o.value === resItem.specialOccasion) || OCCASIONS[0];
                   const OccasionIcon = occasionObj.icon;
 
                   return (
-                    <tr key={resItem._id} className="hover:bg-stone-800/30 transition-colors">
+                    <tr key={resItem._id} className="hover:bg-slate-50 transition-colors">
                       {/* Code / Time */}
                       <td className="py-3.5 px-4">
                         <div className="font-mono font-bold text-orange-400">
                           {resItem.reservationCode}
                         </div>
-                        <div className="text-stone-300 flex items-center gap-1 font-semibold mt-0.5">
-                          <Clock className="w-3 h-3 text-stone-400" />
+                        <div className="text-slate-700 flex items-center gap-1 font-semibold mt-0.5">
+                          <Clock className="w-3 h-3 text-slate-500" />
                           {resItem.timeSlot} ({resItem.durationMinutes || 90}m)
                         </div>
                       </td>
@@ -881,7 +881,7 @@ export default function RestaurantReservations() {
                         <div className="font-bold text-white text-sm">
                           {resItem.customerName}
                         </div>
-                        <div className="text-stone-400 flex items-center gap-1 mt-0.5">
+                        <div className="text-slate-500 flex items-center gap-1 mt-0.5">
                           <Phone className="w-3 h-3" />
                           {resItem.customerPhone}
                         </div>
@@ -894,8 +894,8 @@ export default function RestaurantReservations() {
 
                       {/* Party & Table */}
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-1 text-white font-semibold">
-                          <Users className="w-3.5 h-3.5 text-stone-400" />
+                        <div className="flex items-center gap-1 text-slate-900 font-semibold">
+                          <Users className="w-3.5 h-3.5 text-slate-500" />
                           {resItem.partySize} Guests
                         </div>
                         <div className="mt-1">
@@ -921,13 +921,13 @@ export default function RestaurantReservations() {
                         )}
                         <div className="flex flex-wrap gap-1 mt-0.5">
                           {resItem.dietaryPreferences?.map(tag => (
-                            <span key={tag} className="text-[10px] px-1.5 py-0.2 rounded bg-stone-800 text-stone-300 border border-stone-700">
+                            <span key={tag} className="text-[10px] px-1.5 py-0.2 rounded bg-white text-slate-700 font-semibold border border-slate-200">
                               {tag.replace('_', ' ')}
                             </span>
                           ))}
                         </div>
                         {resItem.guestNotes && (
-                          <p className="text-[11px] text-stone-400 italic truncate mt-1">
+                          <p className="text-[11px] text-slate-500 italic truncate mt-1">
                             "{resItem.guestNotes}"
                           </p>
                         )}
@@ -938,7 +938,7 @@ export default function RestaurantReservations() {
                         {resItem.depositAmount > 0 ? (
                           <div>
                             <span className="font-bold text-emerald-400">₹{resItem.depositAmount}</span>
-                            <div className="text-[10px] text-stone-400">{resItem.depositPaymentMethod}</div>
+                            <div className="text-[10px] text-slate-500">{resItem.depositPaymentMethod}</div>
                           </div>
                         ) : (
                           <span className="text-stone-500">—</span>
@@ -953,7 +953,7 @@ export default function RestaurantReservations() {
                             : resItem.status === 'SEATED'
                             ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                             : resItem.status === 'COMPLETED'
-                            ? 'bg-stone-500/10 text-stone-400 border border-stone-600'
+                            ? 'bg-stone-500/10 text-slate-500 border border-stone-600'
                             : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                         }`}>
                           {resItem.status}
@@ -974,14 +974,14 @@ export default function RestaurantReservations() {
                           )}
                           <button
                             onClick={() => handleSendConfirmation(resItem, 'WHATSAPP')}
-                            className="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-emerald-400 border border-stone-700 transition-colors"
+                            className="p-1.5 rounded-lg bg-white hover:bg-slate-100 text-emerald-600 border border-slate-200 transition-colors"
                             title="Send WhatsApp Confirmation"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleOpenEditModal(resItem)}
-                            className="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-700 transition-colors"
+                            className="p-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors"
                             title="Edit"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -989,7 +989,7 @@ export default function RestaurantReservations() {
                           {['CONFIRMED', 'SEATED'].includes(resItem.status) && (
                             <button
                               onClick={() => handleOpenCancelModal(resItem)}
-                              className="p-1.5 rounded-lg bg-stone-800 hover:bg-rose-900/40 text-rose-400 border border-stone-700 hover:border-rose-700/50 transition-colors"
+                              className="p-1.5 rounded-lg bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 transition-colors"
                               title="Cancel"
                             >
                               <X className="w-3.5 h-3.5" />
@@ -1008,9 +1008,9 @@ export default function RestaurantReservations() {
 
       {/* CREATE / EDIT RESERVATION MODAL */}
       {isFormModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-stone-900 border border-stone-700 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-5 my-8">
-            <div className="flex items-center justify-between border-b border-stone-800 pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-5 my-8">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                   {editingReservation ? 'Edit Reservation' : 'New Table Reservation'}
@@ -1020,13 +1020,13 @@ export default function RestaurantReservations() {
                     </span>
                   )}
                 </h3>
-                <p className="text-xs text-stone-400 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   Enter guest details, party size, time slot, and allocate best table.
                 </p>
               </div>
               <button
                 onClick={() => setIsFormModalOpen(false)}
-                className="p-2 text-stone-400 hover:text-white rounded-xl hover:bg-stone-800 transition-colors"
+                className="p-2 text-slate-500 hover:text-slate-900 rounded-xl hover:bg-slate-100 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1036,7 +1036,7 @@ export default function RestaurantReservations() {
               {/* Row 1: Guest Contact */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Guest Name <span className="text-orange-500">*</span>
                   </label>
                   <input
@@ -1045,12 +1045,12 @@ export default function RestaurantReservations() {
                     placeholder="e.g. Aditi Sharma"
                     value={form.customerName}
                     onChange={(e) => setForm(prev => ({ ...prev, customerName: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Phone Number <span className="text-orange-500">*</span>
                   </label>
                   <input
@@ -1059,12 +1059,12 @@ export default function RestaurantReservations() {
                     placeholder="e.g. 9876543210"
                     value={form.customerPhone}
                     onChange={(e) => setForm(prev => ({ ...prev, customerPhone: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Email Address
                   </label>
                   <input
@@ -1072,15 +1072,15 @@ export default function RestaurantReservations() {
                     placeholder="Optional for receipts"
                     value={form.customerEmail}
                     onChange={(e) => setForm(prev => ({ ...prev, customerEmail: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
               </div>
 
               {/* Row 2: Date, Slot & Party Size */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-stone-800/40 p-3.5 rounded-2xl border border-stone-800">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Reservation Date <span className="text-orange-500">*</span>
                   </label>
                   <input
@@ -1092,12 +1092,12 @@ export default function RestaurantReservations() {
                       setForm(prev => ({ ...prev, reservationDate: newDate }));
                       checkAvailableTables(newDate, form.timeSlot, form.partySize, form.durationMinutes);
                     }}
-                    className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Time Slot <span className="text-orange-500">*</span>
                   </label>
                   <select
@@ -1107,7 +1107,7 @@ export default function RestaurantReservations() {
                       setForm(prev => ({ ...prev, timeSlot: newSlot }));
                       checkAvailableTables(form.reservationDate, newSlot, form.partySize, form.durationMinutes);
                     }}
-                    className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   >
                     {TIME_SLOTS.map(slot => (
                       <option key={slot} value={slot}>{slot}</option>
@@ -1116,7 +1116,7 @@ export default function RestaurantReservations() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Party Size (Pax) <span className="text-orange-500">*</span>
                   </label>
                   <input
@@ -1130,12 +1130,12 @@ export default function RestaurantReservations() {
                       setForm(prev => ({ ...prev, partySize: newParty }));
                       checkAvailableTables(form.reservationDate, form.timeSlot, newParty, form.durationMinutes);
                     }}
-                    className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Duration (Minutes)
                   </label>
                   <select
@@ -1145,7 +1145,7 @@ export default function RestaurantReservations() {
                       setForm(prev => ({ ...prev, durationMinutes: newDur }));
                       checkAvailableTables(form.reservationDate, form.timeSlot, form.partySize, newDur);
                     }}
-                    className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   >
                     <option value="60">60 mins (1 hr)</option>
                     <option value="90">90 mins (1.5 hrs)</option>
@@ -1158,7 +1158,7 @@ export default function RestaurantReservations() {
               {/* Table Allocation & Smart Recommendation */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold text-stone-300">
+                  <label className="block text-xs font-semibold text-slate-700">
                     Floor Table Allocation
                   </label>
                   {recommendedTableId && (
@@ -1176,7 +1176,7 @@ export default function RestaurantReservations() {
                 <select
                   value={form.tableId}
                   onChange={(e) => setForm(prev => ({ ...prev, tableId: e.target.value }))}
-                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-orange-500"
                 >
                   <option value="">-- Leave Unassigned (Allocate at Arrival) --</option>
                   {availableTablesData.map(tbl => (
@@ -1195,13 +1195,13 @@ export default function RestaurantReservations() {
               {/* Occasion & Dietary Preferences */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Special Occasion
                   </label>
                   <select
                     value={form.specialOccasion}
                     onChange={(e) => setForm(prev => ({ ...prev, specialOccasion: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-orange-500"
                   >
                     {OCCASIONS.map(occ => (
                       <option key={occ.value} value={occ.value}>{occ.label}</option>
@@ -1210,10 +1210,10 @@ export default function RestaurantReservations() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Dietary Tags
                   </label>
-                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-1.5 bg-stone-800/40 rounded-xl border border-stone-700/60">
+                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-1.5 bg-slate-50 rounded-xl border border-slate-300/60">
                     {DIETARY_TAGS.map(tag => {
                       const isSelected = form.dietaryPreferences.includes(tag.id);
                       return (
@@ -1231,7 +1231,7 @@ export default function RestaurantReservations() {
                           className={`text-[10px] px-2 py-1 rounded-lg border font-medium transition-all ${
                             isSelected
                               ? 'bg-orange-500/20 text-orange-400 border-orange-500/40 font-bold'
-                              : 'bg-stone-800 text-stone-400 border-stone-700 hover:text-stone-200'
+                              : 'bg-slate-100 text-slate-600 border-slate-200 hover:text-slate-900'
                           }`}
                         >
                           {tag.label}
@@ -1243,34 +1243,34 @@ export default function RestaurantReservations() {
               </div>
 
               {/* Advance Booking Deposit */}
-              <div className="bg-stone-800/30 p-3.5 rounded-2xl border border-stone-800 space-y-3">
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-stone-300 flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
                     <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
                     Advance Booking Guarantee Deposit
                   </span>
-                  <span className="text-[11px] text-stone-400">Optional for large parties</span>
+                  <span className="text-[11px] text-slate-500">Optional for large parties</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[11px] text-stone-400 mb-1">Deposit Amount (₹)</label>
+                    <label className="block text-[11px] text-slate-500 mb-1">Deposit Amount (₹)</label>
                     <input
                       type="number"
                       min="0"
                       step="50"
                       value={form.depositAmount}
                       onChange={(e) => setForm(prev => ({ ...prev, depositAmount: e.target.value }))}
-                      className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-stone-400 mb-1">Status</label>
+                    <label className="block text-[11px] text-slate-500 mb-1">Status</label>
                     <select
                       value={form.depositStatus}
                       onChange={(e) => setForm(prev => ({ ...prev, depositStatus: e.target.value }))}
-                      className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                     >
                       <option value="NOT_REQUIRED">Not Required</option>
                       <option value="PAID">Paid / Received</option>
@@ -1279,11 +1279,11 @@ export default function RestaurantReservations() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-stone-400 mb-1">Method</label>
+                    <label className="block text-[11px] text-slate-500 mb-1">Method</label>
                     <select
                       value={form.depositPaymentMethod}
                       onChange={(e) => setForm(prev => ({ ...prev, depositPaymentMethod: e.target.value }))}
-                      className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                     >
                       <option value="UPI">UPI / QR Code</option>
                       <option value="CASH">Cash</option>
@@ -1298,7 +1298,7 @@ export default function RestaurantReservations() {
               {/* Guest & Internal Notes */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Special Requests / Guest Notes
                   </label>
                   <textarea
@@ -1306,12 +1306,12 @@ export default function RestaurantReservations() {
                     placeholder="e.g. Window booth, quiet corner, bring baby chair"
                     value={form.guestNotes}
                     onChange={(e) => setForm(prev => ({ ...prev, guestNotes: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Internal Staff Notes
                   </label>
                   <textarea
@@ -1319,17 +1319,17 @@ export default function RestaurantReservations() {
                     placeholder="e.g. Regular weekend VIP guest, complimentary welcome drink"
                     value={form.internalNotes}
                     onChange={(e) => setForm(prev => ({ ...prev, internalNotes: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
               </div>
 
               {/* Modal Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-stone-800">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setIsFormModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800 font-medium text-sm transition-colors"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-medium text-sm transition-colors"
                 >
                   Cancel
                 </button>
@@ -1357,31 +1357,31 @@ export default function RestaurantReservations() {
 
       {/* GUEST CHECK-IN & SEATING MODAL */}
       {isSeatModalOpen && reservationToSeat && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-stone-900 border border-stone-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <UserCheck className="w-5 h-5 text-emerald-400" />
                 Seat Guest at Floor Table
               </h3>
               <button
                 onClick={() => setIsSeatModalOpen(false)}
-                className="text-stone-400 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-stone-800/60 border border-stone-700/60 space-y-1.5">
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
               <div className="font-bold text-white text-base">
                 {reservationToSeat.customerName}
               </div>
-              <div className="text-xs text-stone-300 flex items-center justify-between">
+              <div className="text-xs text-slate-700 flex items-center justify-between">
                 <span>Party Size: <b className="text-white">{reservationToSeat.partySize} Guests</b></span>
                 <span className="font-mono text-orange-400">{reservationToSeat.reservationCode}</span>
               </div>
               {reservationToSeat.guestNotes && (
-                <p className="text-xs text-stone-400 italic pt-1">
+                <p className="text-xs text-slate-500 italic pt-1">
                   Note: "{reservationToSeat.guestNotes}"
                 </p>
               )}
@@ -1389,13 +1389,13 @@ export default function RestaurantReservations() {
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-stone-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Select Table to Occupy <span className="text-orange-500">*</span>
                 </label>
                 <select
                   value={seatForm.tableId}
                   onChange={(e) => setSeatForm(prev => ({ ...prev, tableId: e.target.value }))}
-                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-orange-500"
                 >
                   <option value="">-- Choose Floor Table --</option>
                   {tablesList.map(t => (
@@ -1414,17 +1414,17 @@ export default function RestaurantReservations() {
                   onChange={(e) => setSeatForm(prev => ({ ...prev, createOrder: e.target.checked }))}
                   className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
                 />
-                <label htmlFor="createOrder" className="text-xs text-stone-300 cursor-pointer">
+                <label htmlFor="createOrder" className="text-xs text-slate-700 cursor-pointer">
                   Auto-open active dine-in ticket in POS for table
                 </label>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-800">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
               <button
                 type="button"
                 onClick={() => setIsSeatModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-stone-400 hover:text-white text-sm"
+                className="px-4 py-2 rounded-xl text-slate-500 hover:text-slate-900 text-sm"
               >
                 Cancel
               </button>
@@ -1451,29 +1451,29 @@ export default function RestaurantReservations() {
 
       {/* WHATSAPP CONFIRMATION PREVIEW SIMULATOR MODAL */}
       {isConfirmModalOpen && confirmationData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-stone-900 border border-stone-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
                   <MessageSquare className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white">WhatsApp Confirmation</h3>
-                  <p className="text-xs text-stone-400">Dispatched to {confirmationData.recipient}</p>
+                  <p className="text-xs text-slate-500">Dispatched to {confirmationData.recipient}</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsConfirmModalOpen(false)}
-                className="text-stone-400 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* WhatsApp Chat Preview Bubble */}
-            <div className="bg-[#0b141a] p-4 rounded-2xl border border-stone-800 text-stone-100 space-y-2 relative overflow-hidden font-sans">
-              <div className="text-[10px] text-stone-400 text-center pb-1">
+            <div className="bg-[#0b141a] p-4 rounded-2xl border border-slate-200 text-stone-100 space-y-2 relative overflow-hidden font-sans">
+              <div className="text-[10px] text-slate-500 text-center pb-1">
                 TODAY • ENCRYPTED WHATSAPP BUSINESS GATEWAY
               </div>
               <div className="bg-[#005c4b] p-3.5 rounded-2xl rounded-tr-none text-xs text-emerald-50 leading-relaxed shadow space-y-1 whitespace-pre-wrap">
@@ -1488,11 +1488,11 @@ export default function RestaurantReservations() {
             <div className="flex items-center justify-between pt-2">
               <button
                 type="button"
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors border border-slate-200"
                 onClick={() => {
                   navigator.clipboard.writeText(confirmationData.messageBody);
                   toast.success('Message copied to clipboard');
                 }}
-                className="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
               >
                 <Copy className="w-3.5 h-3.5" />
                 <span>Copy Message</span>
@@ -1512,24 +1512,24 @@ export default function RestaurantReservations() {
 
       {/* CANCEL RESERVATION MODAL */}
       {isCancelModalOpen && reservationToCancel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-stone-900 border border-stone-700 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3 text-rose-400">
               <div className="p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="text-base font-bold text-white">Cancel Reservation</h3>
-                <p className="text-xs text-stone-400">Booking {reservationToCancel.reservationCode}</p>
+                <p className="text-xs text-slate-500">Booking {reservationToCancel.reservationCode}</p>
               </div>
             </div>
 
-            <p className="text-xs text-stone-300">
+            <p className="text-xs text-slate-700">
               Are you sure you want to cancel the reservation for <b className="text-white">{reservationToCancel.customerName}</b>? Any assigned table will be released back to AVAILABLE.
             </p>
 
             <div>
-              <label className="block text-xs font-semibold text-stone-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Cancellation Reason
               </label>
               <input
@@ -1537,15 +1537,15 @@ export default function RestaurantReservations() {
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 placeholder="e.g. Guest called to cancel, flight delayed"
-                className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-stone-800">
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-200">
               <button
                 type="button"
                 onClick={() => setIsCancelModalOpen(false)}
-                className="px-3.5 py-1.5 rounded-xl text-stone-400 hover:text-white text-xs"
+                className="px-3.5 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 text-xs"
               >
                 Keep Booking
               </button>

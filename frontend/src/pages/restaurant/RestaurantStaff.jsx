@@ -17,7 +17,7 @@ const DEPARTMENTS = [
   { id: 'SERVICE_FOH', label: 'Service & Dining (FOH)', icon: Utensils, color: 'text-orange-400 bg-orange-500/10 border-orange-500/20' },
   { id: 'BAR_BEVERAGE', label: 'Bar & Beverage', icon: Coffee, color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
   { id: 'MANAGEMENT', label: 'Management', icon: Shield, color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
-  { id: 'HOUSEKEEPING', label: 'Housekeeping', icon: Building2, color: 'text-stone-400 bg-stone-500/10 border-stone-500/20' },
+  { id: 'HOUSEKEEPING', label: 'Housekeeping', icon: Building2, color: 'text-slate-500 bg-stone-500/10 border-stone-500/20' },
 ];
 
 const ROLES = [
@@ -437,22 +437,22 @@ export default function RestaurantStaff() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-900 text-stone-100 p-4 md:p-6 space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fade-in">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-800 pb-5">
+      <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20">
+            <span className="p-2 rounded-xl bg-orange-50 text-orange-600 border border-orange-200">
               <Users className="w-6 h-6" />
             </span>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                 Staff Rostering, Attendance & Tips Pool
-                <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                   Live Attendance
                 </span>
               </h1>
-              <p className="text-sm text-stone-400">
+              <p className="text-sm text-slate-500">
                 Shift scheduling, steward clock-in/out, live station allocation, and daily gratuity pool sharing.
               </p>
             </div>
@@ -461,13 +461,13 @@ export default function RestaurantStaff() {
 
         {/* Date Selector & Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex bg-stone-800/80 p-1 rounded-xl border border-stone-700/60">
+          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
               onClick={() => setSelectedDate(todayStr)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedDate === todayStr 
                   ? 'bg-orange-600 text-white shadow-sm' 
-                  : 'text-stone-300 hover:text-white hover:bg-stone-700/50'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-stone-700/50'
               }`}
             >
               Today
@@ -477,17 +477,17 @@ export default function RestaurantStaff() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedDate === tomorrowStr 
                   ? 'bg-orange-600 text-white shadow-sm' 
-                  : 'text-stone-300 hover:text-white hover:bg-stone-700/50'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-stone-700/50'
               }`}
             >
               Tomorrow
             </button>
-            <div className="relative flex items-center pl-1 border-l border-stone-700">
+            <div className="relative flex items-center pl-1 border-l border-slate-300">
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="bg-transparent text-xs text-stone-300 px-2 py-1 focus:outline-none cursor-pointer"
+                className="bg-transparent text-xs text-slate-700 px-2 py-1 focus:outline-none cursor-pointer font-medium"
               />
             </div>
           </div>
@@ -495,7 +495,7 @@ export default function RestaurantStaff() {
           <button
             onClick={() => fetchData(true)}
             disabled={refreshing}
-            className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-700/60 transition-colors"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
             title="Refresh staff data"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-orange-400' : ''}`} />
@@ -504,7 +504,7 @@ export default function RestaurantStaff() {
           {activeTab === 'roster' && (
             <button
               onClick={() => handleOpenRosterModal()}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold text-sm shadow-lg shadow-orange-900/30 hover:brightness-110 active:scale-95 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-bold text-xs shadow-md shadow-orange-900/30 hover:brightness-110 active:scale-95 transition-all"
               style={{ backgroundColor: effectivePrimary }}
             >
               <Plus className="w-4 h-4" />
@@ -515,7 +515,7 @@ export default function RestaurantStaff() {
           {activeTab === 'tips' && (
             <button
               onClick={() => setIsTipCalcModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold text-sm shadow-lg shadow-orange-900/30 hover:brightness-110 active:scale-95 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-bold text-xs shadow-md shadow-orange-900/30 hover:brightness-110 active:scale-95 transition-all"
               style={{ backgroundColor: effectivePrimary }}
             >
               <Wallet className="w-4 h-4" />
@@ -526,7 +526,7 @@ export default function RestaurantStaff() {
           {activeTab === 'directory' && (
             <button
               onClick={() => handleOpenStaffModal()}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold text-sm shadow-lg shadow-orange-900/30 hover:brightness-110 active:scale-95 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-bold text-xs shadow-md shadow-orange-900/30 hover:brightness-110 active:scale-95 transition-all"
               style={{ backgroundColor: effectivePrimary }}
             >
               <UserPlus className="w-4 h-4" />
@@ -538,74 +538,74 @@ export default function RestaurantStaff() {
 
       {/* KPI Cards Strip */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
-        <div className="p-4 rounded-2xl bg-stone-800/40 border border-stone-700/50 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-stone-400 text-xs font-medium mb-1">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
             <span>Staff Headcount</span>
             <Users className="w-4 h-4 text-orange-400" />
           </div>
-          <div className="text-2xl font-bold text-white tracking-tight">
+          <div className="text-2xl font-black text-slate-900 tracking-tight mt-1">
             {summary.totalStaff}
           </div>
-          <div className="text-xs text-stone-400 mt-1">
+          <div className="text-xs text-slate-500 mt-1 font-medium">
             <span className="text-emerald-400 font-semibold">{summary.activeStaff} Active</span> • BOH & FOH
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-stone-800/40 border border-stone-700/50 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-stone-400 text-xs font-medium mb-1">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
             <span>On Duty (Clocked In)</span>
             <UserCheck className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-2xl font-bold text-emerald-400 tracking-tight">
             {summary.clockedInToday}
           </div>
-          <div className="text-xs text-stone-400 mt-1">
+          <div className="text-xs text-slate-500 mt-1 font-medium">
             Working right now
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-stone-800/40 border border-stone-700/50 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-stone-400 text-xs font-medium mb-1">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
             <span>Today's Roster</span>
             <Calendar className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-2xl font-bold text-white tracking-tight">
+          <div className="text-2xl font-black text-slate-900 tracking-tight mt-1">
             {summary.scheduledToday}
           </div>
-          <div className="text-xs text-stone-400 mt-1">
+          <div className="text-xs text-slate-500 mt-1 font-medium">
             Shifts rostered for {selectedDate === todayStr ? 'today' : selectedDate}
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-stone-800/40 border border-stone-700/50 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-stone-400 text-xs font-medium mb-1">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
             <span>Service Charge & Tips</span>
             <Wallet className="w-4 h-4 text-purple-400" />
           </div>
           <div className="text-2xl font-bold text-purple-400 tracking-tight">
             ₹{(tipsAnalytics?.todayTipsCollected || 0).toLocaleString()}
           </div>
-          <div className="text-xs text-stone-400 mt-1">
+          <div className="text-xs text-slate-500 mt-1 font-medium">
             Collected today from bills
           </div>
         </div>
 
-        <div className="col-span-2 md:col-span-1 p-4 rounded-2xl bg-stone-800/40 border border-stone-700/50 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-stone-400 text-xs font-medium mb-1">
+        <div className="col-span-2 md:col-span-1 p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
             <span>Monthly Payroll Liability</span>
             <DollarSign className="w-4 h-4 text-amber-400" />
           </div>
           <div className="text-2xl font-bold text-amber-400 tracking-tight">
             ₹{(summary.monthlyPayroll || 0).toLocaleString()}
           </div>
-          <div className="text-xs text-stone-400 mt-1">
+          <div className="text-xs text-slate-500 mt-1 font-medium">
             Estimated base monthly wages
           </div>
         </div>
       </div>
 
       {/* Main Tabs Navigation */}
-      <div className="flex border-b border-stone-800 gap-4">
+      <div className="flex border-b border-slate-200 gap-6">
         {[
           { id: 'roster', label: 'Shift Rostering & Attendance', icon: Clock },
           { id: 'tips', label: 'Gratuity & Tips Pool Sharing', icon: Wallet },
@@ -620,7 +620,7 @@ export default function RestaurantStaff() {
               className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${
                 isSelected
                   ? 'border-orange-500 text-orange-400'
-                  : 'border-transparent text-stone-400 hover:text-stone-200'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -635,26 +635,26 @@ export default function RestaurantStaff() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-white">Daily Shift Roster & Punch Clock</h2>
-              <p className="text-xs text-stone-400">
+              <h2 className="text-lg font-bold text-slate-900">Daily Shift Roster & Punch Clock</h2>
+              <p className="text-xs text-slate-500">
                 Track steward and kitchen line clock-in, overtime hours, and station coverage.
               </p>
             </div>
-            <div className="text-xs text-stone-400">
-              Showing <b className="text-white">{rosterList.length}</b> scheduled shifts for {selectedDate}
+            <div className="text-xs text-slate-500">
+              Showing <b className="text-slate-900">{rosterList.length}</b> scheduled shifts for {selectedDate}
             </div>
           </div>
 
           {rosterList.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-stone-800 p-12 text-center bg-stone-800/20">
+            <div className="rounded-3xl border border-dashed border-slate-200 p-12 text-center bg-white">
               <Calendar className="w-10 h-10 text-stone-500 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-white mb-1">No Shifts Scheduled for {selectedDate}</h3>
-              <p className="text-xs text-stone-400 max-w-sm mx-auto mb-4">
+              <h3 className="text-base font-bold text-slate-900 mb-1">No Shifts Scheduled for {selectedDate}</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4">
                 Assign shifts to your kitchen and service staff to enable clock-in attendance tracking.
               </p>
               <button
                 onClick={() => handleOpenRosterModal()}
-                className="px-4 py-2 rounded-xl text-white font-semibold text-xs shadow hover:brightness-110 transition-all inline-flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl text-slate-900 font-semibold text-xs shadow hover:brightness-110 transition-all inline-flex items-center gap-1.5"
                 style={{ backgroundColor: effectivePrimary }}
               >
                 <Plus className="w-4 h-4" />
@@ -673,20 +673,20 @@ export default function RestaurantStaff() {
                     key={shift._id}
                     className={`rounded-2xl border transition-all p-4 space-y-3 ${
                       isClockedIn
-                        ? 'bg-stone-800/60 border-emerald-500/40 shadow-lg shadow-emerald-950/20'
+                        ? 'bg-slate-100/60 border-emerald-500/40 shadow-lg shadow-emerald-950/20'
                         : isClockedOut
-                        ? 'bg-stone-900/50 border-stone-800 opacity-80'
-                        : 'bg-stone-800/40 border-stone-700/60'
+                        ? 'bg-slate-50/50 border-slate-200 opacity-80'
+                        : 'bg-slate-50 border-slate-300/60'
                     }`}
                   >
                     {/* Header */}
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-white text-base">
+                          <span className="font-bold text-slate-900 text-base">
                             {staff.name || 'Staff Member'}
                           </span>
-                          <span className="text-[10px] font-mono text-stone-400 px-1.5 py-0.5 rounded bg-stone-800 border border-stone-700">
+                          <span className="text-[10px] font-mono text-slate-500 px-1.5 py-0.5 rounded bg-slate-100 border border-slate-300">
                             {staff.employeeCode || 'EMP'}
                           </span>
                         </div>
@@ -700,7 +700,7 @@ export default function RestaurantStaff() {
                         isClockedIn
                           ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 animate-pulse'
                           : isClockedOut
-                          ? 'bg-stone-700 text-stone-300'
+                          ? 'bg-stone-700 text-slate-600'
                           : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                       }`}>
                         {shift.status}
@@ -708,26 +708,26 @@ export default function RestaurantStaff() {
                     </div>
 
                     {/* Shift & Station Details */}
-                    <div className="space-y-1.5 text-xs text-stone-300 bg-stone-900/60 p-2.5 rounded-xl border border-stone-800">
+                    <div className="space-y-1.5 text-xs text-slate-600 bg-white p-2.5 rounded-xl border border-slate-200">
                       <div className="flex items-center justify-between">
-                        <span className="text-stone-400">Shift Type:</span>
-                        <span className="font-semibold text-white">{shift.shiftType?.replace('_', ' ')}</span>
+                        <span className="text-slate-500">Shift Type:</span>
+                        <span className="font-semibold text-slate-900">{shift.shiftType?.replace('_', ' ')}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-stone-400">Scheduled Time:</span>
-                        <span className="font-semibold text-white flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-stone-400" />
+                        <span className="text-slate-500">Scheduled Time:</span>
+                        <span className="font-semibold text-slate-900 flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-slate-500" />
                           {shift.scheduledStartTime} - {shift.scheduledEndTime}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-stone-400">Station / Section:</span>
+                        <span className="text-slate-500">Station / Section:</span>
                         <span className="font-semibold text-amber-400">{shift.station || 'Floor'}</span>
                       </div>
 
                       {/* Actual hours logged */}
                       {shift.actualHoursWorked > 0 && (
-                        <div className="flex items-center justify-between pt-1 border-t border-stone-800 text-emerald-400 font-bold">
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-200 text-emerald-400 font-bold">
                           <span>Hours Worked:</span>
                           <span>{shift.actualHoursWorked} hrs {shift.overtimeMinutes > 0 ? `(${shift.overtimeMinutes}m OT)` : ''}</span>
                         </div>
@@ -735,11 +735,11 @@ export default function RestaurantStaff() {
                     </div>
 
                     {/* Clock-in / Clock-out Action Buttons */}
-                    <div className="flex items-center justify-between pt-2 border-t border-stone-800/80 gap-2">
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-200/80 gap-2">
                       {!isClockedIn && !isClockedOut && (
                         <button
                           onClick={() => handleClockIn(shift._id)}
-                          className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow transition-all"
+                          className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-900 font-semibold text-xs flex items-center justify-center gap-1.5 shadow transition-all"
                         >
                           <LogIn className="w-3.5 h-3.5" />
                           <span>Clock In</span>
@@ -749,7 +749,7 @@ export default function RestaurantStaff() {
                       {isClockedIn && (
                         <button
                           onClick={() => handleClockOut(shift._id)}
-                          className="flex-1 py-1.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow transition-all"
+                          className="flex-1 py-1.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-slate-900 font-semibold text-xs flex items-center justify-center gap-1.5 shadow transition-all"
                         >
                           <LogOut className="w-3.5 h-3.5" />
                           <span>Clock Out</span>
@@ -757,7 +757,7 @@ export default function RestaurantStaff() {
                       )}
 
                       {isClockedOut && (
-                        <div className="text-xs text-stone-400 italic flex items-center gap-1 py-1">
+                        <div className="text-xs text-slate-500 italic flex items-center gap-1 py-1">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                           <span>Shift completed</span>
                         </div>
@@ -767,14 +767,14 @@ export default function RestaurantStaff() {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => handleOpenRosterModal(shift)}
-                          className="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-700 transition-colors"
+                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-stone-700 text-slate-600 border border-slate-300 transition-colors"
                           title="Edit Shift"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeleteShift(shift._id)}
-                          className="p-1.5 rounded-lg bg-stone-800 hover:bg-rose-900/40 text-rose-400 border border-stone-700 hover:border-rose-700/50 transition-colors"
+                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-900/40 text-rose-400 border border-slate-300 hover:border-rose-700/50 transition-colors"
                           title="Remove Shift"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -794,14 +794,14 @@ export default function RestaurantStaff() {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-bold text-white">Daily Gratuity & Service Charge Pool</h2>
-              <p className="text-xs text-stone-400">
+              <h2 className="text-lg font-bold text-slate-900">Daily Gratuity & Service Charge Pool</h2>
+              <p className="text-xs text-slate-500">
                 Transparent tip pooling, formula weighting (role vs hours), and automated UPI/cash disbursement.
               </p>
             </div>
             <button
               onClick={() => setIsTipCalcModalOpen(true)}
-              className="px-4 py-2 rounded-xl text-white font-semibold text-xs shadow hover:brightness-110 transition-all flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl text-slate-900 font-semibold text-xs shadow hover:brightness-110 transition-all flex items-center gap-1.5"
               style={{ backgroundColor: effectivePrimary }}
             >
               <Plus className="w-4 h-4" />
@@ -810,14 +810,14 @@ export default function RestaurantStaff() {
           </div>
 
           {/* Today's Pool Status Banner */}
-          <div className="p-5 rounded-3xl bg-gradient-to-r from-stone-800 to-stone-900 border border-stone-700 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="p-5 rounded-3xl bg-gradient-to-r from-stone-800 to-stone-900 border border-slate-300 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
                 <Wallet className="w-6 h-6" />
               </div>
               <div>
-                <div className="text-xs text-stone-400">Auto-Detected Bill Service Charge Today</div>
-                <div className="text-2xl font-bold text-white">
+                <div className="text-xs text-slate-500">Auto-Detected Bill Service Charge Today</div>
+                <div className="text-2xl font-bold text-slate-900">
                   ₹{(tipsAnalytics?.autoServiceChargeToday || 0).toLocaleString()}
                 </div>
                 <div className="text-xs text-purple-400 mt-0.5">
@@ -836,7 +836,7 @@ export default function RestaurantStaff() {
                 }));
                 setIsTipCalcModalOpen(true);
               }}
-              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition-colors shadow flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-slate-900 font-semibold text-xs transition-colors shadow flex items-center gap-1.5"
             >
               <Sparkles className="w-4 h-4" />
               <span>Split Today's Tips</span>
@@ -845,13 +845,13 @@ export default function RestaurantStaff() {
 
           {/* Active Tip Pool Breakdown View (if open or latest) */}
           {activeTipPoolView && (
-            <div className="p-5 rounded-3xl bg-stone-900 border border-stone-700 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                 <div className="flex items-center gap-2">
                   <span className="p-1.5 rounded-lg bg-orange-500/10 text-orange-400 font-bold text-xs">
                     Pool #{activeTipPoolView._id?.slice(-4).toUpperCase()}
                   </span>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-slate-900">
                     Gratuity Distribution for {new Date(activeTipPoolView.poolDate).toLocaleDateString()}
                   </h3>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
@@ -867,7 +867,7 @@ export default function RestaurantStaff() {
                   {activeTipPoolView.status !== 'DISBURSED' && (
                     <button
                       onClick={() => handleDisburseTipPool(activeTipPoolView._id)}
-                      className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1 shadow transition-all"
+                      className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-900 font-semibold text-xs flex items-center gap-1 shadow transition-all"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>Disburse Payouts</span>
@@ -875,7 +875,7 @@ export default function RestaurantStaff() {
                   )}
                   <button
                     onClick={() => setActiveTipPoolView(null)}
-                    className="p-1.5 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800"
+                    className="p-1.5 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -883,29 +883,29 @@ export default function RestaurantStaff() {
               </div>
 
               {/* Pool Metrics */}
-              <div className="grid grid-cols-4 gap-3 text-xs bg-stone-800/40 p-3 rounded-2xl border border-stone-800">
+              <div className="grid grid-cols-4 gap-3 text-xs bg-slate-50 p-3 rounded-2xl border border-slate-200">
                 <div>
-                  <span className="text-stone-400">Total Gratuity Pool:</span>
+                  <span className="text-slate-500">Total Gratuity Pool:</span>
                   <div className="text-base font-bold text-emerald-400">₹{activeTipPoolView.totalTipsCollected?.toLocaleString()}</div>
                 </div>
                 <div>
-                  <span className="text-stone-400">Distribution Formula:</span>
-                  <div className="font-semibold text-white">{activeTipPoolView.distributionFormula?.replace('_', ' ')}</div>
+                  <span className="text-slate-500">Distribution Formula:</span>
+                  <div className="font-semibold text-slate-900">{activeTipPoolView.distributionFormula?.replace('_', ' ')}</div>
                 </div>
                 <div>
-                  <span className="text-stone-400">Total Weighted Points:</span>
-                  <div className="font-semibold text-white">{activeTipPoolView.totalShares} pts</div>
+                  <span className="text-slate-500">Total Weighted Points:</span>
+                  <div className="font-semibold text-slate-900">{activeTipPoolView.totalShares} pts</div>
                 </div>
                 <div>
-                  <span className="text-stone-400">Rate per Point:</span>
+                  <span className="text-slate-500">Rate per Point:</span>
                   <div className="font-semibold text-purple-400">₹{activeTipPoolView.tipPerShare}/pt</div>
                 </div>
               </div>
 
               {/* Payouts Table */}
-              <div className="overflow-x-auto rounded-xl border border-stone-800">
-                <table className="w-full text-left text-xs text-stone-300">
-                  <thead className="bg-stone-800/80 text-stone-400 font-semibold uppercase text-[11px]">
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full text-left text-xs text-slate-600">
+                  <thead className="bg-slate-100/80 text-slate-500 font-semibold uppercase text-[11px]">
                     <tr>
                       <th className="py-2.5 px-3">Staff Member</th>
                       <th className="py-2.5 px-3">Role</th>
@@ -917,19 +917,19 @@ export default function RestaurantStaff() {
                   </thead>
                   <tbody className="divide-y divide-stone-800/60">
                     {activeTipPoolView.payouts?.map(p => (
-                      <tr key={p._id || p.staffId} className="hover:bg-stone-800/20">
-                        <td className="py-2.5 px-3 font-bold text-white">{p.staffName}</td>
-                        <td className="py-2.5 px-3 text-stone-400">{p.role?.replace('_', ' ')}</td>
+                      <tr key={p._id || p.staffId} className="hover:bg-white">
+                        <td className="py-2.5 px-3 font-bold text-slate-900">{p.staffName}</td>
+                        <td className="py-2.5 px-3 text-slate-500">{p.role?.replace('_', ' ')}</td>
                         <td className="py-2.5 px-3 font-mono font-semibold">{p.points}</td>
                         <td className="py-2.5 px-3 font-bold text-emerald-400 text-sm">₹{p.calculatedTipAmount?.toLocaleString()}</td>
-                        <td className="py-2.5 px-3 text-stone-300">
+                        <td className="py-2.5 px-3 text-slate-600">
                           {p.upiId ? (
                             <span className="font-mono text-purple-300 flex items-center gap-1">
                               <Smartphone className="w-3 h-3 text-purple-400" />
                               {p.upiId}
                             </span>
                           ) : (
-                            <span className="text-stone-400">Cash Payout</span>
+                            <span className="text-slate-500">Cash Payout</span>
                           )}
                         </td>
                         <td className="py-2.5 px-3">
@@ -951,9 +951,9 @@ export default function RestaurantStaff() {
 
           {/* Historical Tip Pools List */}
           <div className="space-y-3">
-            <h3 className="text-sm font-bold text-stone-300 uppercase tracking-wider">Past Tip Pool Runs</h3>
+            <h3 className="text-sm font-bold text-slate-600 uppercase tracking-wider">Past Tip Pool Runs</h3>
             {tipPools.length === 0 ? (
-              <div className="text-xs text-stone-500 py-6 text-center border border-dashed border-stone-800 rounded-2xl">
+              <div className="text-xs text-stone-500 py-6 text-center border border-dashed border-slate-200 rounded-2xl">
                 No tip pool distributions recorded yet. Click "Calculate Tip Pool" above.
               </div>
             ) : (
@@ -962,17 +962,17 @@ export default function RestaurantStaff() {
                   <div
                     key={pool._id}
                     onClick={() => setActiveTipPoolView(pool)}
-                    className="p-3.5 rounded-2xl bg-stone-800/40 border border-stone-700/60 hover:border-orange-500/50 cursor-pointer transition-all flex items-center justify-between"
+                    className="p-3.5 rounded-2xl bg-slate-50 border border-slate-300/60 hover:border-orange-500/50 cursor-pointer transition-all flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-stone-700/60 text-stone-300">
+                      <div className="p-2 rounded-xl bg-stone-700/60 text-slate-600">
                         <Wallet className="w-4 h-4 text-orange-400" />
                       </div>
                       <div>
-                        <div className="font-bold text-white text-sm">
+                        <div className="font-bold text-slate-900 text-sm">
                           Gratuity Pool for {new Date(pool.poolDate).toLocaleDateString()}
                         </div>
-                        <div className="text-xs text-stone-400">
+                        <div className="text-xs text-slate-500">
                           {pool.distributionFormula?.replace('_', ' ')} • {pool.eligibleStaffCount || pool.payouts?.length} Staff Members
                         </div>
                       </div>
@@ -1005,7 +1005,7 @@ export default function RestaurantStaff() {
       {activeTab === 'directory' && (
         <div className="space-y-4">
           {/* Filters & Search */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-stone-800/30 p-2.5 rounded-2xl border border-stone-800">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
             {/* Department Filter Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
               {DEPARTMENTS.map(d => (
@@ -1014,8 +1014,8 @@ export default function RestaurantStaff() {
                   onClick={() => setSelectedDept(d.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                     selectedDept === d.id
-                      ? 'bg-stone-700 text-white font-semibold shadow'
-                      : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800'
+                      ? 'bg-stone-700 text-slate-900 font-semibold shadow'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   {d.label}
@@ -1025,18 +1025,18 @@ export default function RestaurantStaff() {
 
             {/* Search */}
             <div className="relative sm:w-64">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 type="text"
                 placeholder="Search staff, code, role..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-stone-900 border border-stone-700/80 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-orange-500"
+                className="w-full bg-white border border-slate-200/80 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder-stone-500 focus:outline-none focus:border-orange-500"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-slate-600"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -1052,7 +1052,7 @@ export default function RestaurantStaff() {
               return (
                 <div
                   key={staff._id}
-                  className="rounded-2xl border border-stone-700/70 bg-stone-800/40 hover:border-orange-500/50 p-4 space-y-3 transition-all flex flex-col justify-between"
+                  className="rounded-2xl border border-slate-300/70 bg-slate-50 hover:border-orange-500/50 p-4 space-y-3 transition-all flex flex-col justify-between"
                 >
                   <div>
                     {/* Top line: Code & Status */}
@@ -1063,7 +1063,7 @@ export default function RestaurantStaff() {
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                         staff.status === 'ACTIVE'
                           ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-stone-700 text-stone-300'
+                          : 'bg-stone-700 text-slate-600'
                       }`}>
                         {staff.status}
                       </span>
@@ -1071,8 +1071,8 @@ export default function RestaurantStaff() {
 
                     {/* Name & Role */}
                     <div className="mt-2.5">
-                      <h4 className="font-bold text-white text-base">{staff.name}</h4>
-                      <div className="text-xs text-stone-300 font-semibold mt-0.5">
+                      <h4 className="font-bold text-slate-900 text-base">{staff.name}</h4>
+                      <div className="text-xs text-slate-600 font-semibold mt-0.5">
                         {staff.role?.replace('_', ' ')}
                       </div>
                       <span className={`inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-md border mt-1.5 ${deptObj.color}`}>
@@ -1081,10 +1081,10 @@ export default function RestaurantStaff() {
                     </div>
 
                     {/* Contact & Compensation Details */}
-                    <div className="space-y-1.5 text-xs text-stone-400 bg-stone-900/60 p-2.5 rounded-xl border border-stone-800/80 mt-3">
+                    <div className="space-y-1.5 text-xs text-slate-500 bg-white p-2.5 rounded-xl border border-slate-200/80 mt-3">
                       <div className="flex items-center justify-between">
                         <span>Phone:</span>
-                        <span className="text-white font-mono">{staff.phone}</span>
+                        <span className="text-slate-900 font-mono">{staff.phone}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span>Monthly Wage:</span>
@@ -1095,7 +1095,7 @@ export default function RestaurantStaff() {
                         <span className="text-purple-400 font-bold">{staff.tipShareWeight || 1.0}x Points</span>
                       </div>
                       {staff.bankDetails?.upiId && (
-                        <div className="flex items-center justify-between pt-1 border-t border-stone-800 text-[11px]">
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-200 text-[11px]">
                           <span>UPI ID:</span>
                           <span className="text-purple-300 font-mono truncate max-w-[120px]">{staff.bankDetails.upiId}</span>
                         </div>
@@ -1104,10 +1104,10 @@ export default function RestaurantStaff() {
                   </div>
 
                   {/* Footer Actions */}
-                  <div className="pt-2 border-t border-stone-800 flex items-center justify-between">
+                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
                     <button
                       onClick={() => handleOpenStaffModal(staff)}
-                      className="px-3 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-semibold flex items-center gap-1 transition-colors"
+                      className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-stone-700 text-slate-600 text-xs font-semibold flex items-center gap-1 transition-colors"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                       <span>Edit Details</span>
@@ -1136,19 +1136,19 @@ export default function RestaurantStaff() {
 
       {/* REGISTER / EDIT STAFF MODAL */}
       {isStaffModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-stone-900 border border-stone-700 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8">
-            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                   <UserPlus className="w-5 h-5 text-orange-400" />
                   {editingStaff ? 'Edit Staff Profile' : 'Register New Staff Member'}
                 </h3>
-                <p className="text-xs text-stone-400">Employee role, salary, tip share multiplier, and UPI details.</p>
+                <p className="text-xs text-slate-500">Employee role, salary, tip share multiplier, and UPI details.</p>
               </div>
               <button
                 onClick={() => setIsStaffModalOpen(false)}
-                className="text-stone-400 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1157,7 +1157,7 @@ export default function RestaurantStaff() {
             <form onSubmit={handleSubmitStaff} className="space-y-3.5">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
                     Full Name <span className="text-orange-500">*</span>
                   </label>
                   <input
@@ -1166,12 +1166,12 @@ export default function RestaurantStaff() {
                     placeholder="e.g. Vikramaditya Roy"
                     value={staffForm.name}
                     onChange={(e) => setStaffForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
                     Phone Number <span className="text-orange-500">*</span>
                   </label>
                   <input
@@ -1180,14 +1180,14 @@ export default function RestaurantStaff() {
                     placeholder="e.g. 9811001122"
                     value={staffForm.phone}
                     onChange={(e) => setStaffForm(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
                     Role & Title
                   </label>
                   <select
@@ -1201,7 +1201,7 @@ export default function RestaurantStaff() {
                         tipShareWeight: String(selectedRole?.defaultWeight || 1.0)
                       }));
                     }}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   >
                     {ROLES.map(r => (
                       <option key={r.id} value={r.id}>{r.label}</option>
@@ -1210,13 +1210,13 @@ export default function RestaurantStaff() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
                     Department
                   </label>
                   <select
                     value={staffForm.department}
                     onChange={(e) => setStaffForm(prev => ({ ...prev, department: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   >
                     {DEPARTMENTS.filter(d => d.id !== 'ALL').map(d => (
                       <option key={d.id} value={d.id}>{d.label}</option>
@@ -1226,40 +1226,40 @@ export default function RestaurantStaff() {
               </div>
 
               {/* Compensation & Tip Sharing Weight (Adheres to React Number Inputs rule) */}
-              <div className="grid grid-cols-3 gap-3 bg-stone-800/40 p-3 rounded-2xl border border-stone-800">
+              <div className="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
                 <div>
-                  <label className="block text-[11px] text-stone-400 mb-1">Monthly Salary (₹)</label>
+                  <label className="block text-[11px] text-slate-500 mb-1">Monthly Salary (₹)</label>
                   <input
                     type="number"
                     min="0"
                     step="500"
                     value={staffForm.monthlySalary}
                     onChange={(e) => setStaffForm(prev => ({ ...prev, monthlySalary: e.target.value }))}
-                    className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-stone-400 mb-1">Hourly Wage (₹)</label>
+                  <label className="block text-[11px] text-slate-500 mb-1">Hourly Wage (₹)</label>
                   <input
                     type="number"
                     min="0"
                     step="10"
                     value={staffForm.hourlyWage}
                     onChange={(e) => setStaffForm(prev => ({ ...prev, hourlyWage: e.target.value }))}
-                    className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-stone-400 mb-1">Tip Pool Weight (pts)</label>
+                  <label className="block text-[11px] text-slate-500 mb-1">Tip Pool Weight (pts)</label>
                   <input
                     type="number"
                     min="0"
                     step="0.1"
                     value={staffForm.tipShareWeight}
                     onChange={(e) => setStaffForm(prev => ({ ...prev, tipShareWeight: e.target.value }))}
-                    className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
               </div>
@@ -1267,7 +1267,7 @@ export default function RestaurantStaff() {
               {/* UPI & Bank Details */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
                     UPI ID (For Tip Payouts)
                   </label>
                   <input
@@ -1275,12 +1275,12 @@ export default function RestaurantStaff() {
                     placeholder="e.g. rahul@paytm"
                     value={staffForm.upiId}
                     onChange={(e) => setStaffForm(prev => ({ ...prev, upiId: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500 font-mono"
+                    className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500 font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
                     Bank Account Number
                   </label>
                   <input
@@ -1288,17 +1288,17 @@ export default function RestaurantStaff() {
                     placeholder="Optional for salary transfer"
                     value={staffForm.accountNumber}
                     onChange={(e) => setStaffForm(prev => ({ ...prev, accountNumber: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500 font-mono"
+                    className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500 font-mono"
                   />
                 </div>
               </div>
 
               {/* Modal Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setIsStaffModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-stone-400 hover:text-white text-xs"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-slate-900 text-xs"
                 >
                   Cancel
                 </button>
@@ -1306,7 +1306,7 @@ export default function RestaurantStaff() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 rounded-xl text-white font-semibold text-xs shadow hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-xl text-slate-900 font-semibold text-xs shadow hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5"
                   style={{ backgroundColor: effectivePrimary }}
                 >
                   {submitting ? (
@@ -1323,16 +1323,16 @@ export default function RestaurantStaff() {
 
       {/* ASSIGN ROSTER SHIFT MODAL */}
       {isRosterModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-stone-900 border border-stone-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-orange-400" />
                 {editingRosterShift ? 'Edit Roster Shift' : 'Schedule Staff Shift'}
               </h3>
               <button
                 onClick={() => setIsRosterModalOpen(false)}
-                className="text-stone-400 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1340,13 +1340,13 @@ export default function RestaurantStaff() {
 
             <form onSubmit={handleSubmitRosterShift} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-semibold text-stone-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-600 mb-1">
                   Staff Member <span className="text-orange-500">*</span>
                 </label>
                 <select
                   value={rosterForm.staffId}
                   onChange={(e) => setRosterForm(prev => ({ ...prev, staffId: e.target.value }))}
-                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                  className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                 >
                   {staffList.map(s => (
                     <option key={s._id} value={s._id}>
@@ -1357,7 +1357,7 @@ export default function RestaurantStaff() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-600 mb-1">
                   Shift Type
                 </label>
                 <select
@@ -1371,7 +1371,7 @@ export default function RestaurantStaff() {
                       scheduledEndTime: selected?.defaultEnd || prev.scheduledEndTime
                     }));
                   }}
-                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                  className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                 >
                   {SHIFT_TYPES.map(st => (
                     <option key={st.id} value={st.id}>{st.label}</option>
@@ -1381,7 +1381,7 @@ export default function RestaurantStaff() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
                     Start Time
                   </label>
                   <input
@@ -1389,12 +1389,12 @@ export default function RestaurantStaff() {
                     required
                     value={rosterForm.scheduledStartTime}
                     onChange={(e) => setRosterForm(prev => ({ ...prev, scheduledStartTime: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
                     End Time
                   </label>
                   <input
@@ -1402,13 +1402,13 @@ export default function RestaurantStaff() {
                     required
                     value={rosterForm.scheduledEndTime}
                     onChange={(e) => setRosterForm(prev => ({ ...prev, scheduledEndTime: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-600 mb-1">
                   Assigned Station / Section
                 </label>
                 <input
@@ -1416,15 +1416,15 @@ export default function RestaurantStaff() {
                   placeholder="e.g. Section A Tables, Main Bar, Kitchen Pass"
                   value={rosterForm.station}
                   onChange={(e) => setRosterForm(prev => ({ ...prev, station: e.target.value }))}
-                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                  className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setIsRosterModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-stone-400 hover:text-white text-xs"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-slate-900 text-xs"
                 >
                   Cancel
                 </button>
@@ -1432,7 +1432,7 @@ export default function RestaurantStaff() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 rounded-xl text-white font-semibold text-xs shadow hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-xl text-slate-900 font-semibold text-xs shadow hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5"
                   style={{ backgroundColor: effectivePrimary }}
                 >
                   {submitting ? (
@@ -1449,19 +1449,19 @@ export default function RestaurantStaff() {
 
       {/* CALCULATE TIP POOL MODAL */}
       {isTipCalcModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-stone-900 border border-stone-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <Wallet className="w-5 h-5 text-purple-400" />
                   Calculate Gratuity Pool
                 </h3>
-                <p className="text-xs text-stone-400">Distribute service charges and tips among active staff.</p>
+                <p className="text-xs text-slate-500">Distribute service charges and tips among active staff.</p>
               </div>
               <button
                 onClick={() => setIsTipCalcModalOpen(false)}
-                className="text-stone-400 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1470,7 +1470,7 @@ export default function RestaurantStaff() {
             <form onSubmit={handleCalculateTipPool} className="space-y-3.5">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
                     Pool Date
                   </label>
                   <input
@@ -1478,18 +1478,18 @@ export default function RestaurantStaff() {
                     required
                     value={tipForm.poolDate}
                     onChange={(e) => setTipForm(prev => ({ ...prev, poolDate: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
                     Shift Period
                   </label>
                   <select
                     value={tipForm.shiftPeriod}
                     onChange={(e) => setTipForm(prev => ({ ...prev, shiftPeriod: e.target.value }))}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                   >
                     <option value="FULL_DAY">Full Day (All Shifts)</option>
                     <option value="LUNCH">Lunch Shift Only</option>
@@ -1499,48 +1499,48 @@ export default function RestaurantStaff() {
               </div>
 
               {/* Tips Sources (Preserving empty strings for number inputs) */}
-              <div className="bg-stone-800/40 p-3.5 rounded-2xl border border-stone-800 space-y-2.5">
-                <span className="text-xs font-semibold text-stone-300 block">
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2.5">
+                <span className="text-xs font-semibold text-slate-600 block">
                   Gratuity Sources Collected
                 </span>
 
                 <div className="grid grid-cols-3 gap-2.5">
                   <div>
-                    <label className="block text-[10px] text-stone-400 mb-1">Service Charge (₹)</label>
+                    <label className="block text-[10px] text-slate-500 mb-1">Service Charge (₹)</label>
                     <input
                       type="number"
                       min="0"
                       value={tipForm.serviceChargeCollected}
                       onChange={(e) => setTipForm(prev => ({ ...prev, serviceChargeCollected: e.target.value }))}
-                      className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] text-stone-400 mb-1">Cash Tips (₹)</label>
+                    <label className="block text-[10px] text-slate-500 mb-1">Cash Tips (₹)</label>
                     <input
                       type="number"
                       min="0"
                       value={tipForm.cashTips}
                       onChange={(e) => setTipForm(prev => ({ ...prev, cashTips: e.target.value }))}
-                      className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] text-stone-400 mb-1">Card / UPI Tips (₹)</label>
+                    <label className="block text-[10px] text-slate-500 mb-1">Card / UPI Tips (₹)</label>
                     <input
                       type="number"
                       min="0"
                       value={tipForm.digitalTips}
                       onChange={(e) => setTipForm(prev => ({ ...prev, digitalTips: e.target.value }))}
-                      className="w-full bg-stone-900 border border-stone-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs pt-1 border-t border-stone-700/60">
-                  <span className="text-stone-400">Total Pool to Split:</span>
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-300/60">
+                  <span className="text-slate-500">Total Pool to Split:</span>
                   <span className="font-bold text-emerald-400 text-sm">
                     ₹{((Number(tipForm.cashTips) || 0) + (Number(tipForm.digitalTips) || 0) + (Number(tipForm.serviceChargeCollected) || 0)).toLocaleString()}
                   </span>
@@ -1548,13 +1548,13 @@ export default function RestaurantStaff() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-600 mb-1">
                   Distribution Formula
                 </label>
                 <select
                   value={tipForm.distributionFormula}
                   onChange={(e) => setTipForm(prev => ({ ...prev, distributionFormula: e.target.value }))}
-                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                  className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                 >
                   <option value="ROLE_WEIGHTED">Role Weighted (Head Chef 1.2x, Steward 1.0x, Busser 0.8x)</option>
                   <option value="EQUAL_SPLIT">Equal Split (1 Point per Staff Member)</option>
@@ -1562,11 +1562,11 @@ export default function RestaurantStaff() {
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setIsTipCalcModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-stone-400 hover:text-white text-xs"
+                  className="px-4 py-2 rounded-xl text-slate-500 hover:text-slate-900 text-xs"
                 >
                   Cancel
                 </button>
@@ -1574,7 +1574,7 @@ export default function RestaurantStaff() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs shadow hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-slate-900 font-semibold text-xs shadow hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5"
                 >
                   {submitting ? (
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
