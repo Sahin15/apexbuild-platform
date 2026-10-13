@@ -1,6 +1,54 @@
+import os from 'os';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+
+function apexBuildBannerPlugin() {
+  return {
+    name: 'apexbuild-banner-plugin',
+    configureServer(server) {
+      server.httpServer?.once('listening', () => {
+        setTimeout(() => {
+          const interfaces = os.networkInterfaces();
+          let wifiIp = null;
+          let wslIp = null;
+
+          for (const name of Object.keys(interfaces)) {
+            for (const iface of interfaces[name]) {
+              if (iface.family === 'IPv4' && !iface.internal) {
+                if (iface.address.startsWith('192.168.') || iface.address.startsWith('10.')) {
+                  wifiIp = iface.address;
+                } else if (iface.address.startsWith('172.')) {
+                  wslIp = iface.address;
+                }
+              }
+            }
+          }
+
+          const localWifi = wifiIp || '192.168.29.69';
+          const localWsl = wslIp || '172.21.240.1';
+
+          console.log(`
+\x1b[36m┌────────────────────────────────────────────────────────────────────────┐\x1b[0m
+\x1b[36m│\x1b[0m                 \x1b[1m\x1b[37mAPEXBUILD MULTI-TENANT PLATFORM\x1b[0m                        \x1b[36m│\x1b[0m
+\x1b[36m│\x1b[0m               \x1b[32mFrontend Application (Vite + React)\x1b[0m                       \x1b[36m│\x1b[0m
+\x1b[36m├────────────────────────────────────────────────────────────────────────┤\x1b[0m
+\x1b[36m│\x1b[0m  \x1b[1m\x1b[33m🖥️  This PC (Local Browser):\x1b[0m  \x1b[1m\x1b[36mhttp://localhost:5173/\x1b[0m                   \x1b[36m│\x1b[0m
+\x1b[36m│\x1b[0m  \x1b[1m\x1b[32m📱 Phone / Tablet (Wi-Fi):\x1b[0m    \x1b[1m\x1b[32mhttp://${localWifi}:5173/\x1b[0m              \x1b[36m│\x1b[0m
+\x1b[36m│\x1b[0m  \x1b[90m🐧 WSL / Virtual Machine:\x1b[0m     \x1b[90mhttp://${localWsl}:5173/ (WSL Internal)\x1b[0m  \x1b[36m│\x1b[0m
+\x1b[36m├────────────────────────────────────────────────────────────────────────┤\x1b[0m
+\x1b[36m│\x1b[0m  \x1b[1mWorkspaces Available:\x1b[0m                                                 \x1b[36m│\x1b[0m
+\x1b[36m│\x1b[0m  • Contractor OS:   /dashboard     • Supplier OS:     /supplier       \x1b[36m│\x1b[0m
+\x1b[36m│\x1b[0m  • Distributor OS:  /distributor   • Diagnostics OS:  /diagnostics    \x1b[36m│\x1b[0m
+\x1b[36m│\x1b[0m  • Restaurant OS:   /restaurant    • Pharmacy OS:     /pharmacy (NEW) \x1b[36m│\x1b[0m
+\x1b[36m│\x1b[0m  • Super Admin HQ:  /superadmin                                        \x1b[36m│\x1b[0m
+\x1b[36m└────────────────────────────────────────────────────────────────────────┘\x1b[0m
+`);
+        }, 200);
+      });
+    }
+  };
+}
 
 export default defineConfig({
   server: {
@@ -13,6 +61,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    apexBuildBannerPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],

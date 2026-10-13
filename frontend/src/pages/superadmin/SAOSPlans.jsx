@@ -61,6 +61,17 @@ const OS_FEATURE_OPTIONS = {
     { key: 'cashierShifts', label: 'Cash Drawer Float & Blind Drop Close' },
     { key: 'multiStationKDS', label: 'Multi-Station KDS Routing (3+ Stations)' },
     { key: 'customBranding', label: 'White-Label Receipt & Bill Branding' },
+  ],
+  PHARMACY: [
+    { key: 'medicineCatalog', label: 'Medicine & Generic Drug Master Catalog' },
+    { key: 'batchInventory', label: 'Batch-Level Inventory & FEFO Tracking' },
+    { key: 'posBilling', label: 'Counter POS & Thermal Tax Invoicing' },
+    { key: 'expiryControl', label: 'Near-Expiry Alerts & Expired Stock Quarantine' },
+    { key: 'prescriptionValidation', label: 'Prescription Rx Verification & Dispensing Logs' },
+    { key: 'supplierPurchases', label: 'Supplier POs, Invoices & Goods Receipt (GRN)' },
+    { key: 'salesReturns', label: 'Controlled Batch Returns & Refund Management' },
+    { key: 'scheduleHCompliance', label: 'Regulated & Scheduled Drugs Registry (Schedule H/H1/X)' },
+    { key: 'customBranding', label: 'White-Label Pharmacy Bill & Label Branding' },
   ]
 };
 
