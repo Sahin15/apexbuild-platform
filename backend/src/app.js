@@ -74,6 +74,9 @@ import diagnosticsRoutes from './routes/diagnosticsRoutes.js';
 // Restaurant Routes
 import restaurantRoutes from './routes/restaurantRoutes.js';
 
+// Pharmacy Routes
+import pharmacyRoutes from './routes/pharmacyRoutes.js';
+
 // Push Notifications Routes
 import pushNotificationRoutes from './routes/pushNotificationRoutes.js';
 
@@ -140,6 +143,9 @@ app.use('/api/v1/diagnostics', diagnosticsRoutes);
 
 // Restaurant Endpoints
 app.use('/api/v1/restaurant', restaurantRoutes);
+
+// Pharmacy Endpoints
+app.use('/api/v1/pharmacy', pharmacyRoutes);
 
 // Push Notifications Endpoints
 app.use('/api/v1/notifications', pushNotificationRoutes);

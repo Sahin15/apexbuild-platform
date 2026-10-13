@@ -232,11 +232,51 @@ export const OS_CONFIG = {
       accentDot: 'bg-orange-500',
       tierBadge: 'bg-orange-50 text-orange-700 border-orange-200',
     }
+  },
+  PHARMACY: {
+    key: 'PHARMACY',
+    name: 'Pharmacy OS',
+    parentBrand: 'ApexBuild',
+    fullTitle: 'ApexBuild | Pharmacy OS',
+    shortCode: 'RX',
+    roleTag: 'PHARMACY',
+    baseRoute: '/pharmacy',
+    defaultPrimary: '#0D9488',
+    defaultSecondary: '#059669',
+    searchPlaceholder: 'Search medicines, generics, batches, prescriptions, suppliers...',
+    theme: {
+      colorName: 'teal',
+      logoBg: 'bg-teal-600',
+      logoText: 'text-white',
+      badgeBg: 'bg-teal-500/15 text-teal-400 border-teal-500/30',
+      pillBg: 'bg-teal-50 text-teal-700 border-teal-200',
+      avatarBg: 'bg-teal-100 text-teal-700 border-teal-200',
+      avatarRing: 'hover:ring-teal-500',
+      focusRing: 'focus:border-teal-500 focus:ring-teal-500',
+      activeNav: 'bg-teal-600 text-white',
+      hoverNav: 'hover:bg-teal-900/60 hover:text-white',
+      sidebarBg: 'bg-teal-950',
+      sidebarBorder: 'border-teal-900',
+      sidebarCardBg: 'bg-teal-950/95',
+      sidebarCardBorder: 'border-teal-800/80',
+      sidebarBtnBg: 'bg-teal-900/60 hover:bg-teal-900 border-teal-800/60',
+      upgradeBtnBg: 'bg-teal-600 hover:bg-teal-500 text-white',
+      planPillBg: 'bg-teal-500/10 border-teal-500/20 text-teal-400',
+      accentText: 'text-teal-400',
+      roleColor: 'text-teal-600',
+      menuHoverBg: 'hover:bg-teal-50/80',
+      menuHoverText: 'group-hover:text-teal-600',
+      menuActiveText: 'text-teal-700',
+      iconBg: 'bg-teal-50 text-teal-600 group-hover:bg-teal-100 group-hover:text-teal-700',
+      accentDot: 'bg-teal-500',
+      tierBadge: 'bg-teal-50 text-teal-700 border-teal-200',
+    }
   }
 };
 
 export const getOSConfig = (businessType, pathname = '') => {
   // Pathname route takes precedence if on a dedicated OS workspace
+  if (pathname.startsWith('/pharmacy')) return OS_CONFIG.PHARMACY;
   if (pathname.startsWith('/restaurant')) return OS_CONFIG.RESTAURANT;
   if (pathname.startsWith('/superadmin')) return OS_CONFIG.SUPERADMIN;
   if (pathname.startsWith('/supplier')) return OS_CONFIG.MATERIAL_SUPPLIER;

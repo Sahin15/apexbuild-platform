@@ -134,6 +134,17 @@ import OnlineFoodOrdering from './pages/restaurant/OnlineFoodOrdering';
 import OnlineOrderTracking from './pages/restaurant/OnlineOrderTracking';
 import GuestTableOrder from './pages/restaurant/GuestTableOrder';
 
+// Pharmacy OS
+import PharmacyLayout from './components/layout/PharmacyLayout';
+import PharmacyDashboard from './pages/pharmacy/PharmacyDashboard';
+import PharmacyPOS from './pages/pharmacy/PharmacyPOS';
+import PharmacyMedicines from './pages/pharmacy/PharmacyMedicines';
+import PharmacyInventory from './pages/pharmacy/PharmacyInventory';
+import PharmacyExpiry from './pages/pharmacy/PharmacyExpiry';
+import PharmacyPurchases from './pages/pharmacy/PharmacyPurchases';
+import PharmacySales from './pages/pharmacy/PharmacySales';
+import PharmacyCustomers from './pages/pharmacy/PharmacyCustomers';
+
 const ProtectedRoute = ({ children, allowedBusinessTypes }) => {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
@@ -149,6 +160,7 @@ const ProtectedRoute = ({ children, allowedBusinessTypes }) => {
     if (businessType === 'CHICKEN_DISTRIBUTOR') return <Navigate to="/distributor/dashboard" replace />;
     if (businessType === 'DIAGNOSTICS') return <Navigate to="/diagnostics/dashboard" replace />;
     if (businessType === 'RESTAURANT') return <Navigate to="/restaurant/dashboard" replace />;
+    if (businessType === 'PHARMACY') return <Navigate to="/pharmacy/dashboard" replace />;
     if (businessType === 'SUPERADMIN') return <Navigate to="/superadmin/dashboard" replace />;
     return <Navigate to="/dashboard" replace />;
   }
@@ -409,6 +421,33 @@ function App() {
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
             <Route path="subscription" element={<Navigate to="/restaurant/settings?tab=billing" replace />} />
+            <Route path="support" element={<HelpSupport />} />
+          </Route>
+
+          {/* Protected Routes for PHARMACY wrapped in PharmacyLayout */}
+          <Route path="/pharmacy" element={
+            <ProtectedRoute allowedBusinessTypes={['PHARMACY']}>
+              <PharmacyLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="/pharmacy/dashboard" replace />} />
+            <Route path="dashboard" element={<PharmacyDashboard />} />
+            <Route path="pos" element={<PharmacyPOS />} />
+            <Route path="medicines" element={<PharmacyMedicines />} />
+            <Route path="inventory" element={<PharmacyInventory />} />
+            <Route path="expiry" element={<PharmacyExpiry />} />
+            <Route path="debit-notes" element={<PharmacyExpiry />} />
+            <Route path="purchases" element={<PharmacyPurchases />} />
+            <Route path="suppliers" element={<PharmacyPurchases />} />
+            <Route path="sales" element={<PharmacySales />} />
+            <Route path="returns" element={<PharmacySales />} />
+            <Route path="schedule-register" element={<PharmacySales />} />
+            <Route path="customers" element={<PharmacyCustomers />} />
+            <Route path="khata" element={<PharmacyCustomers />} />
+            <Route path="refills" element={<PharmacyCustomers />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="subscription" element={<Navigate to="/pharmacy/settings?tab=billing" replace />} />
             <Route path="support" element={<HelpSupport />} />
           </Route>
 
